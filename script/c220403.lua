@@ -1,146 +1,85 @@
---L:B Aerys
-local s,id,o=GetID()
+--Limit Breaker Aerys
+local s,id=GetID()
 function s.initial_effect(c)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e0:SetRange(LOCATION_MZONE)
-	e0:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e0:SetValue(1)
-	c:RegisterEffect(e0)
+	-- Cannot be destroyed by card effects
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TOGRAVE)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_SUMMON_SUCCESS)
-	e1:SetTarget(s.exctg)
-	e1:SetOperation(s.excop)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetValue(1)
 	c:RegisterEffect(e1)
-	local e2=e1:Clone()
+	-- Excavate top 3 cards, send 1 Normal Spell to GY, rest to bottom of deck
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_TOGRAVE)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetTarget(s.excavatetg)
+	e2:SetOperation(s.excavateop)
 	c:RegisterEffect(e2)
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,1))
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_TO_GRAVE)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCountLimit(1,id+o)
-	e3:SetTarget(s.settg)
-	e3:SetOperation(s.setop)
+	local e3=e2:Clone()
+	e3:SetCode(EVENT_SUMMON_SUCCESS)
 	c:RegisterEffect(e3)
+
+	-- Set 1 "Limit Break" Trap from deck when sent to GY
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
-	e4:SetType(EFFECT_TYPE_IGNITION)
-	e4:SetRange(LOCATION_HAND)
-	e4:SetCost(s.normalcost)
-	e4:SetCountLimit(1,id+o*2)
-	e4:SetOperation(s.normalop)
+	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetCategory(CATEGORY_TOHAND)
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e4:SetCode(EVENT_TO_GRAVE)
+	e4:SetProperty(EFFECT_FLAG_DELAY)
+	e4:SetCountLimit(1,{id,1})
+	e4:SetTarget(s.settg)
+	e4:SetOperation(s.setop)
 	c:RegisterEffect(e4)
 end
-function s.exctg(e,tp,eg,ep,ev,re,r,rp,chk)
-   if chk==0 then
-		if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<3 then return false end
-		local g=Duel.GetDecktopGroup(tp,3)
-		local result=g:FilterCount(Card.IsAbleToGrave,nil)>0
-		return result
-	end
+
+-- Filter for Normal Spell cards
+function s.tgfilter(c)
+	return c:IsNormalSpell() and c:IsAbleToGrave()
+end
+
+-- Excavate target
+function s.excavatetg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
 	Duel.SetTargetPlayer(tp)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
-function s.tdfilter(c)
-	return c:GetType()==TYPE_SPELL and c:IsAbleToGrave()
-end
-function s.excop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.excavateop(e,tp,eg,ep,ev,re,r,rp)
 	local p=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER)
-	Duel.ConfirmDecktop(p,3)
-	local g=Duel.GetDecktopGroup(p,3)
-	if not g or #g<3 then return end
-	g=g:Filter(s.tdfilter,nil)
-	local ct=3
-	if #g>0 and Duel.SelectYesNo(p,aux.Stringid(id,0)) then
+	local ac=3
+	Duel.ConfirmDecktop(p,ac)
+	local g=Duel.GetDecktopGroup(p,ac)
+	if #g>0 and g:IsExists(s.tgfilter,1,nil) and Duel.SelectYesNo(p,aux.Stringid(id,0)) then
 		Duel.Hint(HINT_SELECTMSG,p,HINTMSG_TOGRAVE)
-		local sg=g:Select(p,1,1,nil)
+		local sg=g:FilterSelect(p,s.tgfilter,1,1,nil)
 		Duel.DisableShuffleCheck()
-		Duel.SendtoGrave(sg,nil,REASON_EFFECT)
-		ct=ct-1
+		Duel.SendtoGrave(sg,REASON_EFFECT)
+		ac=ac-1
 	end
-	Duel.SortDecktop(p,p,ct)
-	for i=1,ct do
-		local mg=Duel.GetDecktopGroup(p,1)
-		Duel.MoveSequence(mg:GetFirst(),SEQ_DECKBOTTOM)
+	if ac>0 then
+		Duel.MoveToDeckBottom(ac,tp)
+		Duel.SortDeckbottom(tp,tp,ac)
 	end
-	local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,1))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetCode(EFFECT_CANNOT_TO_HAND)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e1:SetTargetRange(1,1)
-		e1:SetTarget(aux.TargetBoolFunction(Card.IsLocation,LOCATION_DECK))
-		e1:SetReset(RESET_PHASE+PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-		local e2=Effect.CreateEffect(e:GetHandler())
-		e2:SetType(EFFECT_TYPE_FIELD)
-		e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e2:SetDescription(aux.Stringid(id,1))
-		e2:SetCode(EFFECT_CANNOT_DRAW)
-		e2:SetReset(RESET_PHASE+PHASE_END)
-		e2:SetTargetRange(1,1)
-		Duel.RegisterEffect(e2,tp)
 end
+
+
+-- Filter for "Limit Break" Trap card (assumed setcode 0xf86, change if needed)
 function s.setfilter(c)
 	return c:IsSetCard(0xf86) and c:IsType(TYPE_TRAP) and c:IsSSetable()
 end
+
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil) end
 end
+
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil):GetFirst()
-	if tc then
-		Duel.SSet(tp,tc)
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,1))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetCode(EFFECT_CANNOT_TO_HAND)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e1:SetTargetRange(1,1)
-		e1:SetTarget(aux.TargetBoolFunction(Card.IsLocation,LOCATION_DECK))
-		e1:SetReset(RESET_PHASE+PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-		local e2=Effect.CreateEffect(e:GetHandler())
-		e2:SetType(EFFECT_TYPE_FIELD)
-		e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e2:SetDescription(aux.Stringid(id,1))
-		e2:SetCode(EFFECT_CANNOT_DRAW)
-		e2:SetReset(RESET_PHASE+PHASE_END)
-		e2:SetTargetRange(1,1)
-		Duel.RegisterEffect(e2,tp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
+	if #g>0 then
+		Duel.SSet(tp,g:GetFirst())
 	end
-end
-function s.addcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnPlayer()==e:GetOwnerPlayer()
-end
-function s.normalcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return not c:IsPublic() end 
-	Duel.ConfirmCards(1-tp,g)
-	Duel.ShuffleHand(tp)
-end
-function s.normalop(e,tp,eg,ep,ev,re,r,rp)
-	-- Apply effect to allow 1 Level 7 monster to be summoned without tribute
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SUMMON_PROC)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_IGNORE_IMMUNE)
-	e1:SetTargetRange(LOCATION_HAND,0)
-	e1:SetTarget(s.nttg)
-	e1:SetCondition(s.ntcon)
-	e1:SetValue(SUMMON_TYPE_NORMAL)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-end
-function s.ntcon(e,c,minc)
-	if c==nil then return true end
-	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-end
-function s.nttg(e,c)
-	return c:IsLevel(7)
 end

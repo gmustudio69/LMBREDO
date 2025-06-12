@@ -1,106 +1,60 @@
+--<Limit Breaker> Silverwings
+local s,id=GetID()
 
-local s,id,o=GetID()
 function s.initial_effect(c)
-	--xyz summon
-	aux.AddXyzProcedure(c,nil,7,3,s.ovfilter,aux.Stringid(id,0),3,s.xyzop)
 	c:EnableReviveLimit()
-	--
+	--Xyz Summon procedure
+	Xyz.AddProcedure(c,nil,7,3,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
+	--Cannot be destroyed by card effects
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
+	--Send up to 3 "Limit Break" Normal Spells to GY
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOGRAVE)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCost(s.cost)
-	e2:SetCountLimit(1,id+o)
+	e2:SetCountLimit(1)
+	e2:SetCost(s.tgcost)
 	e2:SetTarget(s.tgtg)
 	e2:SetOperation(s.tgop)
 	c:RegisterEffect(e2)
-	 local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetProperty(EFFECT_FLAG_SET_AVAILABLE+EFFECT_FLAG_IGNORE_IMMUNE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCode(EFFECT_TO_GRAVE_REDIRECT)
-	e3:SetTargetRange(nil,LOCATION_ONFIELD)
-	e3:SetValue(LOCATION_REMOVED)
-	c:RegisterEffect(e3)
-	--material
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e4:SetCode(EVENT_CUSTOM+id)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-	e4:SetTarget(s.mttg)
-	e4:SetOperation(s.mtop)
-	c:RegisterEffect(e4)
-	--
-	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,s.chainfilter)
+	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
 end
-function s.chainfilter(re,tp,cid)
-	local rc=re:GetHandler()
-	return not rc:IsCode(220406)
+
+function s.xyzfilter(c,tp,xyzc)
+	return c:IsFaceup() and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR) and c:IsLevel(7)
 end
-function s.ovfilter(c)
-	return c:IsFaceup() and c:IsLevel(7) and c:IsType(TYPE_MONSTER) and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR)
-end
+
 function s.xyzop(e,tp,chk)
-	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and (Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 or Duel.GetCustomActivityCount(id,1-tp,ACTIVITY_CHAIN)>0) end
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
+		Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 end
 	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
+	return true
 end
-function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return c:CheckRemoveOverlayCard(tp,1,REASON_COST) end
-	c:RemoveOverlayCard(tp,1,1,REASON_COST)
+
+function s.tgcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 function s.tgfilter(c)
-	return c:GetType()==TYPE_SPELL and c:IsSetCard(0xf86) 
+	return c:IsType(TYPE_SPELL) and c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToGrave()
 end
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK+LOCATION_HAND,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK+LOCATION_HAND)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
 function s.tgop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(s.tgfilter,tp,LOCATION_DECK+LOCATION_HAND,0,nil)
-	local ft=g:GetCount()
-	if ft<=0 then return end
-	if ft>=3 then ft=3 end
-	if g:GetCount()>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-		local sg=g:SelectSubGroup(tp,aux.dncheck,false,1,ft)
-		if sg:GetCount()>0 then
-			Duel.SendtoGrave(sg,REASON_EFFECT)
-		end
-	end
-end
-function s.rmtarget(e,c)
-	return c:GetOwner()~=e:GetHandlerPlayer() and not c:IsLocation(0x80) and not c:IsType(TYPE_SPELL+TYPE_TRAP) 
-end
-function s.cfilter(c,e)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) 
-end
-function s.mttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return eg:IsContains(chkc) end
-	if chk==0 then return eg:IsExists(s.cfilter,1,nil,e) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=eg:FilterSelect(tp,s.cfilter,1,1,nil,e)
-	Duel.SetTargetCard(g)
-end
-function s.mtop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if not (c:IsRelateToChain() and c:IsType(TYPE_XYZ)) then return end
-	if c:IsRelateToEffect(e) and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
-		local og=tc:GetOverlayGroup()
-		if og:GetCount()>0 then
-			Duel.SendtoGrave(og,REASON_RULE)
-		end
-		Duel.Overlay(c,Group.FromCards(tc))
+	local g=Duel.GetMatchingGroup(s.tgfilter,tp,LOCATION_DECK,0,nil)
+	if #g==0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local sg=g:Select(tp,1,3,nil)
+	if #sg>0 then
+		Duel.SendtoGrave(sg,REASON_EFFECT)
 	end
 end

@@ -1,82 +1,60 @@
---Limit Break - Exceed Evolution
-local s,id,o=GetID()
+
+local s,id=GetID()
 function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
-	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetCountLimit(1,id+o)
-	e1:SetTarget(s.target)
-	e1:SetOperation(s.activate)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
-	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-	e2:SetCondition(s.setcon)
+	e2:SetType(EFFECT_TYPE_XMATERIAL)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCondition(function(e) return e:GetHandler():IsSetCard(0xf86) end)
+	e2:SetValue(s.atkvalue)
 	c:RegisterEffect(e2)
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_XMATERIAL)
-	e3:SetCode(EFFECT_UPDATE_ATTACK)
-	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCondition(function(e) return e:GetHandler():IsSetCard(0xf86) end)
-	e3:SetValue(function(e,c) return c:GetOverlayCount()*400 end)
-	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e4)
 end
-function s.filter1(c,e,tp)
-	return c:IsFaceup() and c:IsSetCard(0xf86) and aux.MustMaterialCheck(c,tp,EFFECT_MUST_BE_XMATERIAL)
-		and Duel.IsExistingMatchingCard(s.filter2,tp,LOCATION_EXTRA,0,1,nil,e,tp,c,c:GetAttribute())
+function s.sptgfilter(c,e,tp)
+	if c:IsFacedown() or not c:IsSetCard(0xf86) then return false end
+	return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,c)
 end
-function s.filter2(c,e,tp,mc,rk)
-	return not c:IsCode(mc:GetCode()) and c:IsAttribute(rk) and c:IsSetCard(0xf86) and c:IsType(TYPE_XYZ) and mc:IsCanBeXyzMaterial(c)
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false) and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
+function s.spfilter(c,e,tp,mc)
+	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
+		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0 and c:IsAttribute(mc:GetAttribute())
+		and mc:IsCanBeXyzMaterial(c,tp,REASON_EFFECT) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
 end
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE) and s.filter1(chkc,e,tp) end
-	if chk==0 then return Duel.IsExistingTarget(s.filter1,tp,LOCATION_MZONE,0,1,nil,e,tp)end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE) and s.sptgfilter(chkc,e,tp) end
+	if chk==0 then return Duel.IsExistingTarget(s.sptgfilter,tp,LOCATION_MZONE,0,1,nil,e,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,s.filter1,tp,LOCATION_MZONE,0,1,1,nil,e,tp)
+	Duel.SelectTarget(tp,s.sptgfilter,tp,LOCATION_MZONE,0,1,1,nil,e,tp)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
-function s.activate(e,tp,eg,ep,ev,re,r,rp)
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	if not aux.MustMaterialCheck(tc,tp,EFFECT_MUST_BE_XMATERIAL)
-		or tc:IsFacedown() or not tc:IsRelateToEffect(e) or tc:IsControler(1-tp)
-		or tc:IsImmuneToEffect(e) then return end
+	if not (tc:IsFaceup() and tc:IsRelateToEffect(e) and tc:IsControler(tp) and tc:IsCanBeXyzMaterial() and not tc:IsImmuneToEffect(e)) then return end
+	local pg=aux.GetMustBeMaterialGroup(tp,Group.FromCards(tc),tp,nil,nil,REASON_XYZ)
+	if #pg>1 or (#pg==1 and pg:GetFirst()~=tc) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.filter2,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,tc,tc:GetAttribute())
-	local sc=g:GetFirst()
-	if sc then
-		local mg=tc:GetOverlayGroup()
-		if mg:GetCount()~=0 then
-			Duel.Overlay(sc,mg)
-		end
-		sc:SetMaterial(Group.FromCards(tc))
-		Duel.Overlay(sc,Group.FromCards(tc))
-		if Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
+	local sc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,tc):GetFirst()
+	if not sc then return end
+	sc:SetMaterial(tc)
+	Duel.Overlay(sc,tc)
+	e:GetHandler():CancelToGrave()
+	Duel.Overlay(sc,e:GetHandler())
+	if Duel.SpecialSummonStep(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP) then
 			sc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,2)
 			sc:CompleteProcedure()
-			Duel.Overlay(sc,e:GetHandler())
-			e:GetHandler():CancelToGrave()
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_CHANGE_CODE)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-			e1:SetValue(74677422)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-			tc:RegisterEffect(e1)
-		end
 	end
+	if Duel.SpecialSummonComplete()==0 then return end
+	sc:CompleteProcedure()
 end
-function s.sprfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xb67)
-end
--- Set Turn Activation condition
-function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(s.sprfilter,tp,LOCATION_ONFIELD,0,1,nil)
+function s.atkvalue(e,c)
+	return e:GetHandler():GetOverlayCount()*400
 end
