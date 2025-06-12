@@ -105,6 +105,10 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c,bc)
 	local xyz=g:GetFirst()
 	if xyz then
+		local og=bc:GetOverlayGroup()
+		if og:GetCount()>0 then
+			Duel.SendtoGrave(og,REASON_RULE)
+		end
 		local mat=Group.FromCards(c,bc)
 		xyz:SetMaterial(mat)
 		Duel.Overlay(xyz,mat)
