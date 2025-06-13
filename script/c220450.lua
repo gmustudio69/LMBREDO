@@ -51,7 +51,7 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc or not c:IsRelateToEffect(e) or not tc:IsRelateToEffect(e) then return end
 	if Duel.MoveToField(c,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
-		and Duel.MoveToField(tc,tp,tc:GetControler(),LOCATION_SZONE,POS_FACEUP,true) then
+		and Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
 		local e1=Effect.CreateEffect(c)
 		e1:SetCode(EFFECT_CHANGE_TYPE)
 		e1:SetType(EFFECT_TYPE_SINGLE)
@@ -66,19 +66,20 @@ end
 
 -- From S/T zone to Special Summon, then move a World Decoder monster to S/T zone
 function s.filter(c)
-	return c:IsSetCard(0xb67) and c:IsFaceup() and c:IsLocation(LOCATION_MZONE)
+	return c:IsFaceup() and c:IsLocation(LOCATION_MZONE)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.SelectTarget(tp,s.filter,tp,LOCATION_MZONE,0,1,1,nil)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.filter,tp,LOCATION_MZONE,0,1,1,nil)
-	local sc=g:GetFirst()
+	local sc=Duel.GetFirstTarget()
+	--local sc=g:GetFirst()
 	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 and sc then
-		if Duel.MoveToField(sc,tp,tp,LOCATION_SZONE,POS_FACEUP,true) then
+		if Duel.MoveToField(sc,tp,sc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
 			local e1=Effect.CreateEffect(sc)
 			e1:SetCode(EFFECT_CHANGE_TYPE)
 			e1:SetType(EFFECT_TYPE_SINGLE)
