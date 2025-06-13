@@ -34,7 +34,7 @@ end
 
 --Cost: detach 1 from a Limit Breaker Xyz, unless you control Level 13 Synchro
 function s.cfilter(c,tp)
-	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
+	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
 end
 function s.synfilter(c)
 	return c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
@@ -42,7 +42,7 @@ end
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 	local b2=Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_MZONE,0,1,nil)
-	if chk==0 then return b1 or b2 end
+	if chk==0 then return b1 or b2 and Duel.CheckRemoveOverlayCard(tp,1,0,1,REASON_COST,b1)end
 	local op=nil
 	if b1 and b2 then
 		op=Duel.SelectEffect(tp,
@@ -52,8 +52,7 @@ function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		op=(b1 and 1) or (b2 and 2)
 	end
 	if op==1 then
-		local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_MZONE,0,1,1,nil)
-		g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
+		Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,b1)
 	elseif op==2 then
 		return
 	end

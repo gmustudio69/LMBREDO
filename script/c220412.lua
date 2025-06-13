@@ -54,7 +54,9 @@ end
 function s.postg(e,c)
 	return true
 end
-
+function s.cfilter(c,tp)
+	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
+end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
 		Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 end
@@ -63,8 +65,9 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-   if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+   local b1=Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
+   if chk==0 then return Duel.CheckRemoveOverlayCard(tp,1,0,1,REASON_COST,b1) end
+   Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,b1)
 end
 
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
