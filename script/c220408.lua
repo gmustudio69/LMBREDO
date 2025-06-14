@@ -34,7 +34,7 @@ end
 
 --Cost: detach 1 from a Limit Breaker Xyz, unless you control Level 13 Synchro
 function s.cfilter(c,tp)
-	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
+	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
 end
 function s.synfilter(c)
 	return c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
@@ -52,7 +52,8 @@ function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		op=(b1 and 1) or (b2 and 2)
 	end
 	if op==1 then
-		Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,b1)
+		local g=Duel.GetMatchingGroup(s.cfilter,tp,LOCATION_MZONE,0,nil)
+		Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,g)
 	elseif op==2 then
 		return
 	end

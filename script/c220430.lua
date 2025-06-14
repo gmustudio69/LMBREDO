@@ -70,11 +70,10 @@ function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_MZONE,0,nil)
 	if #g==0 or Duel.GetFieldGroupCount(1-tp,LOCATION_DECK,0)==0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-	local tc=g:Select(tp,1,1,nil):GetFirst()
-	local top=Duel.GetDecktopGroup(1-tp,1)
-	local card=top:GetFirst()
-	if tc and card then
-		Duel.DisableShuffleCheck()
-		Duel.Overlay(tc,top)
+	local xyz=g:Select(tp,1,1,nil):GetFirst()
+	local tc=Duel.SelectMatchingCard(tp,s.attachfilter,tp,LOCATION_EXTRA,0,1,1,nil,c,tp):GetFirst()
+	if tc then
+		Duel.HintSelection(tc)
+		Duel.Overlay(xyz,tc)
 	end
 end

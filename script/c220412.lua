@@ -1,3 +1,4 @@
+
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -54,8 +55,8 @@ end
 function s.postg(e,c)
 	return true
 end
-function s.cfilter(c,tp)
-	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
+function s.xyzfilter(c,tp)
+	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
@@ -65,9 +66,9 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-   local b1=Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
-   if chk==0 then return Duel.CheckRemoveOverlayCard(tp,1,0,1,REASON_COST,b1) end
-   Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,b1)
+   local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_MZONE,0,nil)
+   if chk==0 then return true end
+   Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,g)
 end
 
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
