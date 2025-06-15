@@ -25,7 +25,7 @@ function s.initial_effect(c)
 		end)
 		Duel.RegisterEffect(ge1,0)
 	end)
-	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:IsActiveType(TYPE_QUICKPLAY) and re:IsHasType(EFFECT_TYPE_ACTIVATE) end)
+	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:IsActiveType(TYPE_QUICKPLAY) end)
 end
 -- "Limit Breaker" SetCode assumed to be 0xf86 (change if different)
 function s.spfilter(c,attr,e,tp)
