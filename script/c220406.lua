@@ -8,6 +8,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCondition(s.con)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
@@ -24,13 +25,15 @@ function s.initial_effect(c)
 		end)
 		Duel.RegisterEffect(ge1,0)
 	end)
+	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:IsActiveType(TYPE_QUICKPLAY) and re:IsHasType(EFFECT_TYPE_ACTIVATE) end)
 end
-
 -- "Limit Breaker" SetCode assumed to be 0xf86 (change if different)
 function s.spfilter(c,attr,e,tp)
 	return c:IsSetCard(0xf86) and c:IsAttribute(attr) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-
+function s.con(e,tp,eg,ep,ev,re,r,rp,chk)
+	return Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)<=0
+end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		for i=0,6 do
@@ -82,7 +85,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	-- Prevent activating Quick-Play Spells this turn
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
 	e1:SetTargetRange(1,0)
 	e1:SetValue(s.aclimit)

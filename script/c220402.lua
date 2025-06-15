@@ -24,6 +24,7 @@ function s.initial_effect(c)
 	e3:SetCode(EFFECT_CANNOT_SELECT_BATTLE_TARGET)
 	e3:SetRange(LOCATION_FZONE)
 	e3:SetTargetRange(0,LOCATION_MZONE)
+	e3:SetCondition(s.effcon)
 	e3:SetValue(function(e,_c) return not _c:IsSetCard(0xf86) end)
 	c:RegisterEffect(e3)
 	local e4=Effect.CreateEffect(c)
@@ -34,6 +35,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
+function s.ritfilter(c)
+	return c:IsSetCard(0xf86) and c:IsFaceup()
+end
+function s.effcon(e)
+	local tp=e:GetHandlerPlayer()
+	return Duel.IsExistingMatchingCard(s.ritfilter,tp,LOCATION_MZONE,0,1,nil)
+end
 -- Place a <World Decoder> from Deck to S/T zone as Continuous Spell
 function s.filter(c)
 	return c:IsSetCard(0xb67) and c:IsType(TYPE_MONSTER) and not c:IsForbidden()

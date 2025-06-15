@@ -12,6 +12,7 @@ function s.initial_effect(c)
 
 	-- Revive if destroyed by card effect at start of Battle Phase
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e2:SetCode(EVENT_DESTROYED)
 	e2:SetCondition(s.revcon)
