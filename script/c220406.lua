@@ -77,11 +77,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	-- Register hint flags for declared attribute(s)
 	
 	-- Shuffle this card into the Deck instead of sending to GY
-	if c:IsRelateToEffect(e) and e:IsHasType(EFFECT_TYPE_ACTIVATE) then
-		if c:IsHasEffect(EFFECT_CANNOT_TO_DECK) then return end
-		c:CancelToGrave()
-		Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
-	end
+	
 	-- Prevent activating Quick-Play Spells this turn
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD)
