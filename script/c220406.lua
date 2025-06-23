@@ -1,5 +1,4 @@
 --Limit Break!!!
---Scripted by Hatter
 local s,id=GetID()
 function s.initial_effect(c)
 	--Declare Attribute; Special Summon 1 "Limit Breaker" monster, then destroy 1 card you control
@@ -17,7 +16,7 @@ function s.initial_effect(c)
 		s.attr_list={[0]=0,[1]=0}
 		local ge1=Effect.CreateEffect(c)
 		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		ge1:SetCode(EVENT_PHASE+PHASE_END)
+		ge1:SetReset(RESET_PHASE|PHASE_END)
 		ge1:SetCountLimit(1)
 		ge1:SetOperation(function()
 			s.attr_list[0]=0
@@ -58,7 +57,9 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_MZONE)
 end
 
-
+function s.dsfilter(c)
+	return not c:IsCode(id)
+end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)  
 	local attr=e:GetLabel()
 	if not attr then return end
@@ -68,7 +69,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
 		Duel.BreakEffect()
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-		local dg=Duel.SelectMatchingCard(tp,nil,tp,LOCATION_MZONE,0,1,1,nil)
+		local dg=Duel.SelectMatchingCard(tp,s.dsfilter,tp,LOCATION_ONFIELD,0,1,1,nil)
 		if #dg>0 then
 			Duel.Destroy(dg,REASON_EFFECT)
 		end
@@ -80,14 +81,14 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	
 	-- Prevent activating Quick-Play Spells this turn
 	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
 	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
 	e1:SetTargetRange(1,0)
 	e1:SetValue(s.aclimit)
-	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
-	aux.RegisterClientHint(e:GetHandler(),nil,tp,1,0,aux.Stringid(id,1),nil)
+	--aux.RegisterClientHint(e:GetHandler(),nil,tp,1,0,aux.Stringid(id,0),nil)
 end
 function s.aclimit(e,re,tp)
 	return re:IsActiveType(TYPE_QUICKPLAY) and re:IsHasType(EFFECT_TYPE_ACTIVATE)

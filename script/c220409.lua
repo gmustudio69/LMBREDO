@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_GRAVE+LOCATION_SZONE)
+	e1:SetRange(LOCATION_HAND+LOCATION_SZONE)
 	e1:SetCountLimit(1,{id,1})
 	e1:SetCost(s.spcost)
 	e1:SetTarget(s.sptg)
@@ -30,10 +30,9 @@ function s.initial_effect(c)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,4))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_BE_MATERIAL)
+	e3:SetCode(EVENT_TO_GRAVE)
 	e3:SetCountLimit(1,{id,3})
 	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCondition(s.matcon)
 	e3:SetTarget(s.mattg)
 	e3:SetOperation(s.matop)
 	c:RegisterEffect(e3)
@@ -114,10 +113,6 @@ function s.sspop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SynchroSummon(tp,sc,nil)
 		end
 	end
-end
--- Check if used as Synchro Material
-function s.matcon(e,tp,eg,ep,ev,re,r,rp)
-	return r==REASON_SYNCHRO
 end
 
 -- Target 1 "World Decoder" monster in GY
