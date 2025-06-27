@@ -32,15 +32,6 @@ function s.initial_effect(c)
 	local e4=e3:Clone()
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
-	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,2))
-	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e5:SetType(EFFECT_TYPE_IGNITION)
-	e5:SetRange(LOCATION_SZONE)
-	e5:SetCountLimit(1,{id,3})
-	e5:SetTarget(s.sttg)
-	e5:SetOperation(s.stop)
-	c:RegisterEffect(e5)
 end
 
 -- Double piercing value
@@ -66,17 +57,16 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
-	local canSelf=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.GetFieldGroupCount(tp,0,LOCATION_MZONE)>1
-	local canOpp=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 
-	if not canSelf and not canOpp then return end
+	local canOpp=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
+	local canYou=Duel.GetFieldGroupCount(tp,0,LOCATION_MZONE)>0
+	if not (canOpp or canYou) then return end
 	local fieldOwner=tp
-	if canSelf and canOpp then
-		local opt=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1)) -- "Your field", "Opponent's field"
-		fieldOwner=(opt==0) and tp or 1-tp
+	if canOpp and canYou then
+		fieldOwner=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))==0 and tp or 1-tp
 	elseif canOpp then
 		fieldOwner=1-tp
 	end
-
+	
 	Duel.SpecialSummon(c,0,tp,fieldOwner,false,false,POS_FACEUP)
 
 	-- Search WIND Warrior

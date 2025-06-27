@@ -74,7 +74,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Check if she battled and revived this way
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
@@ -94,18 +93,17 @@ end
 function s.xyzfilter(c,e,tp,mc1,mc2)
 	return c:IsRank(7) and c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_FIRE)
 		and mc1:IsCanBeXyzMaterial(c,tp) and mc2:IsCanBeXyzMaterial(c,tp)
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
 end
 
 function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
-	if not (c:IsRelateToEffect(e) and bc:IsRelateToEffect(e))  or not bc:IsRelateToBattle() then return end
+	if not (c:IsRelateToEffect(e) or bc:IsRelateToEffect(e))  or not bc:IsRelateToBattle() then return end
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c,bc)
 	local xyz=g:GetFirst()
-	if xyz  then
+	if xyz then
 		local og=bc:GetOverlayGroup()
 		if og:GetCount()>0 then
 			Duel.SendtoGrave(og,REASON_RULE)
