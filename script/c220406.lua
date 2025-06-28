@@ -66,10 +66,10 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,attr,e,tp)
 	local c=e:GetHandler()
-	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
+	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP_DEFENSE)>0 then
 		Duel.BreakEffect()
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-		local dg=Duel.SelectMatchingCard(tp,s.dsfilter,tp,LOCATION_ONFIELD,0,1,1,nil)
+		local dg=Duel.SelectMatchingCard(tp,s.dsfilter,tp,LOCATION_MZONE,0,1,1,nil)
 		if #dg>0 then
 			Duel.Destroy(dg,REASON_EFFECT)
 		end

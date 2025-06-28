@@ -42,6 +42,7 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	-- Register continuous effect to revive at Battle Phase start
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
 	e1:SetCondition(s.spcon)
