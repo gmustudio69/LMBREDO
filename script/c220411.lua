@@ -47,7 +47,7 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetCountLimit(1)
 	e1:SetCondition(s.spcon)
 	e1:SetOperation(s.spop)
-	e1:SetReset(RESET_PHASE+PHASE_BATTLE_START+RESET_SELF_TURN)
+	e1:SetReset(RESET_PHASE+PHASE_BATTLE_START)
 	e1:SetLabelObject(c)
 	Duel.RegisterEffect(e1,tp)
 end
