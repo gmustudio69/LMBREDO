@@ -59,7 +59,7 @@ function s.xyzfilter(c,tp)
 	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
-	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,nil) and
 		Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 end
 	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
 	return true
@@ -67,7 +67,7 @@ end
 
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
    local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_MZONE,0,nil)
-   if chk==0 then return true end
+   if chk==0 then return g:GetFirst():CheckRemoveOverlayCard(tp,1,REASON_COST) end
    Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,g)
 end
 

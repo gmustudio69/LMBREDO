@@ -8,15 +8,15 @@ function s.initial_effect(c)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e0:SetValue(LOCATION_REMOVED)
 	c:RegisterEffect(e0)
-
 	-- Protect other Floowandereeze monsters from destruction
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetCode(EFFECT_SET_POSITION)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	e1:SetTarget(s.prottg)
-	e1:SetValue(aux.tgoval)
+	e1:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
+	e1:SetCondition(s.poscon)
+	e1:SetTarget(s.postg)
+	e1:SetValue(POS_FACEUP_ATTACK)
 	c:RegisterEffect(e1)
 	-- Search Floowandereeze Spell/Trap & Normal Summon
 	local e2=Effect.CreateEffect(c)
@@ -28,9 +28,11 @@ function s.initial_effect(c)
 	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
 end
-
-function s.prottg(e,c)
-	return c:IsSetCard(0x16f)
+function s.poscon(e)
+	return e:GetHandler():IsTributeSummoned()
+end
+function s.postg(e,c)
+	return true
 end
 
 -- Set + additional Normal Summon
