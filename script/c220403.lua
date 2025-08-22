@@ -7,6 +7,7 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e1:SetRange(LOCATION_MZONE)
+	e1:SetCondition(s.indescon)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
 	-- Excavate top 3 cards, send 1 Normal Spell to GY, rest to bottom of deck
@@ -35,7 +36,9 @@ function s.initial_effect(c)
 	e4:SetOperation(s.setop)
 	c:RegisterEffect(e4)
 end
-
+function s.indescon(e)
+	return Duel.GetFieldGroupCount(e:GetHandlerPlayer(),LOCATION_MZONE,0)==1
+end
 -- Filter for Normal Spell cards
 function s.tgfilter(c)
 	return c:IsNormalSpell() and c:IsAbleToGrave()
