@@ -31,6 +31,7 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_FIELD)
 	e4:SetCode(EFFECT_MUST_ATTACK)
 	e4:SetRange(LOCATION_FZONE)
+	e4:SetCondition(s.effcon)
 	e4:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e4)
 end
@@ -68,20 +69,20 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e1)
 	end
 	-- Restriction: Only Psychic and Warrior monster effects
-	local e2=Effect.CreateEffect(e:GetHandler())
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_CANNOT_ACTIVATE)
-	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-	e2:SetTargetRange(1,0)
-	e2:SetValue(s.aclimit)
-	e2:SetReset(RESET_PHASE|PHASE_END)
-	Duel.RegisterEffect(e2,tp)
-	aux.RegisterClientHint(e:GetHandler(),nil,tp,1,0,aux.Stringid(id,0),nil)
-end
-
-function s.aclimit(e,re,tp)
-	local rc=re:GetHandler()
-	return re:IsActiveType(TYPE_MONSTER) and not (rc:IsRace(RACE_PSYCHIC) or rc:IsRace(RACE_WARRIOR))
+	if not e:IsHasType(EFFECT_TYPE_ACTIVATE) then return end
+	local c=e:GetHandler()
+	--Cannot Special Summon from the Deck or Extra Deck, except Fiend monsters
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetTargetRange(1,0)
+	e1:SetReset(RESET_PHASE|PHASE_END,1)
+	e1:SetTarget(function(e,c) return c:IsLocation(LOCATION_DECK|LOCATION_EXTRA) and not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
+	Duel.RegisterEffect(e1,tp)
+	--Clock Lizard check
+	aux.addTempLizardCheck(c,tp,function(e,c) return not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
 end
 
 -- Chain limit for Limit Break!!! (opponent cannot respond)
