@@ -1,5 +1,6 @@
 --Limit Break!!!
 local s,id=GetID()
+local LIMIT_BREAKER=0xf86
 
 function s.initial_effect(c)
 	--Activate
@@ -25,32 +26,27 @@ function s.initial_effect(c)
 	end)
 end
 
---Limit Breaker setcode
-local LIMIT_BREAKER=0xf86
-
 function s.lbfilter(c,attr,e,tp)
-	return c:IsSetCard(LIMIT_BREAKER) and c:IsAttribute(attr)
+	return c:IsSetCard(LIMIT_BREAKER)
+		and c:IsAttribute(attr)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
+-- ✅ FIXED xyz filter
 function s.xyzfilter(c,attr,mc,tp)
-	return c:IsSetCard(LIMIT_BREAKER) and c:IsType(TYPE_XYZ)
+	return c:IsSetCard(LIMIT_BREAKER)
+		and c:IsType(TYPE_XYZ)
 		and c:IsAttribute(attr)
 		and mc:IsCanBeXyzMaterial(c)
-		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
+		and Duel.GetLocationCountFromEx(tp,tp,mc)>0
 end
 
---ATTRIBUTE SELECT
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return s.getmask(e,tp)~=0 end
 	local mask=s.getmask(e,tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATTRIBUTE)
 	local attr=Duel.AnnounceAttribute(tp,1,mask)
 	e:SetLabel(attr)
-
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,
-		LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED+LOCATION_EXTRA)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_MZONE)
 end
 
 function s.getmask(e,tp)
@@ -71,12 +67,11 @@ function s.getmask(e,tp)
 	return mask
 end
 
---MAIN RESOLVE
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local attr=e:GetLabel()
 	if attr==0 then return end
 
-	--STEP 1 — Special Summon
+	-- STEP 1 — Special Summon
 	if Duel.IsExistingMatchingCard(s.lbfilter,tp,
 		LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,attr,e,tp)
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
@@ -91,8 +86,12 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.BreakEffect()
 
+	-- CHECK if opponent controls monster (REQUIRED BY CARD TEXT)
+	local opp_has_mon=Duel.IsExistingMatchingCard(Card.IsMonster,tp,0,LOCATION_MZONE,1,nil)
+
+	-- CHECK XYZ POSSIBILITY
 	local can_xyz=false
-	if Duel.GetMatchingGroupCount(nil,tp,0,LOCATION_MZONE,nil)>0 and Duel.GetLocationCountFromEx(tp)>0 then
+	if opp_has_mon then
 		can_xyz=Duel.IsExistingMatchingCard(function(c)
 			return c:IsFaceup() and c:IsSetCard(LIMIT_BREAKER)
 				and c:IsAttribute(attr)
@@ -101,12 +100,8 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		end,tp,LOCATION_MZONE,0,1,nil)
 	end
 
-	local do_xyz=false
-	if can_xyz then
-		do_xyz=Duel.SelectYesNo(tp,aux.Stringid(id,2))
-	end
-
-	if do_xyz then
+	if can_xyz and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		-- Xyz branch
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 		local mc=Duel.SelectMatchingCard(tp,function(c)
 			return c:IsFaceup() and c:IsSetCard(LIMIT_BREAKER)
@@ -130,14 +125,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		end
 
 	else
-		--destroy fallback
-		if Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_MZONE,0,1,nil) then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-			local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_MZONE,0,1,1,nil)
+		-- DESTROY branch
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+		local g=Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() end,tp,LOCATION_MZONE,0,1,1,nil)
+		if #g>0 then
 			Duel.Destroy(g,REASON_EFFECT)
 		end
 	end
 
-	--mark attribute used
 	s.attr_list[tp]=s.attr_list[tp]|attr
 end

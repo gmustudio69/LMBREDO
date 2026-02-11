@@ -45,7 +45,7 @@ function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.spfilter(c,e,tp)
-	return not c:IsCode(14558127) and c:IsAttack(0) and c:IsDefense(1800) and c:IsMonster() and (c:IsAbleToHand() or c:IsCanBeSpecialSummoned(e,0,tp,false,false))
+	return c:IsAttack(0) and c:IsDefense(1800) and c:IsMonster() and (c:IsAbleToHand() or c:IsCanBeSpecialSummoned(e,0,tp,false,false))
 end
 
 function s.selfspop(e,tp,eg,ep,ev,re,r,rp)
