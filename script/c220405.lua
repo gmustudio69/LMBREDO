@@ -1,25 +1,27 @@
 --<World Decoder> Ellie
 local s,id=GetID()
 function s.initial_effect(c)
+	c:EnableUnsummonable()
 	c:SetUniqueOnField(1,0,220405)
-	c:EnableReviveLimit()
 	--splimit
 	local e0=Effect.CreateEffect(c)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e0:SetType(EFFECT_TYPE_SINGLE)
 	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e0:SetValue(s.spconlimit)
 	c:RegisterEffect(e0)
+
+	--special summon procedure (hand / SZONE)
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e1:SetRange(LOCATION_HAND+LOCATION_SZONE)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
+
 	-- Set 1 "Limit Break" spell from Deck or Banished
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
@@ -33,7 +35,7 @@ function s.initial_effect(c)
 
 	-- Move to S/T zone as Continuous Spell if leaves field during your turn
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_LEAVE_FIELD)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCountLimit(1,{id,2})
@@ -42,29 +44,22 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
--- Restriction: Only 1 can be special summoned per turn this way
+function s.spconlimit(e,se,sp,st)
+	return se:IsHasType(EFFECT_TYPE_ACTIONS) and se:GetHandler():IsSetCard(0xb67)
+end
+
+-- discard summon condition
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,e:GetHandler())
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return false end
+	if c:IsLocation(LOCATION_SZONE) and not c:IsFaceup() then return false end
+	return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,c)
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,c)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
-		local g=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,LOCATION_HAND,0,0,1,e:GetHandler())
-		if #g>0 then
-			g:KeepAlive()
-			e:SetLabelObject(g)
-			return true
-		end
-	end
-	return false
-end
+
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=e:GetLabelObject()
-	if not g then return end
-	Duel.SendtoGrave(g,REASON_COST|REASON_DISCARD)
-	g:DeleteGroup()
+	Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
+	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 end
 
 -- Set 1 "Limit Break" from Deck or Banished

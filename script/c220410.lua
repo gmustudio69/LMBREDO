@@ -1,24 +1,15 @@
 --<Limit Breaker> Ouroboros
 local s,id,o=GetID()
 function s.initial_effect(c)
+	-- Must be Special Summoned by "Limit" S/T
 	c:EnableReviveLimit()
-	-- Must be Special Summoned by "Limit Break"
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
-	e0:SetValue(function(e,se,sp,st)
-		return se and se:IsActiveType(TYPE_SPELL+TYPE_TRAP) and se:GetHandler():IsSetCard(0xf86)
-	end)
-	c:RegisterEffect(e0)
-	-- Cannot be destroyed by card effects
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(1)
+	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetValue(s.splimit)
 	c:RegisterEffect(e1)
+	-- Banisher (Field to GY -> Banish)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
@@ -28,6 +19,8 @@ function s.initial_effect(c)
 	e2:SetTargetRange(0,LOCATION_ONFIELD)
 	e2:SetValue(LOCATION_REMOVED)
 	c:RegisterEffect(e2)
+
+	-- Attach banished card
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
@@ -37,37 +30,46 @@ function s.initial_effect(c)
 	e3:SetTarget(s.mttg)
 	e3:SetOperation(s.mtop)
 	c:RegisterEffect(e3)
+
+	-- "World Decoder Ellie" Buffs
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
-	e4:SetCategory(CATEGORY_REMOVE)
-	e4:SetType(EFFECT_TYPE_QUICK_O)
-	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e4:SetCode(EVENT_CHAINING)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1)
-	e4:SetCost(s.cpcost)
-	e4:SetTarget(s.cptg)
-	e4:SetCondition(s.qcon)
-	e4:SetOperation(s.cpop)
+	e4:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e4:SetCondition(s.elliecon)
+	e4:SetValue(1)
 	c:RegisterEffect(e4)
+
+	-- Copy "Limit" Spell effect
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,1))
+	e5:SetType(EFFECT_TYPE_QUICK_O)
+	e5:SetCode(EVENT_FREE_CHAIN)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCountLimit(1)
+	e5:SetCondition(s.elliecon)
+	e5:SetCost(s.copycost)
+	e5:SetTarget(s.copytg)
+	e5:SetOperation(s.copyop)
+	c:RegisterEffect(e5)
 end
-function s.ellie(c)
-	return c:IsFaceup() and c:IsCode(220405)
-end
-function s.qcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp and Duel.IsExistingMatchingCard(s.ellie,tp,LOCATION_ONFIELD,0,1,nil)
+
+-- E1: Special Summon Limit
+function s.splimit(e,se,sp,st)
+	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
 end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
 end
-function s.cfilter(c,e)
+function s.filter(c,e)
 	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) 
 end
 function s.mttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return eg:IsContains(chkc) end
-	if chk==0 then return eg:IsExists(s.cfilter,1,nil,e) end
+	if chk==0 then return eg:IsExists(s.filter,1,nil,e) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=eg:FilterSelect(tp,s.cfilter,1,1,nil,e)
+	local g=eg:FilterSelect(tp,s.filter,1,1,nil,e)
 	Duel.SetTargetCard(g)
 end
 function s.mtop(e,tp,eg,ep,ev,re,r,rp)
@@ -77,37 +79,42 @@ function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Overlay(c,Group.FromCards(tc))
 	end
 end
+
+-- E4/E5: Ellie Condition
+function s.elliecon(e)
+	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
+end
+-- E5: Copy "Limit" Spell
+function s.copycost(e,tp,eg,ep,ev,re,r,rp,chk)
+	e:SetLabel(1)
+	return true
+end
 function s.cpfilter(c)
-	return c:IsNormalSpell() and c:IsAbleToRemove() and c:CheckActivateEffect(true,true,false)~=nil
+	return c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToRemoveAsCost()
 end
-function s.cpcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,2,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,2,2,REASON_COST)
-end
-function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then
-		local te=e:GetLabelObject():GetFirst():CheckActivateEffect(true,true,false)
-		local tg=te:GetTarget()
-		return tg(e,tp,eg,ep,ev,re,r,rp,0,chkc)
+function s.copytg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		if e:GetLabel()==0 then return false end
+		e:SetLabel(0)
+		return e:GetHandler():CheckRemoveOverlayCard(tp,2,REASON_COST) and Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_GRAVE,0,1,nil)
 	end
-	if chk==0 then return Duel.IsExistingTarget(s.cpfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,nil) end
+	e:SetLabel(0)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local tc=Duel.SelectTarget(tp,s.cpfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil):GetFirst()
-	e:SetLabelObject(tc)
-	local te=tc:CheckActivateEffect(true,true,false)
-	e:SetProperty(EFFECT_FLAG_CARD_TARGET|te:GetProperty())
+	local g=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	local te,ceg,cep,cev,cre,cr,crp=g:GetFirst():CheckActivateEffect(false,true,true)
+	e:GetHandler():RemoveOverlayCard(tp,2,2,REASON_COST)
+	Duel.Remove(g,POS_FACEUP,REASON_COST)
+	e:SetProperty(te:GetProperty())
 	local tg=te:GetTarget()
-	if tg then
-		tg(e,tp,eg,ep,ev,re,r,rp,1)
-	end
+	if tg then tg(e,tp,ceg,cep,cev,cre,cr,crp,1) end
+	te:SetLabelObject(e:GetLabelObject())
+	e:SetLabelObject(te)
 	Duel.ClearOperationInfo(0)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,tc,1,tp,0)
 end
-function s.cpop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	if not tc:IsRelateToEffect(e) or Duel.Remove(tc,POS_FACEDOWN,REASON_EFFECT)==0 then return end
-	local te=tc:CheckActivateEffect(true,true,false)
+function s.copyop(e,tp,eg,ep,ev,re,r,rp)
+	local te=e:GetLabelObject()
 	if not te then return end
+	e:SetLabelObject(te:GetLabelObject())
 	local op=te:GetOperation()
 	if op then op(e,tp,eg,ep,ev,re,r,rp) end
 end

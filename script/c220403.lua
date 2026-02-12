@@ -1,28 +1,20 @@
 --Limit Breaker Aerys
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Cannot be destroyed by card effects
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCondition(s.indescon)
-	e1:SetValue(1)
-	c:RegisterEffect(e1)
 	-- Excavate top 3 cards, send 1 Normal Spell to GY, rest to bottom of deck
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetCategory(CATEGORY_TOGRAVE)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_DRAW+CATEGORY_TODECK)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_SUMMON_SUCCESS)
+	e1:SetCountLimit(1,id)
+	e1:SetTarget(s.drtg)
+	e1:SetOperation(s.drop)
+	c:RegisterEffect(e1)
+	local e2=e1:Clone()
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetTarget(s.excavatetg)
-	e2:SetOperation(s.excavateop)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EVENT_SUMMON_SUCCESS)
-	c:RegisterEffect(e3)
 
 	-- Set 1 "Limit Break" Trap from deck when sent to GY
 	local e4=Effect.CreateEffect(c)
@@ -45,29 +37,21 @@ function s.tgfilter(c)
 end
 
 -- Excavate target
-function s.excavatetg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
-	Duel.SetTargetPlayer(tp)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
+function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsPlayerCanDraw(tp,2) end
+	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,2)
 end
 
-function s.excavateop(e,tp,eg,ep,ev,re,r,rp)
-	local p=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER)
-	local ac=3
-	Duel.ConfirmDecktop(p,ac)
-	local g=Duel.GetDecktopGroup(p,ac)
-	if #g>0 and g:IsExists(s.tgfilter,1,nil) and Duel.SelectYesNo(p,aux.Stringid(id,0)) then
-		Duel.Hint(HINT_SELECTMSG,p,HINTMSG_TOGRAVE)
-		local sg=g:FilterSelect(p,s.tgfilter,1,1,nil)
-		Duel.DisableShuffleCheck()
-		Duel.SendtoGrave(sg,REASON_EFFECT)
-		ac=ac-1
-	end
-	if ac>0 then
-		Duel.MoveToDeckBottom(ac,tp)
-		Duel.SortDeckbottom(tp,tp,ac)
+function s.drop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.Draw(tp,2,REASON_EFFECT)==0 then return end
+	if Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_HAND,0,2,2,nil)
+	if #g>0 then
+		Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 	end
 end
+
 
 
 -- Filter for "Limit Break" Trap card (assumed setcode 0xf86, change if needed)

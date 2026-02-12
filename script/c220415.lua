@@ -3,17 +3,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- Pendulum
 	Pendulum.AddProcedure(c)
-
-	-- Cannot Normal Summon/Set
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e0:SetCode(EFFECT_CANNOT_SUMMON)
-	e0:SetValue(1)
-	c:RegisterEffect(e0)
-	local e0b=e0:Clone()
-	e0b:SetCode(EFFECT_CANNOT_MSET)
-	c:RegisterEffect(e0b)
+	c:EnableUnsummonable()
 
 	-- =========================
 	-- Pendulum: shuffle up to 3 Spells from GY/banished into Deck
