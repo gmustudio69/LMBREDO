@@ -33,12 +33,11 @@ function s.lbfilter(c,attr,e,tp)
 end
 
 -- ✅ FIXED xyz filter
-function s.xyzfilter(c,attr,mc,tp)
+function s.xyzfilter(c,attr,mc)
 	return c:IsSetCard(LIMIT_BREAKER)
 		and c:IsType(TYPE_XYZ)
 		and c:IsAttribute(attr)
 		and mc:IsCanBeXyzMaterial(c)
-		and Duel.GetLocationCountFromEx(tp,tp,mc)>0
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -72,9 +71,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if attr==0 then return end
 
 	-- STEP 1 — Special Summon
-	if Duel.IsExistingMatchingCard(s.lbfilter,tp,
-		LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,attr,e,tp)
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	if Duel.IsExistingMatchingCard(s.lbfilter,tp, LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,attr,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local g=Duel.SelectMatchingCard(tp,s.lbfilter,tp,
@@ -85,53 +82,48 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 
 	Duel.BreakEffect()
-
-	-- CHECK if opponent controls monster (REQUIRED BY CARD TEXT)
+	-- CHECK if opponent controls monster
 	local opp_has_mon=Duel.IsExistingMatchingCard(Card.IsMonster,tp,0,LOCATION_MZONE,1,nil)
 
-	-- CHECK XYZ POSSIBILITY
 	local can_xyz=false
 	if opp_has_mon then
 		can_xyz=Duel.IsExistingMatchingCard(function(c)
-			return c:IsFaceup() and c:IsSetCard(LIMIT_BREAKER)
+			return c:IsFaceup()
+				and c:IsSetCard(LIMIT_BREAKER)
 				and c:IsAttribute(attr)
 				and Duel.IsExistingMatchingCard(s.xyzfilter,tp,
-					LOCATION_EXTRA,0,1,nil,attr,c,tp)
+				LOCATION_EXTRA,0,1,nil,attr,c)
 		end,tp,LOCATION_MZONE,0,1,nil)
 	end
-
 	if can_xyz and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-		-- Xyz branch
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 		local mc=Duel.SelectMatchingCard(tp,function(c)
-			return c:IsFaceup() and c:IsSetCard(LIMIT_BREAKER)
-				and c:IsAttribute(attr)
-				and Duel.IsExistingMatchingCard(s.xyzfilter,tp,
-					LOCATION_EXTRA,0,1,nil,attr,c,tp)
-		end,tp,LOCATION_MZONE,0,1,1,nil):GetFirst()
+		return c:IsFaceup()
+			and c:IsSetCard(LIMIT_BREAKER)
+			and c:IsAttribute(attr)
+			and Duel.IsExistingMatchingCard(s.xyzfilter,tp,
+				LOCATION_EXTRA,0,1,nil,attr,c)
+	end,tp,LOCATION_MZONE,0,1,1,nil):GetFirst()
 
-		if mc then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local xyz=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,
-				LOCATION_EXTRA,0,1,1,nil,attr,mc,tp):GetFirst()
+	if mc then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local xyz=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,
+			LOCATION_EXTRA,0,1,1,nil,attr,mc):GetFirst()
 
-			if xyz then
-				local mg=mc:GetOverlayGroup()
-				if #mg>0 then Duel.Overlay(xyz,mg) end
-				Duel.Overlay(xyz,mc)
-				Duel.SpecialSummon(xyz,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
-				xyz:CompleteProcedure()
-			end
-		end
-
-	else
-		-- DESTROY branch
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-		local g=Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() end,tp,LOCATION_MZONE,0,1,1,nil)
-		if #g>0 then
-			Duel.Destroy(g,REASON_EFFECT)
+		if xyz then
+			local mg=mc:GetOverlayGroup()
+			if #mg>0 then Duel.Overlay(xyz,mg) end
+			Duel.Overlay(xyz,mc)
+			Duel.SpecialSummon(xyz,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
+			xyz:CompleteProcedure()
 		end
 	end
+else
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local g=Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() end,
+		tp,LOCATION_MZONE,0,1,1,nil)
+	if #g>0 then Duel.Destroy(g,REASON_EFFECT) end
+end
 
 	s.attr_list[tp]=s.attr_list[tp]|attr
 end

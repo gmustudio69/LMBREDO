@@ -11,17 +11,6 @@ function s.initial_effect(c)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
 
-	-- Change all monsters to Attack Position while in face-up Attack Position
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SET_POSITION)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
-	e2:SetCondition(s.poscon)
-	e2:SetTarget(s.postg)
-	e2:SetValue(POS_FACEUP_ATTACK)
-	c:RegisterEffect(e2)
-
 	-- After damage calculation, if battled and "Limit Break!!!" activated, detach material, double ATK, extra attack (max 3 per turn)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -30,7 +19,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_DAMAGE_STEP_END)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(3,id)
-	e3:SetCondition(s.atkcon)
+	e3:SetCondition(s.elliecon)
 	e3:SetCost(s.atkcost)
 	e3:SetOperation(s.atkop)
 	c:RegisterEffect(e3)
@@ -48,22 +37,12 @@ function s.initial_effect(c)
 	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
 end
 
-function s.poscon(e)
-	return e:GetHandler():IsAttackPos()
-end
-function s.postg(e,c)
-	return true
-end
-
 function s.xyzfilter(c)
 	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
 end
 
-function s.atkcon(e,tp)
-	local c=e:GetHandler()
-	return c:IsRelateToBattle()
-		and Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0
-		and Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil)
+function s.elliecon(e)
+	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
 end
 
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)

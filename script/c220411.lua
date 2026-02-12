@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	--If destroyed by card effect: SS itself at the start of the Battle Phase
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCode(EVENT_DESTROYED)
 	e1:SetCountLimit(1,id)
@@ -73,7 +73,6 @@ function s.xyzfilter(c,mc1,mc2,tp)
 		and c:IsRank(7)
 		and c:IsAttribute(ATTRIBUTE_FIRE)
 		and c:IsRace(RACE_WARRIOR)
-		and Duel.GetLocationCountFromEx(tp,tp,mc1,mc2)>0
 end
 
 --Target
@@ -82,7 +81,6 @@ function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local bc=c:GetBattleTarget()
 	if chk==0 then
 		if not bc then return false end
-		if Duel.GetLocationCountFromEx(tp,tp,c,bc)<=0 then return false end
 		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil,c,bc,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -93,7 +91,6 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
 	if not (c:IsRelateToBattle() and bc and bc:IsRelateToBattle()) then return end
-	if Duel.GetLocationCountFromEx(tp,tp,c,bc)<=0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,c,bc,tp)

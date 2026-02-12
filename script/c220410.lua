@@ -81,13 +81,9 @@ function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- E4/E5: Ellie Condition
-function s.elliefilter(c)
-	return c:IsFaceup() and c:IsCode(220405) -- Replace ID_OF_ELLIE
-end
 function s.elliecon(e)
-	return Duel.IsExistingMatchingCard(s.elliefilter,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil)
+	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
 end
-
 -- E5: Copy "Limit" Spell
 function s.copycost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:SetLabel(1)
