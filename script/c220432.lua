@@ -4,13 +4,6 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon procedure
 	Xyz.AddProcedure(c,nil,7,3,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
-	--Cannot be destroyed by card effects
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e0:SetCondition(s.elliecon)
-	e0:SetValue(1)
-	c:RegisterEffect(e0)
 	--Shared effect: send opponent's card to GY when Special Summoned
 	 local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))

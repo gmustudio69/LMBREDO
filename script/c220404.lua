@@ -5,15 +5,6 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon procedure
 	Xyz.AddProcedure(c,nil,7,3,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
-	--Cannot be destroyed by card effects
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCondition(s.elliecon)
-	e1:SetValue(1)
-	c:RegisterEffect(e1)
 	--Send up to 3 "Limit Break" Normal Spells to GY
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))

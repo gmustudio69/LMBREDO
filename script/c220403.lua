@@ -1,16 +1,15 @@
 --Limit Breaker Aerys
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Excavate top 3 cards, send 1 Normal Spell to GY, rest to bottom of deck
+		--Excavate 3
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_DRAW+CATEGORY_TODECK)
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TOGRAVE)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCode(EVENT_SUMMON_SUCCESS)
-	e1:SetCountLimit(1,id)
-	e1:SetTarget(s.drtg)
-	e1:SetOperation(s.drop)
+	e1:SetTarget(s.thtg)
+	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -28,31 +27,43 @@ function s.initial_effect(c)
 	e4:SetOperation(s.setop)
 	c:RegisterEffect(e4)
 end
-function s.indescon(e)
-	return Duel.GetFieldGroupCount(e:GetHandlerPlayer(),LOCATION_MZONE,0)==1
-end
--- Filter for Normal Spell cards
-function s.tgfilter(c)
-	return c:IsNormalSpell() and c:IsAbleToGrave()
+s.listed_series={0xf86}
+function s.extg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
+	Duel.SetTargetPlayer(tp)
 end
 
--- Excavate target
-function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsPlayerCanDraw(tp,2) end
-	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,2)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 end
+	Duel.SetTargetPlayer(tp)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
-
-function s.drop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.Draw(tp,2,REASON_EFFECT)==0 then return end
-	if Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_HAND,0,2,2,nil)
-	if #g>0 then
-		Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+function s.thfilter(c)
+	return c:IsSetCard(0xf86) and (c:IsAbleToHand() or c:IsAbleToGrave())
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	local p=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER)
+	local ac=3
+	Duel.ConfirmDecktop(p,ac)
+	local g=Duel.GetDecktopGroup(p,ac)
+	if #g>0 and g:IsExists(s.thfilter,1,nil) then
+		Duel.Hint(HINT_SELECTMSG,p,HINTMSG_ATOHAND)
+		local sg=g:FilterSelect(p,s.thfilter,1,1,nil)
+		Duel.DisableShuffleCheck()
+		if Duel.SelectYesNo(p,aux.Stringid(id,0)) then
+			Duel.SendtoHand(sg,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-p,sg)
+			Duel.ShuffleHand(p)
+		else
+			Duel.SendtoGrave(sg,REASON_EFFECT)
+		end
+		ac=ac-1
+	end
+	if ac>0 then
+		Duel.MoveToDeckBottom(ac,tp)
+		Duel.SortDeckbottom(tp,tp,ac)
 	end
 end
-
-
 
 -- Filter for "Limit Break" Trap card (assumed setcode 0xf86, change if needed)
 function s.setfilter(c)

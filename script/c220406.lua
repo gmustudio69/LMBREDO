@@ -46,6 +46,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATTRIBUTE)
 	local attr=Duel.AnnounceAttribute(tp,1,mask)
 	e:SetLabel(attr)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED+LOCATION_EXTRA)
 end
 
 function s.getmask(e,tp)
@@ -120,7 +121,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 else
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() end,
+	local g=Duel.SelectMatchingCard(tp,nil,
 		tp,LOCATION_MZONE,0,1,1,nil)
 	if #g>0 then Duel.Destroy(g,REASON_EFFECT) end
 end
