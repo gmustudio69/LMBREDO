@@ -8,6 +8,7 @@ function s.initial_effect(c)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCountLimit(1,id)
+	e1:SetCost(s.cost)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
@@ -23,12 +24,15 @@ function s.initial_effect(c)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 end
-
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,1200) end
+	Duel.PayLPCost(tp,1200)
+end
 function s.filter(c)
 	return c:IsFaceup() and c:IsNegatable()
 end
 function s.lbcfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xf86) 
+	return c:IsFaceup() and c:IsSetCard(0xf86) and not c:IsCode(id)
 end
 function s.elliefilter(c)
 	return c:IsFaceup() and c:IsCode(220405) 

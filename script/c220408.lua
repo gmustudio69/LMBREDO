@@ -92,7 +92,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local tg=g:GetFirst()
 	if Duel.SendtoGrave(tg,REASON_EFFECT)~=0 and tg:IsLocation(LOCATION_GRAVE) then
-		local atk=math.floor(tc:GetBaseAttack()/2)
+		local atk=math.floor(tg:GetBaseAttack()/2)
 		if atk>0 then
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)

@@ -70,9 +70,9 @@ end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local attr=e:GetLabel()
 	if attr==0 then return end
-
+	Duel.Damage(tp,800,REASON_EFFECT)
 	-- STEP 1 — Special Summon
-	if Duel.IsExistingMatchingCard(s.lbfilter,tp, LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,attr,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	if Duel.IsExistingMatchingCard(s.lbfilter,tp, LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,attr,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local g=Duel.SelectMatchingCard(tp,s.lbfilter,tp,
