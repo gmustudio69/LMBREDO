@@ -32,7 +32,7 @@ function s.filter(c)
 	return c:IsFaceup() and c:IsNegatable()
 end
 function s.lbcfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xf86) and not c:IsCode(id)
+	return c:IsFaceup() and c:IsSetCard(0xf86) 
 end
 function s.elliefilter(c)
 	return c:IsFaceup() and c:IsCode(220405) 
@@ -69,7 +69,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xf86) and c:IsAbleToHand()
+	return c:IsSetCard(0xf86) and c:IsAbleToHand() and not c:IsCode(id)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and s.spfilter(chkc,e,tp) end
