@@ -56,5 +56,5 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	sc:CompleteProcedure()
 end
 function s.atkvalue(e,c)
-	return e:GetHandler():GetOverlayCount()*400
+	return e:GetHandler():GetOverlayCount()*200
 end
