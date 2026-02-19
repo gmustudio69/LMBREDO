@@ -47,6 +47,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	local attr=Duel.AnnounceAttribute(tp,1,mask)
 	e:SetLabel(attr)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED+LOCATION_EXTRA)
+	s.attr_list[tp]=s.attr_list[tp]|attr
 end
 
 function s.getmask(e,tp)
@@ -125,6 +126,4 @@ else
 		tp,LOCATION_MZONE,0,1,1,nil)
 	if #g>0 then Duel.Destroy(g,REASON_EFFECT) end
 end
-
-	s.attr_list[tp]=s.attr_list[tp]|attr
 end

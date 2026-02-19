@@ -80,7 +80,9 @@ end
 function s.limitfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0xf86) and c:IsAbleToHand()
 end
-
+function s.spfilter(c,e,tp)
+	return c:IsRace(RACE_WARRIOR) and c:IsLevel(7) and c:IsAttribute(ATTRIBUTE_FIRE) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.limitfilter(chkc) end
 	if chk==0 then return Duel.IsExistingTarget(s.limitfilter,tp,LOCATION_MZONE,0,1,nil) end
@@ -89,6 +91,7 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,1,0,0)
 	local og=Duel.GetMatchingGroup(Card.IsMonster,tp,0,LOCATION_MZONE,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,og,#og,0,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
 end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
@@ -98,6 +101,13 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		local g=Duel.GetMatchingGroup(Card.IsMonster,tp,0,LOCATION_MZONE,nil)
 		if #g>0 then
 			Duel.Destroy(g,REASON_EFFECT)
+			local sg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,nil,e,tp)
+			if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+				Duel.BreakEffect()
+				Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+				local sp=sg:Select(tp,1,1,nil)
+				Duel.SpecialSummon(sp,0,tp,tp,false,false,POS_FACEUP)
+			end
 		end
 	end
 end

@@ -1,7 +1,6 @@
 --<Limit Breaker> Renara
 local s,id=GetID()
 function s.initial_effect(c)
-
 	--Cannot be destroyed by battle
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
@@ -32,7 +31,6 @@ function s.initial_effect(c)
 	e2:SetOperation(s.xyzop)
 	c:RegisterEffect(e2)
 end
-
 --Revive condition
 function s.revcon(e,tp,eg,ep,ev,re,r,rp)
 	return r&REASON_EFFECT~=0
