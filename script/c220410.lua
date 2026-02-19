@@ -27,19 +27,10 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_REMOVE)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e3:SetCost(s.mtcost)
 	e3:SetTarget(s.mttg)
 	e3:SetOperation(s.mtop)
 	c:RegisterEffect(e3)
-
-	-- "World Decoder Ellie" Buffs
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e4:SetCondition(s.elliecon)
-	e4:SetValue(1)
-	c:RegisterEffect(e4)
 
 	-- Copy "Limit" Spell effect
 	local e5=Effect.CreateEffect(c)
@@ -64,6 +55,11 @@ function s.rmtarget(e,c)
 end
 function s.filter(c,e)
 	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) 
+end
+function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return c:GetFlagEffect(id)==0 and c:IsType(TYPE_XYZ) end
+	c:RegisterFlagEffect(id,RESET_CHAIN,0,1)
 end
 function s.mttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return eg:IsContains(chkc) end
