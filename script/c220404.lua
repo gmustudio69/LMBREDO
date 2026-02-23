@@ -38,7 +38,7 @@ function s.tgcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 function s.tgfilter(c)
-	return c:IsType(TYPE_SPELL) and c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToGrave()
+	return c:IsSetCard(0xf86) and c:IsAbleToGrave()
 end
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil) end
@@ -48,7 +48,7 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.tgfilter,tp,LOCATION_HAND+LOCATION_DECK,0,nil)
 	if #g==0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=g:Select(tp,1,3,nil)
+	local sg=g:Select(tp,1,2,nil)
 	if #sg>0 then
 		Duel.SendtoGrave(sg,REASON_EFFECT)
 	end
