@@ -31,6 +31,7 @@ function s.initial_effect(c)
 	e4:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e4:SetTarget(s.thtg)
+	e4:SetCost(s.thcost)
 	e4:SetOperation(s.thop)
 	c:RegisterEffect(e4)
 	-- Activity counter to check "Limit Break!!!"
@@ -40,6 +41,10 @@ end
 function s.xyzfilter(c)
 	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
 end
+function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,800) end
+	Duel.PayLPCost(tp,800)
+end
 
 function s.elliecon(e)
 	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
@@ -48,7 +53,7 @@ end
 function s.atkcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_MZONE,0,nil)
 	if chk==0 then
-		return g:IsExists(Card.CheckRemoveOverlayCard,1,nil,tp,1,REASON_COST)
+		return g:IsExists(Card.CheckRemoveOverlayCard,1,nil,tp,1,REASON_COST) 
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVEXYZ)
 	local tc=g:Select(tp,1,1,nil):GetFirst()

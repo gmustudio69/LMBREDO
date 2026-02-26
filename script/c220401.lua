@@ -13,6 +13,7 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCountLimit(1,{id,1})
 	e1:SetCondition(s.setcon)
+	e1:SetCost(s.thcost)
 	e1:SetTarget(s.settg)
 	e1:SetOperation(s.setop)
 	c:RegisterEffect(e1)
@@ -35,6 +36,11 @@ end
 -- Link Material Check
 function s.lcheck(g,lc,sumtype,tp)
 	return g:GetFirst():IsAttribute(ATTRIBUTE_LIGHT)
+end
+
+function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,800) end
+	Duel.PayLPCost(tp,800)
 end
 
 -- Set "Diagram System" from Deck
