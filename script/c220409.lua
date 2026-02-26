@@ -126,7 +126,7 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
 			tc:RegisterEffect(e1)
 		else
-			Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+			Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 		end
 	end
 end
