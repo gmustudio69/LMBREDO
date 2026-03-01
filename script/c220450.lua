@@ -1,92 +1,129 @@
---Limit Breaker Kazari
+--<Limit Breaker> Kazari
 local s,id=GetID()
+
 function s.initial_effect(c)
 
-	-- Special Summon from hand if opponent controls more monsters
+	--------------------------------------------------
+	-- Special Summon from hand
+	--------------------------------------------------
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
-	-- Quick Effect: Turn into Continuous Spell along with opponent's monster
+
+	--------------------------------------------------
+	-- Equip monster (Quick Effect)
+	--------------------------------------------------
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_EQUIP)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_MZONE)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetTarget(s.eqtg)
 	e2:SetOperation(s.eqop)
 	c:RegisterEffect(e2)
 
-	-- Special Summon from S/T Zone
+	--------------------------------------------------
+	-- Lose ATK → revive + token
+	--------------------------------------------------
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
 	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetRange(LOCATION_SZONE)
+	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
-	e3:SetTarget(s.sptg)
-	e3:SetOperation(s.spop)
+	e3:SetCondition(s.atkcon)
+	e3:SetTarget(s.atktg)
+	e3:SetOperation(s.atkop)
 	c:RegisterEffect(e3)
 end
 
--- Special Summon condition
+--------------------------------------------------
+-- SS condition
+--------------------------------------------------
 function s.spcon(e,c)
 	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.GetFieldGroupCount(tp,0,LOCATION_MZONE)>0
+	return Duel.GetFieldGroupCount(c:GetControler(),0,LOCATION_MZONE)>0
+		and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 end
 
--- Turn this card + opponent's monster into Continuous Spells
-function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-	Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+--------------------------------------------------
+-- Equip
+--------------------------------------------------
+function s.eqfilter(c)
+	return c:IsFaceup() and not c:IsImmuneToEffect(nil)
 end
+
+function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsOnField() and s.eqfilter(chkc) end
+	if chk==0 then return Duel.IsExistingTarget(s.eqfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
+	Duel.SelectTarget(tp,s.eqfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+end
+
 function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if not tc or not c:IsRelateToEffect(e) or not tc:IsRelateToEffect(e) then return end
-	if Duel.MoveToField(c,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
-		and Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
+	if not c:IsRelateToEffect(e) or not tc or not tc:IsRelateToEffect(e) then return end
+
+	if Duel.Equip(tp,tc,c,true) then
+		-- Treat as Equip Spell
 		local e1=Effect.CreateEffect(c)
-		e1:SetCode(EFFECT_CHANGE_TYPE)
 		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_CHANGE_TYPE)
 		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
-		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-		c:RegisterEffect(e1,true)
-		local e2=e1:Clone()
-		tc:RegisterEffect(e2,true)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+		e1:SetValue(TYPE_EQUIP+TYPE_SPELL)
+		tc:RegisterEffect(e1)
 	end
 end
 
--- From S/T zone to Special Summon, then move a World Decoder monster to S/T zone
-function s.filter(c)
-	return c:IsFaceup() and c:IsLocation(LOCATION_MZONE)
+--------------------------------------------------
+-- Condition: has equip
+--------------------------------------------------
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():GetEquipGroup():GetCount()>0
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil) end
-	Duel.SelectTarget(tp,s.filter,tp,LOCATION_MZONE,0,1,1,nil)
+
+function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local sc=Duel.GetFirstTarget()
-	--local sc=g:GetFirst()
-	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 and sc then
-		if Duel.MoveToField(sc,tp,sc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
-			local e1=Effect.CreateEffect(sc)
-			e1:SetCode(EFFECT_CHANGE_TYPE)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
-			e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-			sc:RegisterEffect(e1,true)
+	local g=c:GetEquipGroup()
+	if #g==0 then return end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
+	local ec=g:Select(tp,1,1,nil):GetFirst()
+	if not ec then return end
+
+	local atk=ec:GetTextAttack()
+
+	-- Reduce ATK
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetValue(-atk)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	c:RegisterEffect(e1)
+
+	if c:GetAttack()==0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+		Duel.SpecialSummon(ec,0,tp,tp,true,true,POS_FACEUP)
+
+		-- Token
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+			local token=Duel.CreateToken(tp,0) -- bạn cần tạo token ID riêng
+			Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
 		end
 	end
 end
