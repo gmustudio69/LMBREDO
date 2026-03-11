@@ -49,8 +49,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e:GetHandler():CancelToGrave()
 	Duel.Overlay(sc,e:GetHandler())
 	if Duel.SpecialSummonStep(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP) then
-			sc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,2)
-			sc:CompleteProcedure()
+		aux.DelayedOperation(sc,PHASE_END,id,e,tp,function(ag) Duel.SendtoDeck(sc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) end,nil,nil,nil,aux.Stringid(id,0))
 	end
 	if Duel.SpecialSummonComplete()==0 then return end
 	sc:CompleteProcedure()

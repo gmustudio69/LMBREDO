@@ -53,6 +53,17 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 then
 		Duel.SendtoGrave(g,REASON_EFFECT)
+		local e1=Effect.CreateEffect(c)
+		e1:SetDescription(aux.Stringid(id,2))
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+		e1:SetTargetRange(1,0)
+		e1:SetReset(RESET_PHASE|PHASE_END,1)
+		e1:SetTarget(function(e,c) return c:IsLocation(LOCATION_DECK|LOCATION_EXTRA) and not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
+		Duel.RegisterEffect(e1,tp)
+		--Clock Lizard check
+		aux.addTempLizardCheck(c,tp,function(e,c) return not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
 	end
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -62,7 +73,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 -- Target LIGHT Warrior in GY
 function s.spfilter(c,e,tp)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR) and c:IsLevel(7)
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsLevel(7)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)

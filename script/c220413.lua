@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	--Synchro Summon
-	Synchro.AddProcedure(c,nil,1,1,Synchro.NonTuner(nil),1,99)
+	Synchro.AddProcedure(c,aux.FilterBoolFunction(Card.IsCode,220405),1,1,Synchro.NonTuner(nil),1,99)
 	c:EnableReviveLimit()
 
 	--Name becomes <World Decoder> Ellie
@@ -36,15 +36,17 @@ function s.initial_effect(c)
 	e3:SetTarget(s.negtg)
 	e3:SetOperation(s.negop)
 	c:RegisterEffect(e3)
+	--Return this card to the Extra Deck and Special Summon from your GY
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
-	e4:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
-	e4:SetType(EFFECT_TYPE_IGNITION)
+	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetCategory(CATEGORY_TOEXTRA+CATEGORY_SPECIAL_SUMMON)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e4:SetCode(EVENT_PHASE|PHASE_STANDBY)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetCountLimit(1,id*2)
-	e4:SetTarget(s.sptdtg)
-	e4:SetOperation(s.sptdop)
+	e4:SetTarget(s.sptg)
+	e4:SetOperation(s.spop)
 	c:RegisterEffect(e4)
 end
 
@@ -70,57 +72,24 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.NegateActivation(ev)
 end
 --Return to Extra Deck and Special Summon
-function s.plfilter(c)
-	local p=c:GetOwner()
-	return c:IsSetCard(0xb67) and c:IsMonster() and c:CheckUniqueOnField(p,LOCATION_SZONE) and not c:IsForbidden()
+function s.spfilter(c,e,tp)
+	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-function s.pltg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.plfilter,tp,LOCATION_GRAVE,0,1,nil)
-			and Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-	local g=Duel.SelectTarget(tp,s.plfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
-end
-function s.plop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 then
-		Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true)
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetCode(EFFECT_CHANGE_TYPE)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
-		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-		tc:RegisterEffect(e1)
-	end
-end
-function s.rescon(sg,e,tp,mg)
-	return sg:IsExists(Card.IsRace,1,nil,RACE_WARRIOR) and sg:IsExists(Card.IsRace,1,nil,RACE_PSYCHIC)
-		and sg:IsExists(s.spchk,1,nil,e,tp,sg)
-end
-function s.spchk(c,e,tp,sg)
-	return c:IsCanBeSpecialSummoned(e,0,tp,false,false) and (#sg==1 or sg:IsExists(Card.IsAbleToDeck,1,c))
-end
-function s.sptdtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return false end
-	local g=Duel.GetMatchingGroup(s.sptdfilter,tp,LOCATION_GRAVE,0,nil,e,tp)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and #g>=2 and aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) end
-	local tg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_TARGET)
-	Duel.SetTargetCard(tg)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,tg,1,tp,0)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,tg,1,tp,0)
-end
-function s.sptdop(e,tp,eg,ep,ev,re,r,rp)
-	local tg=Duel.GetTargetCards(e)
-	if (#tg==0 or Duel.GetLocationCount(tp,LOCATION_MZONE)<=0) then return end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp) and chkc~=c end
+	if chk==0 then return Duel.GetMZoneCount(tp,c)>0 and c:IsAbleToExtra()
+		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,c,e,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local sg=tg:FilterSelect(tp,s.spchk,1,1,nil,e,tp,tg)
-	if #sg>0 and Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)>0 and #tg==2 then
-		local dg=tg-sg
-		Duel.HintSelection(dg)
-		Duel.SendtoDeck(dg,nil,SEQ_DECKBOTTOM,REASON_EFFECT)
+	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,c,e,tp)
+	Duel.SetOperationInfo(0,CATEGORY_TOEXTRA,c,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
+end
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not (c:IsRelateToEffect(e) and Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)>0 and c:IsLocation(LOCATION_EXTRA)) then return end
+	local tc=Duel.GetFirstTarget()
+	if tc:IsRelateToEffect(e) then
+		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
 	end
 end

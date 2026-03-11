@@ -16,7 +16,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.PayLPCost(tp,800)
 end
 function s.filter(c)
-	return c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToRemoveAs()
+	return c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToRemove()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.filter(chkc) end
