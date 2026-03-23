@@ -92,13 +92,13 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	local attr=tc:GetOriginalAttribute()
 	local typ=tc:GetOriginalType()
 
-	local e1=Effect.CreateEffect(e:GetHandler())
+	local e1=Effect.CreateEffect(tc)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e1:SetReset(RESET_PHASE+PHASE_END)
 	e1:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)
 		local g=eg:Filter(function(c)
-			return c:GetOriginalAttribute()==attr or (c:GetOriginalType()&typ)>0
+			return (c:GetOriginalAttribute()==attr or c:GetOriginalType()==typ)
 		end,nil)
 		if #g>0 then
 			Duel.Draw(tp,#g,REASON_EFFECT)
