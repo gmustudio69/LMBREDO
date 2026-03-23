@@ -47,6 +47,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	local attr=Duel.AnnounceAttribute(tp,1,mask)
 	e:SetLabel(attr)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED+LOCATION_EXTRA)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_MZONE)
 	s.attr_list[tp]=s.attr_list[tp]|attr
 end
 

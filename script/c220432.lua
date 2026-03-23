@@ -1,19 +1,18 @@
---<Limit Breaker> Aetherion
+
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon procedure
 	Xyz.AddProcedure(c,nil,7,3,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
-	--Shared effect: send opponent's card to GY when Special Summoned
-	 local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetCategory(CATEGORY_REMOVE+CATEGORY_SPECIAL_SUMMON)
+	c:SetSPSummonOnce(id)
+	--On Special Summon effect
+	local e2=Effect.CreateEffect(c)
+	e2:SetCategory(CATEGORY_TOGRAVE+CATEGORY_DAMAGE)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2:SetCountLimit(1,id)
-	e2:SetTarget(s.tgtg)
-	e2:SetOperation(s.tgop)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 	--detach & send 1 "Limit Breaker"
 	local e3=Effect.CreateEffect(c)
@@ -42,23 +41,50 @@ function s.xyzop(e,tp,chk)
 	return true
 end
 
---Send opponent's card to GY
-function s.tgfilter(c)
-	return c:IsAbleToGrave()
+--On summon effect
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+if chk==0 then return true end
 end
-function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToGrave,tp,0,LOCATION_ONFIELD,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,1-tp,LOCATION_ONFIELD)
+
+function s.attachfilter(c)
+return c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_LIGHT)
 end
-function s.tgop(e,tp,eg,ep,ev,re,r,rp)
-	--Send 1 card your opponent controls to the GY
+
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+
+	local b1=Duel.IsExistingMatchingCard(Card.IsAbleToGrave,tp,0,LOCATION_ONFIELD,1,nil)
+	local b2=Duel.IsExistingMatchingCard(s.attachfilter,tp,LOCATION_GRAVE,0,1,nil)
+
+	if not (b1 or b2) then return end
+
+	local op=0
+
+	if b1 and b2 then
+		op=Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))
+	elseif b1 then
+		op=Duel.SelectOption(tp,aux.Stringid(id,1))
+	else
+		op=Duel.SelectOption(tp,aux.Stringid(id,2))+1
+	end
+
+	if op==0 then
+		Duel.Damage(tp,800,REASON_EFFECT)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 		local g=Duel.SelectMatchingCard(tp,Card.IsAbleToGrave,tp,0,LOCATION_ONFIELD,1,1,nil)
 		if #g>0 then
-			Duel.HintSelection(g,true)
 			Duel.SendtoGrave(g,REASON_EFFECT)
 		end
+
+	elseif op==1 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATTACH)
+		local g=Duel.SelectMatchingCard(tp,s.attachfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+		if #g>0 then
+			Duel.Overlay(c,g)
+		end
+	end
 end
+
 
 --Detach 1 + send Limit Break card: unaffected
 function s.setcost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -80,7 +106,6 @@ end
 function s.setfilter(c)
 	return c:IsSetCard(0xf86) and c:IsType(TYPE_TRAP) and c:IsSSetable()
 end
-
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil) end
 end
