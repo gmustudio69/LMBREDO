@@ -1,14 +1,15 @@
 --Rikka Nymph
 local s,id,o=GetID()
 function s.initial_effect(c)
-	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay bằng cách trả 1 lá Rikka về Deck
+	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,id)
-	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c)return c:IsType(TYPE_MONSTER) and c:IsRace(RACE_PLANT) end,true)))
+	-- Cost: Reveal 1 Plant monster và Shuffle 1 lá Rikka từ tay/mộ về Deck (Dựa trên ý tưởng cũ của bạn)
+	e1:SetCost(s.spcost)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -44,7 +45,17 @@ end
 -- Mã định danh của tộc Rikka là 0x141
 s.listed_series={0x141}
 
--- Logical cho Hiệu ứng 1 (Special Summon)
+-- Logical cho Hiệu ứng 1 (Special Summon + LOCK)
+function s.tdfilter(c)
+	return c:IsSetCard(0x141) and c:IsAbleToDeckAsCost()
+end
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,c) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,1,c)
+	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST)
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
@@ -52,14 +63,26 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
+		-- Dòng Lock Plant bắt đầu ở đây
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+		e1:SetDescription(aux.Stringid(id,3)) -- Thêm mô tả cho người chơi: "Chỉ triệu hồi được Plant"
+		e1:SetTargetRange(1,0)
+		e1:SetTarget(s.splimit)
+		e1:SetReset(RESET_PHASE+PHASE_END)
+		Duel.RegisterEffect(e1,tp)
 	end
+end
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return not c:IsRace(RACE_PLANT)
 end
 
 -- Logical cho Hiệu ứng 2 (Search)
 function s.thfilter(c)
-	return c:IsSetCard(0x141) and not c:IsCode(id) and c:IsAbleToHand()
+	return c:IsSetCard(0x141) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -74,7 +97,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Logical cho Hiệu ứng 3 (Set Spell/Trap)
+-- Logical cho Hiệu ứng 3 (Set S/T)
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
