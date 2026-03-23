@@ -9,7 +9,7 @@ function s.initial_effect(c)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,id)
 	-- Cost: Reveal 1 Plant monster và Shuffle 1 lá Rikka từ tay/mộ về Deck (Dựa trên ý tưởng cũ của bạn)
-	e1:SetCost(s.spcost)
+	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c) return c:IsRace(RACE_PLANT) and c:IsMonster() end,true)))
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -46,16 +46,6 @@ end
 s.listed_series={0x141}
 
 -- Logical cho Hiệu ứng 1 (Special Summon + LOCK)
-function s.tdfilter(c)
-	return c:IsSetCard(0x141) and c:IsAbleToDeckAsCost()
-end
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,c) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,1,c)
-	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST)
-end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
