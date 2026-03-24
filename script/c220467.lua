@@ -14,7 +14,7 @@ function s.initial_effect(c)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCountLimit(1,id)
-	e1:SetCost(aux.dxmcost)
+	e1:SetCost(s.negcost) -- Đã sửa dòng này
 	e1:SetTarget(s.negtg)
 	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1,false,REGISTER_FLAG_DETACH_XMAT)
@@ -33,19 +33,22 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
--- Khai báo Setcode 0x141 cho tộc Rikka
 s.listed_series={0x141}
 s.listed_names={id}
 
 ----------------------------------------------------
 -- Logic Hiệu ứng 1 (Negate)
 ----------------------------------------------------
--- Check xem có quái Rikka Xyz khác trên sân không
+-- Hàm gỡ Xyz Material thủ công (Đã thêm mới)
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
 function s.altfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0x141) and c:IsType(TYPE_XYZ)
 end
 
--- Check điều kiện mở rộng để target Spell/Trap
 function s.altcond(hc,tp)
 	local b1=Duel.IsExistingMatchingCard(s.altfilter,tp,LOCATION_MZONE,0,1,hc)
 	local b2=hc:GetOverlayGroup():IsExists(function(mc) return mc:IsSetCard(0x141) and mc:IsType(TYPE_MONSTER) end, 1, nil)
@@ -103,7 +106,6 @@ end
 -- Logic Hiệu ứng 2 (Recycle / Attach)
 ----------------------------------------------------
 function s.cfilter(c)
-	-- Kiểm tra xem lá bài bị tribute có phải là quái thú không (hoặc nó đã từng là quái thú trên sân)
 	return c:IsType(TYPE_MONSTER) or c:IsPreviousLocation(LOCATION_MZONE)
 end
 
@@ -136,7 +138,6 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	
 	local op=0
 	if b1 and b2 then
-		-- ID chuỗi hiển thị khi cho phép người chơi lựa chọn (2 là Add to Hand, 3 là Attach)
 		op=Duel.SelectOption(tp,aux.Stringid(id,2),aux.Stringid(id,3))
 	elseif b1 then
 		op=0
