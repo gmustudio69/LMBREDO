@@ -72,20 +72,27 @@ function s.repop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ===============================================
+-- Common Filter cho Tribute (Dùng cho cả Effect 2 & 3)
+-- ===============================================
+function s.tribfilter(c)
+	return c:IsRace(RACE_PLANT)
+end
+
+-- ===============================================
 -- Logic Effect 2 (Negate)
 -- ===============================================
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	-- Chống lại Spell/Trap card hoặc effect của đối thủ
-	return rp==1-tp and re:IsActiveType(TYPE_SPELL+TYPE_TRAP) and Duel.IsChainNegatable(ev)
+	return rp==1-tp and (re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP)) and Duel.IsChainNegatable(ev)
 end
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	-- Kiểm tra xem có đủ Material để Detach và Monster Plant trên Field để Tribute không
+	-- Kiểm tra có đủ Xyz Material và Plant Monster để Tribute không
 	if chk==0 then return c:CheckRemoveOverlayCard(tp,1,REASON_COST) 
-		and Duel.CheckReleaseGroupCost(tp,Card.IsRace,1,false,nil,c,RACE_PLANT) end
-	-- Thực thi Cost
+		and Duel.CheckReleaseGroupCost(tp,s.tribfilter,1,false,nil) end
+	-- Thực thi Cost: Detach trước, Tribute sau
 	c:RemoveOverlayCard(tp,1,1,REASON_COST)
-	local g=Duel.SelectReleaseGroupCost(tp,Card.IsRace,1,1,false,nil,c,RACE_PLANT)
+	local g=Duel.SelectReleaseGroupCost(tp,s.tribfilter,1,1,false,nil)
 	Duel.Release(g,REASON_COST)
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -105,10 +112,8 @@ end
 -- Logic Effect 3 (Revive)
 -- ===============================================
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	-- Tribute 1 Plant monster làm cost (CheckReleaseGroupCost đã tự bao gồm logic tính Zone trống)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.CheckReleaseGroupCost(tp,Card.IsRace,1,false,nil,c,RACE_PLANT) end
-	local g=Duel.SelectReleaseGroupCost(tp,Card.IsRace,1,1,false,nil,c,RACE_PLANT)
+	if chk==0 then return Duel.CheckReleaseGroupCost(tp,s.tribfilter,1,false,nil) end
+	local g=Duel.SelectReleaseGroupCost(tp,s.tribfilter,1,1,false,nil)
 	Duel.Release(g,REASON_COST)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -120,7 +125,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
 		-- Banish it when it leaves the field
 		local e1=Effect.CreateEffect(c)
-		e1:SetDescription(3300) -- Dùng chuỗi Text mặc định của game "Banish it when it leaves the field"
+		e1:SetDescription(3300)
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
 		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
