@@ -7,26 +7,27 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id)
-	-- Cost: Reveal 1 Plant monster
+	e1:SetCountLimit(1,id+o)
+	-- Cost: Reveal 1 Plant monster và Shuffle 1 lá Rikka từ tay/mộ về Deck (Dựa trên ý tưởng cũ của bạn)
 	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c) return c:IsRace(RACE_PLANT) and c:IsMonster() end,true)))
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Special Summon (Đã sửa)
+	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Summon (Normal/Special)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS) -- Kích hoạt độc quyền khi Special Summon
-	e2:SetCountLimit(1,id+100)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetCountLimit(1,id+o*2)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
-	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi bị Tribute (Đổi tên e4 thành e3 cho liền mạch)
+
+	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi bị Tribute
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
