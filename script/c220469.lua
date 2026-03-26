@@ -21,7 +21,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 
 	-- ===============================================
-	-- Effect 2: Search Rikka Quick-Play Spell
+	-- Effect 2: Search "Rikka" Spell (MỌI LOẠI PHÉP RIKKA)
 	-- ===============================================
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -35,7 +35,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 
 	-- ===============================================
-	-- Effect 3: Special Summon from GY on Tribute (Trigger)
+	-- Effect 3: Special Summon from GY on Tribute (2 LẦN/LƯỢT)
 	-- ===============================================
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,1))
@@ -43,8 +43,8 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e4:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e4:SetCode(EVENT_RELEASE)
-	e4:SetRange(LOCATION_MZONE+LOCATION_GRAVE) -- Hoạt động cả trên sân và dưới mộ
-	e4:SetCountLimit(1,id+1)
+	e4:SetRange(LOCATION_MZONE+LOCATION_GRAVE) 
+	e4:SetCountLimit(2,id+1) 
 	e4:SetCondition(s.spcon)
 	e4:SetTarget(s.sptg)
 	e4:SetOperation(s.spop)
@@ -61,7 +61,9 @@ function s.lcheck(g,lc,sumtype,tp)
 	return g:IsExists(Card.IsSetCard,1,nil,0x141,lc,sumtype,tp)
 end
 
--- Logic Effect 2 (Search)
+-- ===============================================
+-- Logic Effect 2 (Search BẤT KỲ Rikka Spell nào)
+-- ===============================================
 function s.cfilter(c)
 	return c:IsRace(RACE_PLANT) and c:IsAbleToRemoveAsCost()
 end
@@ -72,7 +74,8 @@ function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Remove(g,POS_FACEUP,REASON_COST)
 end
 function s.thfilter(c)
-	return c:IsSetCard(0x141) and c:IsType(TYPE_SPELL) and c:IsType(TYPE_QUICKPLAY) and c:IsAbleToHand()
+	-- ĐÃ CHỈNH SỬA Ở ĐÂY: Chỉ cần là SetCard Rikka (0x141) và là Spell
+	return c:IsSetCard(0x141) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -87,9 +90,10 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Logic Effect 3 (Summon on Tribute)
+-- ===============================================
+-- Logic Effect 3 (Summon on Tribute - 2 lần/lượt)
+-- ===============================================
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Kích hoạt nếu bất kỳ quái nào bị Tribute (eg), bao gồm chính nó
 	return eg and #eg>0
 end
 function s.spfilter(c,e,tp)
