@@ -1,5 +1,5 @@
 --Rikka Nymph
-local s,id,o=GetID()
+local s,id=GetID() -- Đã xóa bỏ biến 'o' rỗng gây lỗi
 function s.initial_effect(c)
 	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay
 	local e1=Effect.CreateEffect(c)
@@ -8,13 +8,13 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,{id,1})
-	-- Cost: Reveal 1 Plant monster và Shuffle 1 lá Rikka từ tay/mộ về Deck (Dựa trên ý tưởng cũ của bạn)
+	-- Cost: Reveal 1 Plant monster
 	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c) return c:IsRace(RACE_PLANT) and c:IsMonster() end,true)))
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Summon (Normal/Special)
+	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Summon (Special)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -26,23 +26,26 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
-	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi bị Tribute
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetCode(EVENT_RELEASE)
-	e4:SetCountLimit(1,id+200)
-	e4:SetCondition(s.setcon)
-	e4:SetTarget(s.settg)
-	e4:SetOperation(s.setop)
-	c:RegisterEffect(e4)
+	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi có quái Plant bị Tribute
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) -- Đổi thành FIELD Effect để check bài khác bị hiến tế
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_RELEASE)
+	e3:SetRange(LOCATION_MZONE+LOCATION_GRAVE) -- Hoạt động cả trên sân và dưới mộ
+	e3:SetCountLimit(1,{id,3})
+	e3:SetCondition(s.setcon)
+	e3:SetTarget(s.settg)
+	e3:SetOperation(s.setop)
+	c:RegisterEffect(e3)
 end
 
 -- Mã định danh của tộc Rikka là 0x141
 s.listed_series={0x141}
 
--- Logical cho Hiệu ứng 1 (Special Summon + LOCK)
+-- ===============================================
+-- Logic Hiệu ứng 1 (Special Summon + LOCK)
+-- ===============================================
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
@@ -67,7 +70,9 @@ function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
 	return not c:IsRace(RACE_PLANT)
 end
 
--- Logical cho Hiệu ứng 2 (Search)
+-- ===============================================
+-- Logic Hiệu ứng 2 (Search)
+-- ===============================================
 function s.thfilter(c)
 	return c:IsSetCard(0x141) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToHand()
 end
@@ -84,9 +89,15 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- Logical cho Hiệu ứng 3 (Set S/T)
+-- ===============================================
+-- Logic Hiệu ứng 3 (Set S/T khi Plant bị Tribute)
+-- ===============================================
+function s.cfilter(c)
+	return c:IsRace(RACE_PLANT)
+end
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
+	-- Kiểm tra xem trong nhóm các lá bị Tribute (eg) có lá nào là Plant không
+	return eg:IsExists(s.cfilter,1,nil)
 end
 function s.setfilter(c)
 	return c:IsSetCard(0x141) and (c:IsType(TYPE_FIELD) or c:IsType(TYPE_TRAP)) and c:IsSSetable()
