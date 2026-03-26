@@ -1,5 +1,5 @@
 --Rikka Nymph
-local s,id=GetID() -- Đã xóa bỏ biến 'o' rỗng gây lỗi
+local s,id=GetID()
 function s.initial_effect(c)
 	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay
 	local e1=Effect.CreateEffect(c)
@@ -26,18 +26,34 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
-	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi có quái Plant bị Tribute
+	-- ===============================================
+	-- Hiệu ứng 3: TỰ BẢN THÂN bị Tribute (từ Tay hoặc Sân)
+	-- ===============================================
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) -- Đổi thành FIELD Effect để check bài khác bị hiến tế
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_RELEASE)
-	e3:SetRange(LOCATION_MZONE+LOCATION_GRAVE) -- Hoạt động cả trên sân và dưới mộ
-	e3:SetCountLimit(1,{id,3})
-	e3:SetCondition(s.setcon)
+	e3:SetCountLimit(1,{id,3}) -- Dùng chung Limit với e4
 	e3:SetTarget(s.settg)
 	e3:SetOperation(s.setop)
 	c:RegisterEffect(e3)
+
+	-- ===============================================
+	-- Hiệu ứng 4: PLANT KHÁC bị Tribute khi lá này đang ở Mộ
+	-- ===============================================
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e4:SetProperty(EFFECT_FLAG_DELAY)
+	e4:SetCode(EVENT_RELEASE)
+	e4:SetRange(LOCATION_GRAVE)
+	e4:SetCountLimit(1,{id,3}) -- Dùng chung Limit với e3
+	e4:SetCondition(s.gycon)
+	e4:SetCost(aux.bfgcost) -- Banish lá bài này từ dưới Mộ làm Cost
+	e4:SetTarget(s.settg)
+	e4:SetOperation(s.setop)
+	c:RegisterEffect(e4)
 end
 
 -- Mã định danh của tộc Rikka là 0x141
@@ -59,7 +75,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetType(EFFECT_TYPE_FIELD)
 		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
 		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetDescription(aux.Stringid(id,3)) -- Thêm mô tả cho người chơi: "Chỉ triệu hồi được Plant"
+		e1:SetDescription(aux.Stringid(id,3)) 
 		e1:SetTargetRange(1,0)
 		e1:SetTarget(s.splimit)
 		e1:SetReset(RESET_PHASE+PHASE_END)
@@ -90,14 +106,14 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ===============================================
--- Logic Hiệu ứng 3 (Set S/T khi Plant bị Tribute)
+-- Logic Hiệu ứng 3 & 4 (Set S/T khi Tribute)
 -- ===============================================
-function s.cfilter(c)
-	return c:IsRace(RACE_PLANT)
+function s.gyfilter(c,tc)
+	return c:IsRace(RACE_PLANT) and c~=tc
 end
-function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	-- Kiểm tra xem trong nhóm các lá bị Tribute (eg) có lá nào là Plant không
-	return eg:IsExists(s.cfilter,1,nil)
+function s.gycon(e,tp,eg,ep,ev,re,r,rp)
+	-- Điều kiện khi ở Mộ: Có ít nhất 1 Plant khác bị Tribute
+	return eg:IsExists(s.gyfilter,1,nil,e:GetHandler())
 end
 function s.setfilter(c)
 	return c:IsSetCard(0x141) and (c:IsType(TYPE_FIELD) or c:IsType(TYPE_TRAP)) and c:IsSSetable()
