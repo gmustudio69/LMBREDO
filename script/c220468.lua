@@ -50,7 +50,7 @@ function s.initial_effect(c)
 end
 
 -- ===============================================
--- Logic Effect 1 (Protection)
+-- Logic Effect 1 (Protection) - CÓ DÙNG MATERIAL
 -- ===============================================
 function s.repfilter(c,tp)
 	return c:IsFaceup() and c:IsControler(tp) and c:IsLocation(LOCATION_MZONE)
@@ -79,19 +79,16 @@ function s.tribfilter(c)
 end
 
 -- ===============================================
--- Logic Effect 2 (Negate)
+-- Logic Effect 2 (Negate) - ĐÃ BỎ DETACH, CHỈ CÒN TRIBUTE
 -- ===============================================
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	-- Chống lại Spell/Trap card hoặc effect của đối thủ
 	return rp==1-tp and (re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP)) and Duel.IsChainNegatable(ev)
 end
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	-- Kiểm tra có đủ Xyz Material và Plant Monster để Tribute không
-	if chk==0 then return c:CheckRemoveOverlayCard(tp,1,REASON_COST) 
-		and Duel.CheckReleaseGroupCost(tp,s.tribfilter,1,false,nil) end
-	-- Thực thi Cost: Detach trước, Tribute sau
-	c:RemoveOverlayCard(tp,1,1,REASON_COST)
+	-- Đã bỏ phần check và thực thi RemoveOverlayCard
+	if chk==0 then return Duel.CheckReleaseGroupCost(tp,s.tribfilter,1,false,nil) end
+	-- Thực thi Cost: Chỉ Tribute 1 Plant monster
 	local g=Duel.SelectReleaseGroupCost(tp,s.tribfilter,1,1,false,nil)
 	Duel.Release(g,REASON_COST)
 end
