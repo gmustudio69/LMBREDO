@@ -1,5 +1,5 @@
 --Rikka Nymph
-local s,id=GetID() -- Đã xóa biến o rỗng
+local s,id,o=GetID()
 function s.initial_effect(c)
 	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay
 	local e1=Effect.CreateEffect(c)
@@ -7,36 +7,36 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id) -- Sửa thành id
-	-- Cost: Reveal 1 Plant monster
+	e1:SetCountLimit(1,{id,1})
+	-- Cost: Reveal 1 Plant monster và Shuffle 1 lá Rikka từ tay/mộ về Deck (Dựa trên ý tưởng cũ của bạn)
 	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c) return c:IsRace(RACE_PLANT) and c:IsMonster() end,true)))
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Summon (Special)
+	-- Hiệu ứng 2: Thêm 1 lá Rikka từ Deck vào tay khi Summon (Normal/Special)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2:SetCountLimit(1,id+1) -- Sửa thành id+1
+	e2:SetCountLimit(1,{id,2})
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
 	-- Hiệu ứng 3: Set 1 Rikka Field/Trap từ Deck khi bị Tribute
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCode(EVENT_RELEASE)
-	e3:SetCountLimit(1,id+2) -- Sửa thành id+2
-	e3:SetCondition(s.setcon)
-	e3:SetTarget(s.settg)
-	e3:SetOperation(s.setop)
-	c:RegisterEffect(e3)
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e4:SetProperty(EFFECT_FLAG_DELAY)
+	e4:SetCode(EVENT_RELEASE)
+	e4:SetCountLimit(1,id+200)
+	e4:SetCondition(s.setcon)
+	e4:SetTarget(s.settg)
+	e4:SetOperation(s.setop)
+	c:RegisterEffect(e4)
 end
 
 -- Mã định danh của tộc Rikka là 0x141
