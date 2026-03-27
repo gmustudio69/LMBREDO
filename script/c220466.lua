@@ -2,16 +2,14 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- ===============================================
-	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay
+	-- Hiệu ứng 1: Đặc biệt triệu hồi từ tay (Lock Plant nguyên lượt)
 	-- ===============================================
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,{id,1})
-	-- Cost: Reveal 1 Plant monster
-	e1:SetCost(Cost.AND(Cost.HardOncePerChain(id),Cost.Reveal(function(c) return c:IsRace(RACE_PLANT) and c:IsMonster() end,true)))
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -65,7 +63,7 @@ end
 s.listed_series={0x141}
 
 -- ===============================================
--- Logic Hiệu ứng 1 (Special Summon + LOCK)
+-- Logic Hiệu ứng 1 (Special Summon + LINGERING LOCK)
 -- ===============================================
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -75,7 +73,7 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-		-- Dòng Lock Plant bắt đầu ở đây
+		-- Dòng Lock Plant bắt đầu ở đây (Chỉ kích hoạt nếu nhảy thành công)
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_FIELD)
 		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
