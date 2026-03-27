@@ -57,9 +57,9 @@ s.listed_series={0x141}
 function s.matfilter(c,lc,sumtype,tp)
 	return c:IsRace(RACE_PLANT,lc,sumtype,tp)
 end
-function s.lcheck(g,lc,sumtype,tp)
-	return g:IsExists(Card.IsSetCard,1,nil,0x141,lc,sumtype,tp)
-end
+--function s.lcheck(g,lc,sumtype,tp)
+  --  return g:IsExists(Card.IsSetCard,1,nil,0x141,lc,sumtype,tp)
+--end
 
 -- ===============================================
 -- Logic Effect 2 (Search Rikka Spell hoặc Trap)
