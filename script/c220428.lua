@@ -66,7 +66,7 @@ end
 function s.rkcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
-	return bc and bc:IsRelateToBattle() and c:IsRelateToBattle() and rp==1-tp and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_ONFIELD,0,1,nil)
+	return bc and bc:IsRelateToBattle() and c:IsRelateToBattle() and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_ONFIELD,0,1,nil)
 end
 
 ------------------------------------------------
