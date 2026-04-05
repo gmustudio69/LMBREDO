@@ -21,7 +21,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 
 	-- ===============================================
-	-- Effect 2: Search "Rikka" Spell (MỌI LOẠI PHÉP RIKKA)
+	-- Effect 2: Search "Rikka" Spell/Trap (LẤY CẢ PHÉP LẪN BẪY)
 	-- ===============================================
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -57,12 +57,9 @@ s.listed_series={0x141}
 function s.matfilter(c,lc,sumtype,tp)
 	return c:IsRace(RACE_PLANT,lc,sumtype,tp)
 end
-function s.lcheck(g,lc,sumtype,tp)
-	return g:IsExists(Card.IsSetCard,1,nil,0x141,lc,sumtype,tp)
-end
 
 -- ===============================================
--- Logic Effect 2 (Search BẤT KỲ Rikka Spell nào)
+-- Logic Effect 2 (Search Rikka Spell hoặc Trap)
 -- ===============================================
 function s.cfilter(c)
 	return c:IsRace(RACE_PLANT) and c:IsAbleToRemoveAsCost()
@@ -74,8 +71,8 @@ function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Remove(g,POS_FACEUP,REASON_COST)
 end
 function s.thfilter(c)
-	-- ĐÃ CHỈNH SỬA Ở ĐÂY: Chỉ cần là SetCard Rikka (0x141) và là Spell
-	return c:IsSetCard(0x141) and c:IsType(TYPE_SPELL) and c:IsAbleToHand()
+	-- ĐÃ CHỈNH SỬA TẠI ĐÂY: Thêm (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP))
+	return c:IsSetCard(0x141) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
