@@ -15,8 +15,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetCode(EVENT_CHAINING)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_DAMAGE_STEP_END)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(s.rkcon)
@@ -27,7 +27,7 @@ function s.initial_effect(c)
 end
 
 function s.xyzfilter(c,tp,xyzc)
-	return c:IsFaceup() and c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsLevel(7)
+	return c:IsFaceup() and (c:IsAttribute(ATTRIBUTE_FIRE) or c:IsAttribute(ATTRIBUTE_DARK)) and c:IsRace(RACE_WARRIOR)
 end
 
 function s.xyzop(e,tp,chk)
@@ -64,8 +64,9 @@ function s.wdfilter(c)
 end
 
 function s.rkcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp
-		and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_ONFIELD,0,1,nil)
+	local c=e:GetHandler()
+	local bc=c:GetBattleTarget()
+	return bc and bc:IsRelateToBattle() and c:IsRelateToBattle() and rp==1-tp and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_ONFIELD,0,1,nil)
 end
 
 ------------------------------------------------
