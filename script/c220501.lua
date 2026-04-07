@@ -1,158 +1,121 @@
---<Limit Breaker> (Ritual Monster)
+--<Limit Breaker> Phoenix Ascension
 local s,id=GetID()
-
 function s.initial_effect(c)
-	c:EnableReviveLimit()
 
-	--------------------------------------------------
-	-- Reveal + search + shuffle back
-	--------------------------------------------------
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SEARCH+CATEGORY_TODECK)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id)
-	e1:SetCost(s.thcost)
-	e1:SetTarget(s.thtg)
-	e1:SetOperation(s.thop)
-	c:RegisterEffect(e1)
+--Synchro summon
+Synchro.AddProcedure(c,nil,1,1,Synchro.NonTuner(nil),1,99)
+c:EnableReviveLimit()
 
-	--------------------------------------------------
-	-- On Ritual Summon: place as Continuous Spell
-	--------------------------------------------------
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.plcon)
-	e2:SetTarget(s.pltg)
-	e2:SetOperation(s.plop)
-	c:RegisterEffect(e2)
+--Treated as Kazari
+local e0=Effect.CreateEffect(c)
+e0:SetType(EFFECT_TYPE_SINGLE)
+e0:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+e0:SetRange(LOCATION_MZONE+LOCATION_SZONE)
+e0:SetCode(EFFECT_CHANGE_CODE)
+e0:SetValue(220450) --ID of "<Limit Breaker> Kazari"
+c:RegisterEffect(e0)
 
-	--------------------------------------------------
-	-- Quick Effect: Tribute → Special Summon
-	--------------------------------------------------
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetCode(EVENT_FREE_CHAIN)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetHintTiming(0,TIMING_MAIN_END)
-	e3:SetCountLimit(2,{id,2})
-	e3:SetCondition(s.spcon)
-	e3:SetCost(s.spcost)
-	e3:SetTarget(s.sptg)
-	e3:SetOperation(s.spop)
-	c:RegisterEffect(e3)
+--Revive from S/T zone
+local e1=Effect.CreateEffect(c)
+e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+e1:SetCode(EVENT_PHASE+PHASE_STANDBY)
+e1:SetRange(LOCATION_SZONE)
+e1:SetCountLimit(1,id)
+e1:SetCondition(s.spcon)
+e1:SetTarget(s.sptg)
+e1:SetOperation(s.spop)
+c:RegisterEffect(e1)
+
+--Quick effect: turn monster into Continuous Spell
+local e2=Effect.CreateEffect(c)
+e2:SetCategory(0)
+e2:SetType(EFFECT_TYPE_QUICK_O)
+e2:SetCode(EVENT_FREE_CHAIN)
+e2:SetRange(LOCATION_MZONE)
+e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+e2:SetCountLimit(1,id+1)
+e2:SetTarget(s.pctg)
+e2:SetOperation(s.pcop)
+c:RegisterEffect(e2)
+
+--Damage replace
+local e3=Effect.CreateEffect(c)
+e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+e3:SetCode(EFFECT_DESTROY_REPLACE)
+e3:SetRange(LOCATION_MZONE)
+e3:SetTarget(s.reptg)
+e3:SetOperation(s.repop)
+c:RegisterEffect(e3)
+
 end
 
---------------------------------------------------
--- Reveal cost
---------------------------------------------------
-function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,800) end
-	Duel.PayLPCost(tp,800)
-	Duel.ConfirmCards(1-tp,e:GetHandler())
-end
-
-function s.thfilter(c)
-	return c:IsSetCard(0xf86) and c:IsType(TYPE_MONSTER) and c:IsAbleToHand()
-end
-
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,e:GetHandler(),1,0,0)
-end
-
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
-		if c:IsRelateToEffect(e) then
-			Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
-		end
-	end
-end
-
---------------------------------------------------
--- Ritual summon check
---------------------------------------------------
-function s.plcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsSummonType(SUMMON_TYPE_RITUAL)
-end
-
-function s.plfilter(c)
-	return c:ListsCode() -- code của Kazari (bạn thay vào)
-		and c:IsType(TYPE_MONSTER)
-end
-
-function s.pltg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-			and Duel.IsExistingMatchingCard(s.plfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil)
-	end
-end
-
-function s.plop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-	local tc=Duel.SelectMatchingCard(tp,s.plfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil):GetFirst()
-	if tc then
-		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_CHANGE_TYPE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
-		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-		tc:RegisterEffect(e1)
-	end
-end
-
---------------------------------------------------
--- Quick effect summon
---------------------------------------------------
+--===== Revive condition =====
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsMainPhase()
-end
-
-function s.cfilter(c)
-	return c:IsMonsterCard() and c:IsReleasable()
-end
-
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckReleaseGroupCost(tp,s.cfilter,1,false,nil,nil) end
-	local g=Duel.SelectReleaseGroupCost(tp,s.cfilter,1,1,false,nil,nil)
-	Duel.Release(g,REASON_COST)
-end
-
-function s.spfilter(c,e,tp)
-	return c:ListsCode(220450) -- Kazari code
-		and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
+return e:GetHandler():IsContinuousSpell()
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA+LOCATION_GRAVE,0,1,nil,e,tp)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA+LOCATION_GRAVE)
+if chk==0 then
+return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA+LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
-	if tc then
-		Duel.SpecialSummon(tc,0,tp,tp,true,true,POS_FACEUP)
-	end
+local c=e:GetHandler()
+if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+if c:IsRelateToEffect(e) then
+Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+end
+end
+
+--===== Target =====
+function s.pctg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+if chkc then return chkc:IsOnField() and chkc:IsType(TYPE_MONSTER) end
+if chk==0 then
+return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+end
+Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+end
+
+--===== Transform =====
+function s.pcop(e,tp,eg,ep,ev,re,r,rp)
+local tc=Duel.GetFirstTarget()
+if not tc or not tc:IsRelateToEffect(e) then return end
+
+--move to S/T zone
+if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
+
+--become Continuous Spell
+local e1=Effect.CreateEffect(e:GetHandler())
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_CHANGE_TYPE)
+e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+tc:RegisterEffect(e1)
+
+end
+
+--===== Replace =====
+function s.repfilter(c,tp)
+return c:IsControler(tp) and c:IsOnField()
+end
+
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
+if chk==0 then
+return Duel.CheckLPCost(tp,800)
+and eg:IsExists(s.repfilter,1,nil,tp)
+end
+if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+Duel.Damage(tp,800,REASON_EFFECT)
+return true
+else return false end
+end
+
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+--no operation needed
 end
