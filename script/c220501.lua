@@ -108,23 +108,3 @@ e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 tc:RegisterEffect(e1)
 
 end
-
---===== Replace =====
-function s.repfilter(c,tp)
-	return c:IsControler(tp) and c:IsOnField()
-end
-
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-	return Duel.CheckLPCost(tp,800)
-	and eg:IsExists(s.repfilter,1,nil,tp)
-	end
-	if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-	Duel.Damage(tp,800,REASON_EFFECT)
-	return true
-	else return false end
-end
-
-function s.repop(e,tp,eg,ep,ev,re,r,rp)
---no operation needed
-end
