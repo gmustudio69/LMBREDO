@@ -5,49 +5,58 @@ function s.initial_effect(c)
 --Synchro summon
 Synchro.AddProcedure(c,nil,1,1,Synchro.NonTuner(nil),1,99)
 c:EnableReviveLimit()
+	--Treated as Kazari
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e0:SetRange(LOCATION_MZONE+LOCATION_SZONE)
+	e0:SetCode(EFFECT_CHANGE_CODE)
+	e0:SetValue(220450) --ID of "<Limit Breaker> Kazari"
+	c:RegisterEffect(e0)
 
---Treated as Kazari
-local e0=Effect.CreateEffect(c)
-e0:SetType(EFFECT_TYPE_SINGLE)
-e0:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-e0:SetRange(LOCATION_MZONE+LOCATION_SZONE)
-e0:SetCode(EFFECT_CHANGE_CODE)
-e0:SetValue(220450) --ID of "<Limit Breaker> Kazari"
-c:RegisterEffect(e0)
+	--Revive from S/T zone
+	local e1=Effect.CreateEffect(c)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetCode(EVENT_PHASE+PHASE_STANDBY)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetCountLimit(1,id)
+	e1:SetCondition(s.spcon)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
+	c:RegisterEffect(e1)
 
---Revive from S/T zone
-local e1=Effect.CreateEffect(c)
-e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-e1:SetCode(EVENT_PHASE+PHASE_STANDBY)
-e1:SetRange(LOCATION_SZONE)
-e1:SetCountLimit(1,id)
-e1:SetCondition(s.spcon)
-e1:SetTarget(s.sptg)
-e1:SetOperation(s.spop)
-c:RegisterEffect(e1)
+	--Quick effect: turn monster into Continuous Spell
+	local e2=Effect.CreateEffect(c)
+	e2:SetCategory(0)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_FREE_CHAIN)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetTarget(s.pctg)
+	e2:SetOperation(s.pcop)
+	c:RegisterEffect(e2)
 
---Quick effect: turn monster into Continuous Spell
-local e2=Effect.CreateEffect(c)
-e2:SetCategory(0)
-e2:SetType(EFFECT_TYPE_QUICK_O)
-e2:SetCode(EVENT_FREE_CHAIN)
-e2:SetRange(LOCATION_MZONE)
-e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-e2:SetCountLimit(1,id+1)
-e2:SetTarget(s.pctg)
-e2:SetOperation(s.pcop)
-c:RegisterEffect(e2)
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EFFECT_DESTROY_REPLACE)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetCountLimit(1,{id,2})
+	e3:SetTarget(s.reptg)
+	e3:SetOperation(function(e,tp) Duel.Damage(tp,800,REASON_EFFECT) end)
+	e3:SetValue(function(e,c) return s.repfilter(c,e:GetHandlerPlayer()) end)
+	c:RegisterEffect(e3)
 
---Damage replace
-local e3=Effect.CreateEffect(c)
-e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-e3:SetCode(EFFECT_DESTROY_REPLACE)
-e3:SetRange(LOCATION_MZONE)
-e3:SetTarget(s.reptg)
-e3:SetOperation(s.repop)
-c:RegisterEffect(e3)
-
+end
+function s.repfilter(c,tp)
+	return c:IsLocation(LOCATION_MZONE) and c:IsControler(tp) and c:IsFaceup()
+		and c:IsReason(REASON_BATTLE|REASON_EFFECT) and not c:IsReason(REASON_REPLACE)
+end
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return eg:IsExists(s.repfilter,1,nil,tp) end
+	return Duel.SelectEffectYesNo(tp,c,96)
 end
 
 --===== Revive condition =====
@@ -102,18 +111,18 @@ end
 
 --===== Replace =====
 function s.repfilter(c,tp)
-return c:IsControler(tp) and c:IsOnField()
+	return c:IsControler(tp) and c:IsOnField()
 end
 
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-if chk==0 then
-return Duel.CheckLPCost(tp,800)
-and eg:IsExists(s.repfilter,1,nil,tp)
-end
-if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-Duel.Damage(tp,800,REASON_EFFECT)
-return true
-else return false end
+	if chk==0 then
+	return Duel.CheckLPCost(tp,800)
+	and eg:IsExists(s.repfilter,1,nil,tp)
+	end
+	if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+	Duel.Damage(tp,800,REASON_EFFECT)
+	return true
+	else return false end
 end
 
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
