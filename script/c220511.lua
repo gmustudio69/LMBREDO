@@ -63,24 +63,4 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:GetFirst()
 	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 then
 	Duel.ConfirmCards(1-tp,tc)
-	--Lock effect if NO Kazari
-	if not Duel.IsExistingMatchingCard(s.kazarifilter,tp,LOCATION_MZONE,0,1,nil) then
-	local code=tc:GetCode()
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetTargetRange(1,0)
-	e1:SetValue(function(e,re,tp)
-	return re:GetHandler():IsCode(code)
-	end)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-	local e2=e1:Clone()
-	e2:SetCode(EFFECT_CANNOT_TRIGGER)
-	Duel.RegisterEffect(e2,tp)
-	end
-	--Draw
-	Duel.Draw(tp,1,REASON_EFFECT)
-	end
 end
