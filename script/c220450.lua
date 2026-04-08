@@ -95,10 +95,17 @@ function s.gypltg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 function s.gyplop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
 	local c=e:GetHandler()
-	if tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e)
-		and s.stplace(tc,tp,c) and c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-	end
+	local tc=Duel.GetFirstTarget()
+	if not tc or not tc:IsRelateToEffect(e) then return end
+	if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CHANGE_TYPE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	c:RegisterEffect(e1)
+	Duel.BreakEffect()
+	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
