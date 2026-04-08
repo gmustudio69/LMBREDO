@@ -68,27 +68,27 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return r==REASON_LINK
 end
 
--- Spirit or Kazari filter
 function s.thfilter(c)
-	return c:IsType(TYPE_SPIRIT) or c:IsCode(220450) -- replace Kazari ID
+return (c:IsType(TYPE_SPIRIT) or c:IsCode(220450)) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then
+	return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
-		local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-		local tc=g:GetFirst()
-		if tc then
-			Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
-			local op=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4))
-			if op==0 then
-				Duel.SendtoHand(tc,nil,REASON_EFFECT)
-				Duel.ConfirmCards(1-tp,tc)
-			else
-				Duel.SendtoGrave(tc,REASON_EFFECT)
-			end
-		end
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+	if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	else
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+		Duel.SendtoGrave(g,REASON_EFFECT)
+	end
 end
