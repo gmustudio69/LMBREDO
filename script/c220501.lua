@@ -20,7 +20,6 @@ c:EnableReviveLimit()
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e1:SetCode(EVENT_PHASE+PHASE_STANDBY)
 	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
@@ -91,19 +90,17 @@ end
 
 --===== Transform =====
 function s.pcop(e,tp,eg,ep,ev,re,r,rp)
-local tc=Duel.GetFirstTarget()
-if not tc or not tc:IsRelateToEffect(e) then return end
-
---move to S/T zone
-if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
-
---become Continuous Spell
-local e1=Effect.CreateEffect(e:GetHandler())
-e1:SetType(EFFECT_TYPE_SINGLE)
-e1:SetCode(EFFECT_CHANGE_TYPE)
-e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-tc:RegisterEffect(e1)
+	local tc=Duel.GetFirstTarget()
+	if not tc or not tc:IsRelateToEffect(e) then return end
+	--move to S/T zone
+	if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
+	--become Continuous Spell
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CHANGE_TYPE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	tc:RegisterEffect(e1)
 
 end
