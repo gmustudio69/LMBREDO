@@ -7,10 +7,6 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	-- Link Summon Procedure: 2 monsters with the same Attribute
 	Link.AddProcedure(c, nil, 2, 2, s.lcheck)
-	
-	-- Mentions Kazari (necessary for EDOPro to recognize "ListsCode" effects)
-	aux.AddCodeList(c, KAZARI_ID)
-
 	-- Cannot Special Summon this card, unless you control Kazari or a monster that mentions it
 	local e1 = Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
@@ -42,13 +38,13 @@ function s.initial_effect(c)
 
 	-- Quick Effect: Target up to 2 monsters you control/GY; place them as Cont. Spells, then bounce cards
 	local e4 = Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id, 1))
+	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetCategory(CATEGORY_TOHAND)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e4:SetCode(EVENT_FREE_CHAIN)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1, id) -- HOPT limit
+	e4:SetCountLimit(1,id) -- HOPT limit
 	e4:SetTarget(s.thtg)
 	e4:SetOperation(s.thop)
 	c:RegisterEffect(e4)
