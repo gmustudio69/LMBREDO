@@ -55,10 +55,10 @@ function s.btptarget(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	c=e:GetHandler()
 	if chkc then return chkc:IsOnField() and chkc~=c and chkc:IsType(TYPE_MONSTER) end
 	if chk==0 then
-	return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+	return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,c)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+	Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,c)
 end
 function s.btplop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
