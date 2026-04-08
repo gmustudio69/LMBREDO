@@ -54,7 +54,7 @@ function s.initial_effect(c)
 	e4:SetOperation(s.negop)
 	c:RegisterEffect(e4)
 end
-
+s.listed_names={220450,id}
 -- Standby Phase Special Summon Condition
 function s.spcon(e, tp, eg, ep, ev, re, r, rp)
 	local c = e:GetHandler()
