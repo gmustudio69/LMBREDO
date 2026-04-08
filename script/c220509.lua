@@ -70,7 +70,7 @@ end
 
 -- Spirit or Kazari filter
 function s.thfilter(c)
-	return c:IsRace(RACE_SPIRIT) or c:IsCode(220450) -- replace Kazari ID
+	return c:IsType(TYPE_SPIRIT) or c:IsCode(220450) -- replace Kazari ID
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
