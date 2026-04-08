@@ -58,25 +58,20 @@ function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 --===== Revive condition =====
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+function s.spcon(e, tp, eg, ep, ev, re, r, rp)
 	local c = e:GetHandler()
 	return c:IsType(TYPE_SPELL) and c:IsType(TYPE_CONTINUOUS)
 end
-
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-if chk==0 then
-return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
+function s.sptg(e, tp, eg, ep, ev, re, r, rp, chk)
+	if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0
+		and e:GetHandler():IsCanBeSpecialSummoned(e, 0, tp, false, false) end
+	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, e:GetHandler(), 1, 0, 0)
 end
-Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
-end
-
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-local c=e:GetHandler()
-if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-if c:IsRelateToEffect(e) then
-Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-end
+function s.spop(e, tp, eg, ep, ev, re, r, rp)
+	local c = e:GetHandler()
+	if c:IsRelateToEffect(e) then
+		Duel.SpecialSummon(c, 0, tp, tp, false, false, POS_FACEUP)
+	end
 end
 
 --===== Target =====
@@ -103,5 +98,4 @@ function s.pcop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	tc:RegisterEffect(e1)
-
 end
