@@ -26,7 +26,6 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.btplcon)
 	e2:SetTarget(s.btptarget)
 	e2:SetOperation(s.btplop)
 	c:RegisterEffect(e2)
@@ -50,14 +49,6 @@ function s.spcon(e,c)
 	if c==nil then return true end
 	return Duel.GetFieldGroupCount(c:GetControler(),0,LOCATION_MZONE)>0
 		and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-end
-function s.checkzones(c0,c1)
-	local p0,p1=c0:GetOwner(),c1:GetOwner()
-	if p0==p1 then return Duel.GetLocationCount(p0,LOCATION_SZONE)>1 end
-	return Duel.GetLocationCount(p0,LOCATION_SZONE)>0 and Duel.GetLocationCount(p1,LOCATION_SZONE)>0
-end
-function s.btplcon(e,tp,eg,ep,ev,re,r,rp)
-	return s.checkzones(bc0,bc1)
 end
 --===== Target =====
 function s.btptarget(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
