@@ -3,8 +3,6 @@ local s, id = GetID()
 local KAZARI_ID = 220450 -- Replace with the actual ID of "<Limit Breaker> Kazari"
 
 function s.initial_effect(c)
-	-- Necessary for EDOPro to recognize "mentions it" effects
-	aux.AddCodeList(c, KAZARI_ID)
 	-- Activate 1 of these effects
 	local e1 = Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
