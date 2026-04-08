@@ -27,6 +27,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCondition(s.btplcon)
+	e2:SetTarget(s.btptarget)
 	e2:SetOperation(s.btplop)
 	c:RegisterEffect(e2)
 	local e3=Effect.CreateEffect(c)
@@ -56,28 +57,24 @@ function s.checkzones(c0,c1)
 	return Duel.GetLocationCount(p0,LOCATION_SZONE)>0 and Duel.GetLocationCount(p1,LOCATION_SZONE)>0
 end
 function s.btplcon(e,tp,eg,ep,ev,re,r,rp)
-	local bc0,bc1=Duel.GetBattleMonster(tp)
-	return bc0 and bc1 and bc0==e:GetHandler() and s.checkzones(bc0,bc1)
+	return s.checkzones(bc0,bc1)
 end
-function s.stplace(c,tp,rc)
-	if not Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,c:IsMonsterCard()) then return end
-	--Treated as a Continuous Spell
-	local e1=Effect.CreateEffect(rc)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e1:SetCode(EFFECT_CHANGE_TYPE)
-	e1:SetValue(TYPE_SPELL|TYPE_CONTINUOUS)
-	e1:SetReset(RESET_EVENT|(RESETS_STANDARD&~RESET_TURN_SET))
-	c:RegisterEffect(e1)
-	return true
+--===== Target =====
+function s.btptarget(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsOnField() and chkc:IsType(TYPE_MONSTER) end
+	if chk==0 then
+	return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 end
 function s.btplop(e,tp,eg,ep,ev,re,r,rp)
-	local bc0,bc1=Duel.GetBattleMonster(tp)
-	if bc0 and bc1 and bc0:IsRelateToBattle() and not bc0:IsImmuneToEffect(e) 
-		and bc1:IsRelateToBattle() and not bc1:IsImmuneToEffect(e) 
-		and s.checkzones(bc0,bc1) and s.stplace(bc0,tp,bc0) then
-		s.stplace(bc1,tp,bc0)
-	end
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
+	if not tc or not tc:IsRelateToEffect(e) then return end
+	if not Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
+	Duel.BreakEffect()
+	if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
 end
 function s.gyplfilter(c)
 	return c:IsSetCard(0xb67) and not c:IsForbidden()
@@ -85,14 +82,10 @@ end
 function s.gypltg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE) and s.gyplfilter(chkc) end
 	local c=e:GetHandler()
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingTarget(s.gyplfilter,tp,LOCATION_MZONE,0,1,nil)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingTarget(s.gyplfilter,tp,LOCATION_MZONE,0,1,nil) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g=Duel.SelectTarget(tp,s.gyplfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 function s.gyplop(e,tp,eg,ep,ev,re,r,rp)
