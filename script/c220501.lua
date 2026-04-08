@@ -37,7 +37,6 @@ c:EnableReviveLimit()
 	e2:SetTarget(s.pctg)
 	e2:SetOperation(s.pcop)
 	c:RegisterEffect(e2)
-
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e3:SetCode(EFFECT_DESTROY_REPLACE)
@@ -47,8 +46,8 @@ c:EnableReviveLimit()
 	e3:SetOperation(function(e,tp) Duel.Damage(tp,800,REASON_EFFECT) end)
 	e3:SetValue(function(e,c) return s.repfilter(c,e:GetHandlerPlayer()) end)
 	c:RegisterEffect(e3)
-
 end
+s.listed_names={220450,id}
 function s.repfilter(c,tp)
 	return c:IsLocation(LOCATION_MZONE) and c:IsControler(tp) and c:IsFaceup()
 		and c:IsReason(REASON_BATTLE|REASON_EFFECT) and not c:IsReason(REASON_REPLACE)
