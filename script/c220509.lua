@@ -27,7 +27,7 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 end
-
+s.listed_names={220450,id}
 -- Check if you control "<Limit Breaker> Kazari"
 function s.cfilter(c)
 	return c:IsFaceup() and c:IsCode(220450) -- replace with Kazari's ID
