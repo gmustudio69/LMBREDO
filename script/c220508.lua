@@ -35,7 +35,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,id) -- HOPT
-	e3:SetCost(aux.dxmcostgen(1, 1, nil)) -- Detach 1 material
+	e3:SetCost(plcost) -- Detach 1 material
 	e3:SetTarget(s.pctg)
 	e3:SetOperation(s.pcop)
 	c:RegisterEffect(e3)
@@ -71,7 +71,10 @@ function s.spop(e, tp, eg, ep, ev, re, r, rp)
 		Duel.SpecialSummon(c, 0, tp, tp, false, false, POS_FACEUP)
 	end
 end
-
+function s.plcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
 -- Filter for placing monsters into the Spell/Trap zone
 -- Note: Checks if the specific OWNER of the card has an empty Spell/Trap zone
 function s.pcfilter(c)
