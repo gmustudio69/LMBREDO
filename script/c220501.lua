@@ -81,12 +81,12 @@ end
 
 --===== Target =====
 function s.pctg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-if chkc then return chkc:IsOnField() and chkc:IsType(TYPE_MONSTER) end
-if chk==0 then
-return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
-end
-Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+	if chkc then return chkc:IsOnField() and chkc:IsType(TYPE_MONSTER) end
+	if chk==0 then
+	return Duel.IsExistingTarget(Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,Card.IsMonster,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 end
 
 --===== Transform =====
