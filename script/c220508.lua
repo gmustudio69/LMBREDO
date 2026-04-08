@@ -35,7 +35,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,id) -- HOPT
-	e3:SetCost(plcost) -- Detach 1 material
+	e3:SetCost(s.plcost) -- Detach 1 material
 	e3:SetTarget(s.pctg)
 	e3:SetOperation(s.pcop)
 	c:RegisterEffect(e3)
