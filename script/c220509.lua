@@ -44,7 +44,7 @@ end
 
 -- Filter for WIND Warrior Link Monsters
 function s.linkfilter(c,e,tp)
-	return c:IsAttribute(ATTRIBUTE_WIND) and c:IsRace(RACE_WARRIOR)
+	return c:IsRace(RACE_WARRIOR)
 		and c:IsType(TYPE_LINK)
 		and c:IsLinkSummonable(nil,nil)
 end
