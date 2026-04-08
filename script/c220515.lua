@@ -73,7 +73,7 @@ function s.ssop(e, tp, eg, ep, ev, re, r, rp)
 	-- Assume we summon to opponent's field by default, unless they have a monster and we choose our field
 	local sum_tp = 1-tp
 	if b1 and b2 then
-		if Duel.SelectYesNo(tp, aux.Stringid(id, 3)) then -- Prompt: "Do you want to Special Summon to your field instead?"
+		if Duel.SelectYesNo(tp, aux.Stringid(id,3)) then -- Prompt: "Do you want to Special Summon to your field instead?"
 			sum_tp = tp
 		end
 	elseif b2 then
@@ -142,7 +142,6 @@ function s.xyzop(e, tp, eg, ep, ev, re, r, rp)
 			local mg = Group.FromCards(tc)
 			sc:SetMaterial(mg)
 			Duel.Overlay(sc, mg)
-			
 			-- Special Summon the Xyz Monster
 			if Duel.SpecialSummon(sc, SUMMON_TYPE_XYZ, tp, tp, false, false, POS_FACEUP) > 0 then
 				sc:CompleteProcedure()

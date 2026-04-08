@@ -106,7 +106,7 @@ function s.gyplop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	c:RegisterEffect(e1)
+	tc:RegisterEffect(e1)
 	Duel.BreakEffect()
 	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
