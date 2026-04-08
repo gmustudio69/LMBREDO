@@ -91,4 +91,5 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 		Duel.SendtoGrave(g,REASON_EFFECT)
 	end
+	end
 end
