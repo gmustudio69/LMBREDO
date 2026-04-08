@@ -6,15 +6,16 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Fusion.AddProcMix(c,true,true,s.matfilter,s.matfilter)
 
-	--Alternative Special Summon (from Extra Deck)
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.altcon)
-	e1:SetOperation(s.altop)
-	c:RegisterEffect(e1)
+	--Alternative Summon Procedure
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_FIELD)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e0:SetCode(EFFECT_SPSUMMON_PROC)
+	e0:SetRange(LOCATION_EXTRA)
+	e0:SetCondition(s.hspcon)
+	e0:SetTarget(s.hsptg)
+	e0:SetOperation(s.hspop)
+	c:RegisterEffect(e0)
 
 	--Become Kazari
 	local e2=Effect.CreateEffect(c)
@@ -52,25 +53,29 @@ function s.matfilter(c,fc,sumtype,tp)
 	return c:IsSetCard(0xf86) 
 end
 
---===== ALT SUMMON =====
-function s.cfilter(c)
-	return c:IsFaceup() and c:IsType(TYPE_MONSTER)
+function s.hspfilter(c)
+	return c:IsMonsterCard() and c:IsFaceup() and c:IsAbleToGraveAsCost()
 end
-
-function s.altcon(e,c)
-	if c==nil then return true end
+function s.hspcon(e,c)
+	if not c then return true end
 	local tp=c:GetControler()
 	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-	and Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_SZONE,0,2,nil)
-	end
-
-	function s.altop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_SZONE,0,2,2,nil)
-	c:SetMaterial(g)
-	Duel.SendtoGrave(g,REASON_COST)
+		and Duel.IsExistingMatchingCard(s.hspfilter,tp,LOCATION_STZONE,0,2,nil)
 end
-
-
+function s.hsptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.hspfilter,tp,LOCATION_STZONE,0,2,2,true,nil)
+	if not g then return false end
+	g:KeepAlive()
+	e:SetLabelObject(g)
+	return true
+end
+function s.hspop(e,tp,eg,ep,ev,re,r,rp,c)
+	local g=e:GetLabelObject()
+	if not g then return end
+	Duel.SendtoGrave(g,REASON_COST|REASON_MATERIAL)
+	g:DeleteGroup()
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
@@ -90,15 +95,15 @@ end
 function s.rtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-	and Duel.IsExistingMatchingCard(s.kazarifilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,nil,e,tp)
+	and Duel.IsExistingMatchingCard(s.kazarifilter,tp,LOCATION_GRAVE,0,1,nil,e,tp)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+	Duel.SelectTarget(tp,s.kazarifilter,tp,LOCATION_GRAVE,0,1,1,nil)
 end
 
 function s.rop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.kazarifilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,1,nil,e,tp)
 	if #g>0 then
 	Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end

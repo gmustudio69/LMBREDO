@@ -62,5 +62,6 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	local tc=g:GetFirst()
 	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 then
-	Duel.ConfirmCards(1-tp,tc)
+		Duel.ConfirmCards(1-tp,tc)
+	end
 end
