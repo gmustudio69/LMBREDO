@@ -4,7 +4,6 @@ function s.initial_effect(c)
 	--Link Summon
 	c:EnableReviveLimit()
 	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute),2,2,s.lcheck)
-	
 
 	--===== BECOME KAZARI =====
 	local e1=Effect.CreateEffect(c)
@@ -42,9 +41,10 @@ s.listed_names={220450,id}
 function s.lcheck(g,lc,sumtype,tp)
 return g:GetClassCount(Card.GetAttribute)==1
 end
+
 --===== SUMMON LIMIT =====
 function s.kzfilter(c)
-	return c:IsFaceup() and (c:IsCode(220450) or c:ListsCode(220450))
+return c:IsFaceup() and (c:IsCode(220450) or c:ListsCode(220450))
 end
 
 function s.splimit(e,se,sp,st)
