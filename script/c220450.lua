@@ -65,7 +65,7 @@ function s.btplop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	
 	-- Kiểm tra xem Kazari có còn trên sân hay đã bị destroy/banish mất rồi
-	if not c:IsRelateToEffect(e) or not c:IsControler(tp) or not c:IsLocation(LOCATION_MZONE) then return end
+	if not c:IsRelateToEffect(e) or not c:IsControler(tp)  then return end
 	-- Thực hiện đặt Kazari vào Spell/Trap zone TRƯỚC
 	if Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
 		-- Trở thành Continuous Spell
