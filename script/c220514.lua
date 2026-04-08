@@ -14,14 +14,14 @@ e1:SetOperation(s.activate)
 c:RegisterEffect(e1)
 
 end
-
+s.listed_names={220450,id}
 --===== FILTER =====
 function s.kzfilter(c)
 return c:IsCode(220450) and (c:IsLocation(LOCATION_MZONE) or c:IsFaceup())
 end
 
 function s.spfilter(c,e,tp)
-return c:IsLevelAbove(7) and c:ListsCode(220450) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SPECIAL,tp,true,true)
+return c:ListsCode(220450) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SPECIAL,tp,true,true)
 end
 
 --===== COST =====
