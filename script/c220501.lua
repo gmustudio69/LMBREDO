@@ -59,7 +59,8 @@ end
 
 --===== Revive condition =====
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-return e:GetHandler():IsContinuousSpell()
+	local c = e:GetHandler()
+	return c:IsType(TYPE_SPELL) and c:IsType(TYPE_CONTINUOUS)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
