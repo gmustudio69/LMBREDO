@@ -63,25 +63,34 @@ end
 function s.btplop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if not tc or not tc:IsRelateToEffect(e) then return end
-	if not Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
-	--become Continuous Spell
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CHANGE_TYPE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	c:RegisterEffect(e1)
-	Duel.BreakEffect()
-	if not Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then return end
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CHANGE_TYPE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	c:RegisterEffect(e1)
+	
+	-- Kiểm tra xem Kazari có còn trên sân hay đã bị destroy/banish mất rồi
+	if not c:IsRelateToEffect(e) or not c:IsControler(tp) or not c:IsLocation(LOCATION_MZONE) then return end
+	-- Thực hiện đặt Kazari vào Spell/Trap zone TRƯỚC
+	if Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
+		-- Trở thành Continuous Spell
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_CHANGE_TYPE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
+		c:RegisterEffect(e1)
+		
+		-- CHỈ KHI bước trên thành công, mới bắt đầu bứng mục tiêu (tc) sang S/T Zone
+		if tc and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
+			Duel.BreakEffect() -- Ngăn cách timing giữa 2 hành động để đúng luật PSCT
+			if Duel.MoveToField(tc,tp,tc:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
+				local e2=Effect.CreateEffect(c)
+				e2:SetType(EFFECT_TYPE_SINGLE)
+				e2:SetCode(EFFECT_CHANGE_TYPE)
+				e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+				e2:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+				e2:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
+				tc:RegisterEffect(e2)
+			end
+		end
+	end
 end
 function s.gyplfilter(c)
 	return c:IsSetCard(0xb67) and not c:IsForbidden()
