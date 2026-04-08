@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e2:SetCode(EFFECT_CHANGE_CODE)
-	e2:SetRange(LOCATION_MZONE)
+	e2:SetRange(LOCATION_ONFIELD)
 	e2:SetValue(KAZARI_ID)
 	c:RegisterEffect(e2)
 
@@ -59,8 +59,8 @@ end
 function s.cfilter(c)
 	return c:IsFaceup() and (c:IsCode(KAZARI_ID) or c:ListsCode(KAZARI_ID))
 end
-function s.splimit(e, se, sp, st)
-	return Duel.IsExistingMatchingCard(s.cfilter, e:GetHandlerPlayer(), LOCATION_MZONE, 0, 1, nil)
+function s.splimit(e,se,sp,st)
+	return Duel.IsExistingMatchingCard(s.cfilter, e:GetHandlerPlayer(), LOCATION_MZONE,0, 1, nil)
 end
 
 -- Standby Phase Special Summon Condition (Must be a Continuous Spell)
