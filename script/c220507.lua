@@ -102,9 +102,9 @@ function s.rtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.rop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if not tc or not tc:IsRelateToEffect(e) then return end
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	if #g>0 then
 	Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
-	end
 end
