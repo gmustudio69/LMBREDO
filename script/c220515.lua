@@ -111,14 +111,16 @@ function s.xyzcon(e, tp, eg, ep, ev, re, r, rp)
 	local c = e:GetHandler()
 	return c:IsType(TYPE_SPELL) and c:IsType(TYPE_CONTINUOUS)
 end
-function s.xyz_ex_filter(c, e, tp, attr, lvl)
-	-- Xyz monsters use Rank instead of Level. We match the Rank to the target's Level.
-	return c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ) and c:IsAttribute(attr) and c:GetRank() == lvl 
-		and c:IsCanBeSpecialSummoned(e, SUMMON_TYPE_XYZ, tp, false, false) and Duel.GetLocationCountFromEx(tp, tp, nil, c) > 0
+function s.xyz_ex_filter(c, e, tp, tc)
+	return c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ) 
+		and c:IsAttribute(tc:GetAttribute()) and c:GetRank() == tc:GetLevel() 
+		and c:IsCanBeSpecialSummoned(e, SUMMON_TYPE_XYZ, tp, false, false) 
+		-- We pass 'tc' here to ensure the game knows that zone will free up if it's in the EMZ
+		and Duel.GetLocationCountFromEx(tp, tp, tc, c) > 0
 end
 function s.xyz_target_filter(c, e, tp)
 	return c:IsFaceup() and c:IsRace(RACE_WARRIOR) and c:HasLevel()
-		and Duel.IsExistingMatchingCard(s.xyz_ex_filter, tp, LOCATION_EXTRA, 0, 1, nil, e, tp, c:GetAttribute(), c:GetLevel())
+		and Duel.IsExistingMatchingCard(s.xyz_ex_filter, tp, LOCATION_EXTRA, 0, 1, nil, e, tp, c)
 end
 function s.xyztg(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.xyz_target_filter(chkc, e, tp) end
@@ -129,16 +131,28 @@ function s.xyztg(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
 end
 function s.xyzop(e, tp, eg, ep, ev, re, r, rp)
 	local c = e:GetHandler()
-	if not c:IsRelateToEffect(e) then return end
 	local tc = Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) and tc:IsFaceup() then
+	-- Ensure the target is still viable and the continuous spell is still on the field
+	if tc:IsRelateToEffect(e) and tc:IsFaceup() and not tc:IsImmuneToEffect(e) then
 		Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
-		local sg = Duel.SelectMatchingCard(tp, s.xyz_ex_filter, tp, LOCATION_EXTRA, 0, 1, 1, nil, e, tp, tc:GetAttribute(), tc:GetLevel())
+		local sg = Duel.SelectMatchingCard(tp, s.xyz_ex_filter, tp, LOCATION_EXTRA, 0, 1, 1, nil, e, tp, tc)
 		local sc = sg:GetFirst()
-		if sc and Duel.SpecialSummon(sc, SUMMON_TYPE_XYZ, tp, tp, false, false, POS_FACEUP) > 0 then
-			sc:CompleteProcedure()
-			-- Attach this card to the summoned monster as material
-			Duel.Overlay(sc, c)
+		if sc then
+			-- Attach the targeted monster to the Xyz monster first
+			local mg = Group.FromCards(tc)
+			sc:SetMaterial(mg)
+			Duel.Overlay(sc, mg)
+			
+			-- Special Summon the Xyz Monster
+			if Duel.SpecialSummon(sc, SUMMON_TYPE_XYZ, tp, tp, false, false, POS_FACEUP) > 0 then
+				sc:CompleteProcedure()
+				
+				-- Attach this card (Ryan) to the summoned monster
+				if c:IsRelateToEffect(e) then
+					c:CancelToGrave()
+					Duel.Overlay(sc, c)
+				end
+			end
 		end
 	end
 end
