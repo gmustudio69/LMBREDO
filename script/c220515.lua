@@ -146,7 +146,6 @@ function s.xyzop(e, tp, eg, ep, ev, re, r, rp)
 			-- Special Summon the Xyz Monster
 			if Duel.SpecialSummon(sc, SUMMON_TYPE_XYZ, tp, tp, false, false, POS_FACEUP) > 0 then
 				sc:CompleteProcedure()
-				
 				-- Attach this card (Ryan) to the summoned monster
 				if c:IsRelateToEffect(e) then
 					c:CancelToGrave()
