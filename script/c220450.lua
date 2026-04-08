@@ -45,6 +45,11 @@ end
 --------------------------------------------------
 -- SS condition
 --------------------------------------------------
+function s.spcon(e,c)
+	if c==nil then return true end
+	return Duel.GetFieldGroupCount(c:GetControler(),0,LOCATION_MZONE)>0
+		and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
+end
 function s.checkzones(c0,c1)
 	local p0,p1=c0:GetOwner(),c1:GetOwner()
 	if p0==p1 then return Duel.GetLocationCount(p0,LOCATION_SZONE)>1 end
@@ -87,6 +92,7 @@ function s.gypltg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g=Duel.SelectTarget(tp,s.gyplfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 function s.gyplop(e,tp,eg,ep,ev,re,r,rp)
