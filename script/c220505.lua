@@ -116,14 +116,4 @@ function s.thop(e, tp, eg, ep, ev, re, r, rp)
 			placed = placed + 1
 		end
 	end
-	
-	-- Optional Bounce Effect based on how many cards were placed
-	if placed > 0 then
-		local g = Duel.GetMatchingGroup(Card.IsFaceup, tp, 0, LOCATION_ONFIELD, nil)
-		if #g > 0 and Duel.SelectYesNo(tp, aux.Stringid(id, 2)) then -- Prompts: "Do you want to return opponent's cards to hand?"
-			Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_RTOHAND)
-			local sg = g:Select(tp, 1, placed, nil)
-			Duel.SendtoHand(sg, nil, REASON_EFFECT)
-		end
-	end
 end
