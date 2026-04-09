@@ -7,13 +7,12 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	-- Link Summon Procedure: 2 monsters with the same Attribute
 	Link.AddProcedure(c, nil, 2, 2, s.lcheck)
-	-- Cannot Special Summon this card, unless you control Kazari or a monster that mentions it
-	local e1 = Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
-	e1:SetValue(s.splimit)
-	c:RegisterEffect(e1)
+	-- Cannot Special Summon this card, unless you control Kazari or a
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetCode(EFFECT_SPSUMMON_COST)
+	e0:SetCost(s.spcost)
+	c:RegisterEffect(e0)
 
 	-- This card becomes "<Limit Breaker> Kazari" while on the field
 	local e2 = Effect.CreateEffect(c)
@@ -35,7 +34,6 @@ function s.initial_effect(c)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
-
 	-- Quick Effect: Target up to 2 monsters you control/GY; place them as Cont. Spells, then bounce cards
 	local e4 = Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,1))
@@ -59,7 +57,7 @@ end
 function s.cfilter(c)
 	return c:IsFaceup() and (c:IsCode(KAZARI_ID) or c:ListsCode(KAZARI_ID))
 end
-function s.splimit(e,se,sp,st)
+function s.spcost(e,se,sp,st)
 	return Duel.IsExistingMatchingCard(s.cfilter, e:GetHandlerPlayer(), LOCATION_MZONE,0, 1, nil)
 end
 
