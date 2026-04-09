@@ -52,18 +52,22 @@ end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-	return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) and Duel.IsPlayerCanDraw(tp,1)
 	end
+	Duel.SetTargetPlayer(tp)
+	Duel.SetTargetParam(1)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
 end
 
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	local tc=g:GetFirst()
 	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 then
 		Duel.ConfirmCards(1-tp,tc)
-		Duel.Draw(1,REASON_EFFECT)
+		Duel.BreakEffect()
+		Duel.Draw(p,d,REASON_EFFECT)
 	end
 end
