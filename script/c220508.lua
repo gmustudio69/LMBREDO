@@ -126,7 +126,19 @@ function s.negtg(e, tp, eg, ep, ev, re, r, rp, chk)
 	end
 end
 function s.negop(e, tp, eg, ep, ev, re, r, rp)
-	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
-		Duel.Destroy(eg, REASON_EFFECT)
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) or not c:IsControler(tp)  then return end
+	if Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true) then
+		-- Trở thành Continuous Spell
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_CHANGE_TYPE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
+		c:RegisterEffect(e1)
+		if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
+			Duel.Destroy(eg, REASON_EFFECT)
+		end
 	end
 end
