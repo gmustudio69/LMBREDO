@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetCode(EFFECT_CHANGE_CODE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(CARD_ELLIE_ID) -- REPLACE WITH ELLIE'S ID (e.g., 10000000)
+	e1:SetValue(220405) -- REPLACE WITH ELLIE'S ID (e.g., 10000000)
 	c:RegisterEffect(e1)
 
 	-- Special Summon from Hand or S/T Zone
