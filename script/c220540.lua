@@ -5,7 +5,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e1:SetRange(LOCATION_MZONE+LOCATION_GY)
+	e1:SetRange(LOCATION_MZONE)
 	e1:SetValue(0)
 	c:RegisterEffect(e1)
 end
