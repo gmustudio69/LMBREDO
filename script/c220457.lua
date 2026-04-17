@@ -1,80 +1,78 @@
 --<Limit Breaker> Shadow Catastrophe
 local s,id=GetID()
 function s.initial_effect(c)
-
-	--GY trigger revive
-	local e1=Effect.CreateEffect(c)
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_TO_GRAVE)
-	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-	e1:SetCountLimit(1,id)
+	-- Effect 1: Special Summon 1 Level 7 LIGHT Warrior and Equip
+	local e1 = Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id, 0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON + CATEGORY_EQUIP)
+	e1:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_SUMMON_SUCCESS)
+	e1:SetCountLimit(1, id)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-
-	--Summon Endless Token
-	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,id*2)
-	e2:SetCost(s.tokencost)
-	e2:SetTarget(s.tokentg)
-	e2:SetOperation(s.tokenop)
+	local e2 = e1:Clone()
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e2)
 
+	-- Effect 2: Special Summon Token when sent to GY
+	local e3 = Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id, 1))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON + CATEGORY_TOKEN)
+	e3:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_TO_GRAVE)
+	e3:SetCountLimit(1,{id,2}})
+	e3:SetTarget(s.tktg)
+	e3:SetOperation(s.tkop)
+	c:RegisterEffect(e3)
+
 end
 
---Revive filter
-function s.spfilter(c,e,tp)
-	return c:IsAttribute(ATTRIBUTE_DARK)
-	and c:IsLevelBelow(6)
-	and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+-- Functions for Effect 1
+function s.spfilter(c, e, tp)
+	-- Checks for Lv 7 LIGHT Warrior. If banished, must be face-up to verify stats.
+	return c:IsLevel(7) and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR)
+		and (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
+		and c:IsCanBeSpecialSummoned(e, 0, tp, false, false)
 end
-
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and s.spfilter(chkc,e,tp) end
-	if chk==0 then
-	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-	and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp)
+function s.sptg(e, tp, eg, ep, ev, re, r, rp, chk)
+	if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0
+		and Duel.IsExistingMatchingCard(s.spfilter, tp, LOCATION_DECK + LOCATION_GRAVE + LOCATION_REMOVED, 0, 1, nil, e, tp) end
+	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, nil, 1, tp, LOCATION_DECK + LOCATION_GRAVE + LOCATION_REMOVED)
+	Duel.SetOperationInfo(0, CATEGORY_EQUIP, e:GetHandler(), 1, 0, 0)
+end
+function s.spop(e, tp, eg, ep, ev, re, r, rp)
+	local c = e:GetHandler()
+	if Duel.GetLocationCount(tp, LOCATION_MZONE) <= 0 then return end
+	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
+	
+	-- NecroValleyFilter ensures it can't SS from GY if Necrovalley is active
+	local g = Duel.SelectMatchingCard(tp, aux.NecroValleyFilter(s.spfilter), tp, LOCATION_DECK + LOCATION_GRAVE + LOCATION_REMOVED, 0, 1, 1, nil, e, tp)
+	local tc = g:GetFirst()
+	
+	if tc and Duel.SpecialSummon(tc, 0, tp, tp, false, false, POS_FACEUP) > 0 then
+		-- Equip this card to the summoned monster
+		if c:IsRelateToEffect(e) and c:IsFaceup() and c:IsControler(tp) then
+			Duel.Equip(tp, c, tc)
+			-- Add Equip Limit so the game rules don't immediately destroy the newly equipped spell
+			local e1 = Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_EQUIP_LIMIT)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+			e1:SetReset(RESET_EVENT + RESETS_STANDARD)
+			e1:SetValue(s.eqlimit)
+			e1:SetLabelObject(tc)
+			c:RegisterEffect(e1)
+		end
 	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
+end
+function s.eqlimit(e, c)
+	return c == e:GetLabelObject()
 end
 
-function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return not (c:IsAttribute(ATTRIBUTE_DARK) or c:IsLocation(LOCATION_EXTRA))
-end
-
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-	if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
-
-	--Summon restriction
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(s.splimit)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-
-	end
-	end
-end
-
---Token cost
-function s.tokencost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,1200) end
-	Duel.PayLPCost(tp,1200)
-end
-
-function s.tokentg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 	and Duel.IsPlayerCanSpecialSummonMonster(tp,220422,0,TYPES_TOKEN,2000,2000,6,RACE_ILLUSION,ATTRIBUTE_DARK)
@@ -83,7 +81,7 @@ function s.tokentg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,0,0)
 	end
 
-	function s.tokenop(e,tp,eg,ep,ev,re,r,rp)
+ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	if not Duel.IsPlayerCanSpecialSummonMonster(tp,220422,0,TYPES_TOKEN,2000,2000,6,RACE_ILLUSION,ATTRIBUTE_DARK) then return end
 
