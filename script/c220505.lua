@@ -36,11 +36,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	-- Quick Effect: Target up to 2 monsters you control/GY; place them as Cont. Spells, then bounce cards
 	local e4 = Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,1))
-	e4:SetCategory(CATEGORY_TOHAND)
-	e4:SetType(EFFECT_TYPE_QUICK_O)
-	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e4:SetCode(EVENT_FREE_CHAIN)
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetCountLimit(1,id) -- HOPT limit
 	e4:SetTarget(s.thtg)
