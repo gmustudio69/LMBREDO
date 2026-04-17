@@ -9,24 +9,38 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_DELAY,EFFECT_FLAG2_CHECK_SIMULTANEOUS)
 	e1:SetCode(EVENT_TO_GRAVE)
 	e1:SetRange(LOCATION_HAND)
+	e1:SetCountLimit(1,{id,1})
 	e1:SetCondition(s.selfspcon)
 	e1:SetTarget(s.selfsptg)
 	e1:SetOperation(s.selfspop)
 	c:RegisterEffect(e1)
-
-	--Negate effect that would destroy
+	--SearchCard
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_DISABLE)
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_SUMMON_SUCCESS)
+	e2:SetTarget(s.thtg)
 	e2:SetCountLimit(1,{id,2})
-	e2:SetCondition(s.negcon)
-	e2:SetTarget(s.negtg)
-	e2:SetOperation(s.negop)
+	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
+	local e3=e2:Clone()
+	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	c:RegisterEffect(e3)
+	--Negate effect that would destroy
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_DISABLE)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_CHAINING)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e3:SetCountLimit(1,{id,3})
+	e3:SetCondition(s.negcon)
+	e3:SetTarget(s.negtg)
+	e3:SetOperation(s.negop)
+	c:RegisterEffect(e3)
 end
 
 -- e1: Special Summon trigger
@@ -44,32 +58,54 @@ function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 
-function s.spfilter(c,e,tp)
-	return c:IsAttack(0) and c:IsDefense(1800) and c:IsMonster() and (c:IsAbleToHand() or c:IsCanBeSpecialSummoned(e,0,tp,false,false))
-end
-
 function s.selfspop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
-		local tc=g:GetFirst()
-		if tc then
-			if tc:IsCanBeSpecialSummoned(e,0,tp,false,false) and (not tc:IsAbleToHand() or Duel.SelectOption(tp,1190,1152)==1) then
-				Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
-			else
-				Duel.SendtoHand(tc,nil,REASON_EFFECT)
-				Duel.ConfirmCards(1-tp,tc)
-			end
-		end
+	if c:IsRelateToEffect(e) then
+		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
+function s.thfilter(c,e,tp)
+	if not (c:IsMonster() and c:IsAttack(0) and c:IsDefense(1800)) then return false end
+	local b1 = c:IsAbleToHand()
+	local b2 = c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+	return b1 or b2
+end
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
+	local tc=g:GetFirst()
+	if tc then
+		local b1 = tc:IsAbleToHand()
+		local b2 = tc:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		local op = 0
+		if b1 and b2 then
+			-- 1190 is the string for "Add to hand", 1152 is "Special Summon"
+			op = Duel.SelectOption(tp,1190,1152) 
+		elseif b1 then
+			op = 0
+		else
+			op = 1
+		end
+		
+		if op==0 then
+			Duel.SendtoHand(tc,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,tc)
+		else
+			Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+		end
+	end
+end
 -- e2: Quick negation
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	if e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) or not Duel.IsChainNegatable(ev) then return false end
 	if re:IsHasCategory(CATEGORY_NEGATE)
-		and Duel.GetChainInfo(ev-1,CHAININFO_TRIGGERING_EFFECT):IsHasType(EFFECT_TYPE_ACTIVATE) then return false end
+		and Duel.GetChainInfo(ev-1,CHAININFO_TRIGGERING_EFFECT):IsHasType(EFFECT_TYPE_ACTIVATE) and not re:IsActiveType(TYPE_MONSTER) then return false end
 	local ex,tg,tc=Duel.GetOperationInfo(ev,CATEGORY_DESTROY)
 	return ex and tg~=nil and tc+tg:FilterCount(Card.IsOnField,nil)-#tg>0
 end
