@@ -31,31 +31,31 @@ end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsChainNegatable(ev)
 end
+--Filters
+	function s.xyzfilter(c)
+	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
+	and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
+end
 
---Cost: detach 1 from a Limit Breaker Xyz, unless you control Level 13 Synchro
-function s.cfilter(c,tp)
-	return c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86) and c:GetOverlayCount()>0 and c:IsFaceup()
-end
 function s.synfilter(c)
-	return c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
+	return c:IsFaceup() and c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
 end
+
+--Cost
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local b1=Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
+	local b1=Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil)
 	local b2=Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_MZONE,0,1,nil)
-	if chk==0 then return b1 or b2 and Duel.CheckRemoveOverlayCard(tp,1,0,1,REASON_COST,b1)end
-	local op=nil
-	if b1 and b2 then
-		op=Duel.SelectEffect(tp,
-			{b1,aux.Stringid(id,0)},
-			{b2,aux.Stringid(id,1)})
-	else
-		op=(b1 and 1) or (b2 and 2)
-	end
-	if op==1 then
-		local g=Duel.GetMatchingGroup(s.cfilter,tp,LOCATION_MZONE,0,nil)
-		Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST,g)
-	elseif op==2 then
-		return
+
+	if chk==0 then return b1 or b2 end
+
+	if not b2 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DEATTACHFROM)
+		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil)
+		g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
+	elseif b1 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DEATTACHFROM)
+		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil)
+		g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
 	end
 end
 

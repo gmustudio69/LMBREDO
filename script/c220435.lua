@@ -2,7 +2,6 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-
 	--Counter Trap activation
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DISABLE_SUMMON+CATEGORY_DESTROY+CATEGORY_SPECIAL_SUMMON)
@@ -14,7 +13,6 @@ function s.initial_effect(c)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.operation)
 	c:RegisterEffect(e1)
-
 end
 
 --Check summon negatable
