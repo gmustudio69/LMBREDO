@@ -71,6 +71,7 @@ end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateSummon(eg) then
 		Duel.Destroy(eg,REASON_EFFECT)
+		Duel.BreakEffect()
 		
 		-- LƯU Ý LOGIC: 
 		-- Nếu bạn MUỐN hiệu ứng Special Summon luôn xảy ra miễn là thỏa điều kiện dưới GY,
