@@ -1,51 +1,59 @@
+-- Shattered Limit - The Final Fall
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Effect 1: Choose 1 of 2 effects
+	-- Kích hoạt lá bài (Card Activation)
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetType(EFFECT_TYPE_QUICK_O) -- Use EFFECT_TYPE_QUICK_O if this is a Trap Card
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1)
-	e1:SetTarget(s.e1tg)
-	e1:SetOperation(s.e1op)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e1)
 
-	-- Effect 2: Protection by Tributing
+	-- Lựa chọn 1 trong 2 hiệu ứng (Once per turn)
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,3))
-	e2:SetType(EFFECT_TYPE_QUICK_O) -- Use EFFECT_TYPE_QUICK_O if this is a Trap/Quick Effect
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1,id)
-	e2:SetCost(s.protcost)
-	e2:SetTarget(s.prottg)
-	e2:SetOperation(s.protop)
+	e2:SetCountLimit(1)
+	e2:SetTarget(s.efftg)
+	e2:SetOperation(s.effop)
 	c:RegisterEffect(e2)
+
+	-- Tribute 1 DARK để bảo vệ 1 quái thú (HOPT)
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,3))
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCountLimit(1,id)
+	e3:SetCost(s.procost)
+	e3:SetTarget(s.protg)
+	e3:SetOperation(s.proop)
+	c:RegisterEffect(e3)
 end
 
 -- ==========================================
--- Filters for Effect 1
+-- Xử lý Hiệu ứng 1 (Lựa chọn 1 trong 2)
 -- ==========================================
+
 function s.tdfilter(c)
-	return c:IsType(TYPE_TRAP) and c:IsAbleToDeck()
+	return c:IsTrap() and c:IsAbleToDeck()
 end
 function s.setfilter(c)
-	return c:IsType(TYPE_TRAP) and c:IsSSetable()
+	return c:IsTrap() and c:IsSSetable()
 end
-function s.syncfilter(c)
+function s.cfilter(c)
 	return c:IsFaceup() and c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
 end
 
-function s.e1tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		if e:GetLabel()==0 then
-			return chkc:IsLocation(LOCATION_GY) and chkc:IsControler(tp) and s.tdfilter(chkc)
-		else return false end
+		if e:GetLabel()==0 then return chkc:IsLocation(LOCATION_GY) and chkc:IsControler(tp) and s.tdfilter(chkc) end
+		return false
 	end
 	local b1=Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_GY,0,2,nil) and Duel.IsPlayerCanDraw(tp,1)
 	local b2=Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND,0,1,nil)
 	if chk==0 then return b1 or b2 end
-	
 	local op=0
 	if b1 and b2 then
 		op=Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))
@@ -55,76 +63,73 @@ function s.e1tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		op=Duel.SelectOption(tp,aux.Stringid(id,2))+1
 	end
 	e:SetLabel(op)
-	
 	if op==0 then
-		-- Target 2 Traps
-		e:SetCategory(CATEGORY_TODECK+CATEGORY_DRAW)
 		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 		local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_GY,0,2,2,nil)
 		Duel.SetOperationInfo(0,CATEGORY_TODECK,g,2,0,0)
 		Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
 	else
-		-- Set from Hand (No target needed)
-		e:SetCategory(0)
 		e:SetProperty(0)
 	end
 end
 
-function s.e1op(e,tp,eg,ep,ev,re,r,rp)
+function s.effop(e,tp,eg,ep,ev,re,r,rp)
+	if not e:GetHandler():IsRelateToEffect(e) then return end
 	local op=e:GetLabel()
 	if op==0 then
-		-- Shuffle and Draw
+		-- Trộn 2 Trap vào Deck và Rút 1
 		local tg=Duel.GetTargetCards(e)
 		if #tg>0 then
 			Duel.SendtoDeck(tg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
-			local g=Duel.GetOperatedGroup()
-			if g:IsExists(Card.IsLocation,1,nil,LOCATION_DECK+LOCATION_EXTRA) then
-				Duel.ShuffleDeck(tp)
+			local og=Duel.GetOperatedGroup()
+			if og:IsExists(Card.IsLocation,1,nil,LOCATION_DECK+LOCATION_EXTRA) then
 				Duel.Draw(tp,1,REASON_EFFECT)
 			end
 		end
 	else
-		-- Set Trap from Hand
+		-- Set 1 Trap từ tay
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-		local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_HAND,0,1,1,nil)
-		if #g>0 then
-			local tc=g:GetFirst()
-			if Duel.SSet(tp,tc)~=0 then
-				-- Check for Level 13 Synchro
-				if Duel.IsExistingMatchingCard(s.syncfilter,tp,LOCATION_MZONE,0,1,nil) then
-					local e1=Effect.CreateEffect(e:GetHandler())
-					e1:SetType(EFFECT_TYPE_SINGLE)
-					e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
-					e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-					e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-					tc:RegisterEffect(e1)
-				end
+		local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_HAND,0,1,1,nil):GetFirst()
+		if tc and Duel.SSet(tp,tc)>0 then
+			-- Cho phép kích hoạt luôn nếu có Synchro Level 13
+			if Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil) then
+				local e1=Effect.CreateEffect(e:GetHandler())
+				e1:SetType(EFFECT_TYPE_SINGLE)
+				e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+				e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+				e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+				tc:RegisterEffect(e1)
 			end
 		end
 	end
 end
 
 -- ==========================================
--- Filters and Functions for Effect 2
+-- Xử lý Hiệu ứng 2 (Tribute & Protect)
 -- ==========================================
-function s.cfilter(c)
-	return c:IsAttribute(ATTRIBUTE_DARK)
+
+function s.costfilter(c)
+	return c:IsAttribute(ATTRIBUTE_DARK) and c:IsReleasable()
 end
-function s.protcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckReleaseGroupCost(tp,s.cfilter,1,false,nil,nil) end
-	local g=Duel.SelectReleaseGroupCost(tp,s.cfilter,1,1,false,nil,nil)
+function s.procost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
+	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_MZONE,0,1,1,nil)
 	Duel.Release(g,REASON_COST)
 end
-function s.prottg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+
+function s.protg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) end
 	if chk==0 then return Duel.IsExistingTarget(aux.TRUE,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	Duel.SelectTarget(tp,aux.TRUE,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 end
-function s.protop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.proop(e,tp,eg,ep,ev,re,r,rp)
+	if not e:GetHandler():IsRelateToEffect(e) then return end
 	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
+	if tc and tc:IsRelateToEffect(e) then
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
