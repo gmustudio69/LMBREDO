@@ -48,10 +48,10 @@ end
 
 function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		if e:GetLabel()==0 then return chkc:IsLocation(LOCATION_GY) and chkc:IsControler(tp) and s.tdfilter(chkc) end
+		if e:GetLabel()==0 then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.tdfilter(chkc) end
 		return false
 	end
-	local b1=Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_GY,0,2,nil) and Duel.IsPlayerCanDraw(tp,1)
+	local b1=Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_GRAVE,0,2,nil) and Duel.IsPlayerCanDraw(tp,1)
 	local b2=Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND,0,1,nil)
 	if chk==0 then return b1 or b2 end
 	local op=0
@@ -66,7 +66,7 @@ function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if op==0 then
 		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-		local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_GY,0,2,2,nil)
+		local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_GRAVE,0,2,2,nil)
 		Duel.SetOperationInfo(0,CATEGORY_TODECK,g,2,0,0)
 		Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
 	else
