@@ -104,7 +104,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		local tc=g:GetFirst()
 		if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 			-- Negate effects
-			local e1=Effect.CreateEffect(c)
+			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_DISABLE)
 			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
