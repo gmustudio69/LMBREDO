@@ -24,7 +24,10 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 s.listed_series={0xf86}
-
+-- Condition: Control no other monsters
+function s.indcon(e)
+	return Duel.GetFieldGroupCount(e:GetHandlerPlayer(),LOCATION_MZONE,0)==1
+end
 -- Filter for "Limit Break" Trap card (assumed setcode 0xf86, change if needed)
 function s.setfilter(c)
 	return c:IsSetCard(0xf86) and c:IsType(TYPE_TRAP) and c:IsSSetable()
