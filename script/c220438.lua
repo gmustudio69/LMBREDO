@@ -63,7 +63,7 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetTarget(function(e,c) return c:IsLocation(LOCATION_DECK|LOCATION_EXTRA) and not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
 		Duel.RegisterEffect(e1,tp)
 		--Clock Lizard check
-		aux.addTempLizardCheck(c,tp,function(e,c) return not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
+		aux.addTempLizardCheck(e:GetHandler(),tp,function(e,e:GetHandler()) return not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR)) end)
 	end
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
