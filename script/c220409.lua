@@ -44,9 +44,8 @@ function s.costfilter(c)
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_DECK,0,1,nil) and Duel.CheckLPCost(tp,800)
+		return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_DECK,0,1,nil)
 	end
-	Duel.PayLPCost(tp,800)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_DECK,0,1,1,nil)
 	Duel.SendtoGrave(g,REASON_COST)
@@ -73,6 +72,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetValue(3)
 			e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
 			c:RegisterEffect(e1)
+			
 		end
 	end
 end
@@ -94,8 +94,18 @@ function s.scfilter(c)
 end
 function s.sspop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	if not tc then return end
-	Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+	if tc:IsRelateToEffect(e) and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
+		-- Negate effects
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_DISABLE)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+		tc:RegisterEffect(e1)
+		local e2=e1:Clone()
+		e2:SetCode(EFFECT_DISABLE_EFFECT)
+		tc:RegisterEffect(e2)
+	end
+	Duel.SpecialSummonComplete()
 end
 
 -- Target 1 "World Decoder" monster in GY
