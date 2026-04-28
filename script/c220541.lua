@@ -25,9 +25,9 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,{id,2})
-	e2:SetCondition(s.tkcon)
-	e2:SetTarget(s.tktg)
-	e2:SetOperation(s.tkop)
+	e2:SetCondition(s.rmcon)
+	e2:SetTarget(s.rmtg)
+	e2:SetOperation(s.rmop)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -52,34 +52,41 @@ function s.gyop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- Effect 2: Token Generation
+-- Effect 2: Temporary Banishment
 function s.tkfilter(c,tp,lg)
 	return c:IsLocation(LOCATION_MZONE) and lg:IsContains(c)
 end
-function s.tkcon(e,tp,eg,ep,ev,re,r,rp)
+function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
 	local lg=e:GetHandler():GetLinkedGroup()
 	return lg and eg:IsExists(s.tkfilter,1,nil,tp,lg)
 end
-function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) end
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
+function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsFaceup() end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
 end
-function s.tkop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
-	local token=Duel.CreateToken(tp,220542) -- Use your Token ID here
-	if Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)>0 then
-		-- Cannot be used as Fusion or Synchro material
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
-		e1:SetValue(1)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-		token:RegisterEffect(e1)
-		local e2=e1:Clone()
-		e2:SetCode(EFFECT_CANNOT_BE_SYNCHRO_MATERIAL)
-		token:RegisterEffect(e2)
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if tc:IsRelateToEffect(e) then
+		if Duel.Remove(tc,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)>0 then
+			-- Banish until opponent's next End Phase
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+			e1:SetCode(EVENT_PHASE+PHASE_END)
+			e1:SetReset(RESET_PHASE+PHASE_END+RESET_OPPO_TURN,1)
+			e1:SetCountLimit(1)
+			e1:SetLabelObject(tc)
+			e1:SetCondition(s.retcon)
+			e1:SetOperation(s.retop)
+			Duel.RegisterEffect(e1,tp)
+		end
 	end
+end
+function s.retcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetTurnPlayer()~=tp
+end
+function s.retop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.ReturnToField(e:GetLabelObject())
 end
