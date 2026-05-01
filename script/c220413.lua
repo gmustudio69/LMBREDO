@@ -72,12 +72,10 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 --Return to Extra Deck and Special Summon
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
+	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToExtra()
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
+	if chk==0 then return e:GetHandler():IsAbleToExtra() end
 	Duel.SetOperationInfo(0,CATEGORY_TOEXTRA,e:GetHandler(),1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
 	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,1200)
