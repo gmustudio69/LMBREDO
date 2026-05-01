@@ -41,6 +41,7 @@ function s.initial_effect(c)
 	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetCategory(CATEGORY_TOEXTRA+CATEGORY_SPECIAL_SUMMON+CATEGORY_RECOVER)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e4:SetCode(EVENT_PHASE+PHASE_STANDBY)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetCountLimit(1)
@@ -70,28 +71,36 @@ end
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.NegateActivation(ev)
 end
---Return to Extra Deck and Special Summon
+-- E4: Tag Out (UPDATED PSCT)
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	-- Ensure the monster has a Level (ignores Link/Xyz) so the LP calculation is valid
+	return c:IsSetCard(0xb67) and c:HasLevel()
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToExtra() end
-	Duel.SetOperationInfo(0,CATEGORY_TOEXTRA,e:GetHandler(),1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
-	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,1200)
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp) end
+	local c=e:GetHandler()
+	if chk==0 then return c:IsAbleToExtra()
+		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
+		
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
+	Duel.SetOperationInfo(0,CATEGORY_TOEXTRA,c,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,g:GetFirst():GetLevel()*400)
+	-- Special summon info is omitted here because it is an optional "then" effect
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	-- Returning to Extra Deck is the primary action
-	if c:IsRelateToEffect(e) then
-		Duel.SendtoDeck(c,nil,SEQ_DECKTOP,REASON_EFFECT)
-		local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,nil,e,tp)
-		if #g>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-			Duel.BreakEffect()
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local sg=g:Select(tp,1,1,nil)
-			if #sg>0 and Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)>0 then
-				Duel.Recover(tp,1200,REASON_EFFECT)
+	local tc=Duel.GetFirstTarget()
+	if not (c:IsRelateToEffect(e) and tc:IsRelateToEffect(e)) then return end
+	-- "Return this card... and if you do, gain LP"
+	if Duel.SendtoExtraP(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_EXTRA) then
+		local rec = Duel.Recover(tp,tc:GetLevel()*400,REASON_EFFECT)
+		-- "then you can special summon it"
+		if rec>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+			if Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+				-- BreakEffect creates the sequential timing for "then"
+				Duel.BreakEffect()
+				Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
 			end
 		end
 	end
