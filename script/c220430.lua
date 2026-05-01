@@ -15,36 +15,52 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.CheckLPCost(tp,800) end
 	Duel.PayLPCost(tp,800)
 end
-function s.filter(c)
-	return c:IsNormalSpell() and c:IsSetCard(0xf86) and c:IsAbleToRemove()
+-- Filter for "Limit" Spell that has an activatable effect
+function s.filter(c,e,tp,eg,ep,ev,re,r,rp)
+	if not (c:IsSetCard(0xf86) and c:IsType(TYPE_SPELL) and c:IsAbleToRemove()) then return false end
+	local te=c:CheckActivateEffect(false,true,false)
+	return te~=nil
 end
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.filter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_GRAVE,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,tp,0)
-end
-function s.activate(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if not tc:IsRelateToEffect(e) then return end
+
+function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then
+		-- Pass the targeting condition to the copied spell if it targets
+		local te=e:GetLabelObject()
+		local tg=te and te:GetTarget() or nil
+		return tg and tg(e,tp,eg,ep,ev,re,r,rp,0,chkc)
+	end
+	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_GRAVE,0,1,nil,e,tp,eg,ep,ev,re,r,rp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	
+	-- Target the "Limit" spell
+	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp,eg,ep,ev,re,r,rp)
+	local tc=g:GetFirst()
+	
+	-- Extract the spell's effect and prompt for its targets (if any)
 	local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
-	if not te then return end
+	
+	-- Merge properties to ensure we don't lose the CARD_TARGET flag
+	e:SetProperty(te:GetProperty()|EFFECT_FLAG_CARD_TARGET)
+	e:SetLabelObject(te)
+	
 	local tg=te:GetTarget()
-	local op=te:GetOperation()
-	if tg then tg(te,tp,Group.CreateGroup(),PLAYER_NONE,0,e,REASON_EFFECT,PLAYER_NONE,1) end
-	Duel.BreakEffect()
-	tc:CreateEffectRelation(te)
-	Duel.BreakEffect()
-	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
-	for etc in aux.Next(g) do
-		etc:CreateEffectRelation(te)
+	if tg then tg(e,tp,ceg,cep,cev,cre,cr,crp,1) end
+	
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
+end
+
+function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	local te=e:GetLabelObject()
+	if not te then return end
+	local tc=te:GetHandler()
+	
+	-- Banish the targeted spell
+	if tc:IsRelateToEffect(e) and Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)>0 then
+		-- If successfully banished, apply the spell's effect
+		local op=te:GetOperation()
+		if op then 
+			Duel.BreakEffect()
+			op(e,tp,eg,ep,ev,re,r,rp) 
+		end
 	end
-	if op then op(te,tp,Group.CreateGroup(),PLAYER_NONE,0,e,REASON_EFFECT,PLAYER_NONE,1) end
-	tc:ReleaseEffectRelation(te)
-	for etc in aux.Next(g) do
-		etc:ReleaseEffectRelation(te)
-	end
-	Duel.BreakEffect()
-	Duel.Remove(te:GetHandler(),POS_FACEUP,REASON_EFFECT)
 end

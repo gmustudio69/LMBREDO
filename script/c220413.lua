@@ -72,7 +72,7 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 --Return to Extra Deck and Special Summon
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,true,true)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsAbleToExtra()
