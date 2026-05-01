@@ -53,6 +53,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	s.attr_list[tp] = s.attr_list[tp]|attr
 	
 	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,tp,800)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_MZONE)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED+LOCATION_EXTRA)
 end
 
