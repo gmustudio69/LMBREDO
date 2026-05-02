@@ -76,31 +76,31 @@ function s.rescon(sg,e,tp,mg)
 	local lv=sg:GetSum(Card.GetLevel)
 	return Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,lv)
 end
+-- COST: Selection and Banishment happen here
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return true end
-	c:RegisterFlagEffect(id,RESET_CHAIN,0,1)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,nil)
-	if chk==0 then return Duel.GetLocationCountFromEx(tp)>0
-		and aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) end
+	if chk==0 then 
+		return Duel.GetLocationCountFromEx(tp)>0
+		and aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) 
+	end
+	
+	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_REMOVE)
+	local lv=sg:GetSum(Card.GetLevel)
+	e:SetLabel(lv) -- Pass the Level to the Operation
+	Duel.Remove(sg,POS_FACEUP,REASON_COST)
+end
+
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,2,tp,LOCATION_MZONE+LOCATION_GRAVE)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,nil)
-	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_REMOVE)
-	if #sg==2 then
-		local lv=sg:GetSum(Card.GetLevel)
-		if Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)==2 then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local sc=Duel.SelectMatchingCard(tp,s.synfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,lv):GetFirst()
-			if sc then
-				Duel.SpecialSummon(sc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP)
-				sc:CompleteProcedure()
-			end
-		end
+	local lv=e:GetLabel()
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local sc=Duel.SelectMatchingCard(tp,s.synfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,lv):GetFirst()
+	if sc then
+		Duel.SpecialSummon(sc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP)
+		sc:CompleteProcedure()
 	end
 end
