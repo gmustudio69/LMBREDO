@@ -2,42 +2,39 @@
 local s,id=GetID()
 function s.initial_effect(c)
 
---Activate
-local e1=Effect.CreateEffect(c)
-e1:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND+CATEGORY_HANDES)
-e1:SetType(EFFECT_TYPE_ACTIVATE)
-e1:SetCode(EVENT_FREE_CHAIN)
-e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-e1:SetTarget(s.thtg)
-e1:SetOperation(s.thop)
-c:RegisterEffect(e1)
+	--Activate
+	local e1=Effect.CreateEffect(c)
+	e1:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND+CATEGORY_HANDES)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetTarget(s.thtg)
+	e1:SetOperation(s.thop)
+	c:RegisterEffect(e1)
 
---Banish effect
-local e2=Effect.CreateEffect(c)
-e2:SetCategory(CATEGORY_REMOVE)
-e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-e2:SetRange(LOCATION_SZONE)
-e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-e2:SetCountLimit(1,id+1)
-e2:SetCondition(s.rmcon)
-e2:SetTarget(s.rmtg)
-e2:SetOperation(s.rmop)
-c:RegisterEffect(e2)
+	--Banish effect
+	local e2=Effect.CreateEffect(c)
+	e2:SetCategory(CATEGORY_REMOVE)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetCondition(s.rmcon)
+	e2:SetTarget(s.rmtg)
+	e2:SetOperation(s.rmop)
+	c:RegisterEffect(e2)
 
 end
 
 --===== SEARCH =====
 function s.thfilter(c)
-return c:IsSetCard(0xd8f) and c:IsMonster() and c:IsAbleToHand()
+	return c:IsSetCard(0xd8f) and c:IsMonster() and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-if chk==0 then
-return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,2,nil)
-end
-Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
-Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,tp,1)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
 end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
