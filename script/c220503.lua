@@ -34,9 +34,9 @@ end
 
 --===== SEARCH =====
 function s.thfilter(c)
-return (c:IsSetCard(0xd8f) and c:IsType(TYPE_SPELL+TYPE_TRAP))
+return (c:IsSetCard(0xd8f) and c:IsType(TYPE_MONSTER))
 or (c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_PSYCHIC) and c:IsMonster())
-and c:IsAbleToHand()
+and c:IsAbleToHand() and not c:IsCode(id)
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
