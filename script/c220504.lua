@@ -48,7 +48,6 @@ if #g>0 then
 Duel.SendtoHand(g,nil,REASON_EFFECT)
 Duel.ConfirmCards(1-tp,g)
 end
-end
 --discard 1
 if Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) then
 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
@@ -58,7 +57,7 @@ Duel.SendtoGrave(dg,REASON_EFFECT+REASON_DISCARD)
 end
 end
 end
-
+end
 --===== CONDITION =====
 function s.rmfilter(c,tp)
 return c:IsFaceup()
