@@ -41,13 +41,14 @@ Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,tp,1)
 end
 
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
+if Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,2,2,nil)
 if #g>0 then
 Duel.SendtoHand(g,nil,REASON_EFFECT)
 Duel.ConfirmCards(1-tp,g)
 end
-
+end
 --discard 1
 if Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) then
 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
