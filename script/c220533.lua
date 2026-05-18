@@ -77,8 +77,8 @@ function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 		-- "and if you do, double this card ATK"
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_SET_ATTACK_FINAL)
-		e1:SetValue(c:GetAttack()*2)
+		e1:SetCode(EFFECT_UPDATE_LEVEL)
+		e1:SetValue(-3)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
 		c:RegisterEffect(e1)
 	end
