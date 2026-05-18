@@ -48,9 +48,9 @@ end
 --discard 1
 if Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) then
 Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
-local dg=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil)
+local dg=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_HAND,0,1,1,nil)
 if #dg>0 then
-Duel.SendtoGrave(dg,REASON_EFFECT+REASON_DISCARD)
+Duel.Remove(dg,POS_FACEUP,REASON_EFFECT)
 end
 end
 end
