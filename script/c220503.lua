@@ -1,7 +1,6 @@
 --Nocturne Gear - Glitch
 local s,id=GetID()
 function s.initial_effect(c)
-
 	--Discard to search
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
@@ -16,7 +15,7 @@ function s.initial_effect(c)
 
 	--Special summon effect
 	local e2=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DAMAGE)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_HAND+LOCATION_GRAVE)
