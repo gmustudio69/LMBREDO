@@ -49,7 +49,7 @@ function s.initial_effect(c)
 	e4:SetOperation(s.spop)
 	c:RegisterEffect(e4)
 end
-
+s.listed_names={220405,id}
 --Check if you control a Limit Breaker monster
 function s.tgfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0xf86) -- Assuming "Limit Breaker" set code is 0xCBF
