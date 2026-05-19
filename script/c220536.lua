@@ -45,7 +45,7 @@ end
 
 -- E2: Banish Choice Logic
 function s.sumfilter(c,e,tp)
-	return c:IsSetCard(0xd8f) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsRace(RACE_PSYCHIC) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.choicetg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
