@@ -1,6 +1,7 @@
 -- <Limit Breaker> Ryan
 local s, id = GetID()
-local KAZARI_ID = 220450 -- Replace with the actual ID of "<Limit Breaker> Kazari"
+local KAZARI_ID = 220450
+local EMI_ID = 220531 -- Replace with the actual ID of "<Limit Breaker> Kazari"
 
 function s.initial_effect(c)
 	-- Effect 1: Special Summon from Hand & Search
@@ -42,11 +43,12 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 s.listed_names={220450,id}
+s.listed_names={220531,id}
 -- =========================================================
 -- Effect 1: Special Summon & Search
 -- =========================================================
 function s.thfilter(c)
-	return c:IsCode(KAZARI_ID) and c:IsAbleToHand()
+	return (c:IsCode(KAZARI_ID) or c:IsCode(EMI_ID))and c:IsAbleToHand()
 end
 function s.sstg(e, tp, eg, ep, ev, re, r, rp, chk)
 	local c = e:GetHandler()
