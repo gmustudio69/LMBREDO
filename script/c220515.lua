@@ -43,7 +43,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 s.listed_names={220450,id}
-s.listed_names={220531,id}
 -- =========================================================
 -- Effect 1: Special Summon & Search
 -- =========================================================
