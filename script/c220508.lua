@@ -31,9 +31,9 @@ function s.initial_effect(c)
 	-- Ignition Effect: Detach 1, target 1 monster on field or GY; place it as a Continuous Spell
 	local e3 = Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id, 1))
-	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e3:SetRange(LOCATION_MZONE)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e3:SetCountLimit(1,id) -- HOPT
 	e3:SetCost(s.plcost) -- Detach 1 material
 	e3:SetTarget(s.pctg)

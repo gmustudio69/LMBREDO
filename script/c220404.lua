@@ -1,21 +1,28 @@
 --<Limit Breaker> Silverwings
 local s,id=GetID()
-
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Xyz Summon procedure
-	Xyz.AddProcedure(c,nil,7,3,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
+	Xyz.AddProcedure(c,nil,7,2,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
+	c:SetSPSummonOnce(id)
 	--Send up to 3 "Limit Break" Normal Spells to GY
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetCategory(CATEGORY_TOGRAVE)
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCountLimit(1)
+	e1:SetCost(s.tgcost)
+	e1:SetCondition(s.elliecon)
+	e1:SetTarget(s.tgtg)
+	e1:SetOperation(s.tgop)
+	c:RegisterEffect(e1)
+	-- Gain ATK during damage calculation
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOGRAVE)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1)
-	e2:SetCost(s.tgcost)
-	e2:SetCondition(s.elliecon)
-	e2:SetTarget(s.tgtg)
-	e2:SetOperation(s.tgop)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+	e2:SetCondition(s.atkcon)
+	e2:SetOperation(s.atkop)
 	c:RegisterEffect(e2)
 	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
 end
@@ -51,5 +58,23 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 	local sg=g:Select(tp,1,2,nil)
 	if #sg>0 then
 		Duel.SendtoGrave(sg,REASON_EFFECT)
+	end
+end
+-- E2: ATK Gain
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=c:GetBattleTarget()
+	return tc and tc:IsFaceup() and not tc:IsAttribute(ATTRIBUTE_LIGHT)
+end
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=c:GetBattleTarget()
+	if tc then
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(tc:GetAttack())
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_DAMAGE_CAL)
+		c:RegisterEffect(e1)
 	end
 end
