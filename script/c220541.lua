@@ -2,6 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- Link Summon procedure
 	c:EnableReviveLimit()
+	Pendulum.AddProcedure(c)
 	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
 
 	-- Pendulum Effect
