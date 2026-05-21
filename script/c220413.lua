@@ -98,7 +98,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			local b1=tc:IsAbleToHand()
 			local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,false,false)
 			if (b1 or b2) then
-				if b1 and (not b2 or Duel.SelectOption(tp,aux.Stringid(id,3)) then
+				if b1 and (not b2 or Duel.SelectOption(tp,aux.Stringid(id,3))) then
 					Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
 				else
 					Duel.SendtoHand(tc,nil,REASON_EFFECT)
