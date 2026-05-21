@@ -31,8 +31,8 @@ end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsChainNegatable(ev)
 end
---Filters
-	function s.xyzfilter(c)
+
+function s.xyzfilter(c,tp)
 	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsSetCard(0xf86)
 	and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
 end
@@ -43,18 +43,16 @@ end
 
 --Cost
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local b1=Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil)
+	local b1=Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil,tp)
 	local b2=Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_MZONE,0,1,nil)
-
 	if chk==0 then return b1 or b2 end
-
 	if not b2 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DEATTACHFROM)
-		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil,tp)
 		g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
 	elseif b1 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DEATTACHFROM)
-		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil,tp)
 		g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
 	end
 end
