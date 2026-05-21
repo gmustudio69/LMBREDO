@@ -2,91 +2,106 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- Link Summon procedure
 	c:EnableReviveLimit()
-	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_EFFECT),2,2)
-	
-	-- 1: Target 1 banished card; return to GY
+	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
+
+	-- Pendulum Effect
+	local pe1=Effect.CreateEffect(c)
+	pe1:SetDescription(aux.Stringid(id,0))
+	pe1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
+	pe1:SetType(EFFECT_TYPE_IGNITION)
+	pe1:SetRange(LOCATION_PZONE)
+	pe1:SetCountLimit(1,id)
+	pe1:SetCost(s.tkcost)
+	pe1:SetTarget(s.tktg)
+	pe1:SetOperation(s.tkop)
+	c:RegisterEffect(pe1)
+
+	-- Monster Effect 1: Trigger on Summon
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TOGRAVE)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCountLimit(1,{id,1})
-	e1:SetTarget(s.gytg)
-	e1:SetOperation(s.gyop)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetCategory(CATEGORY_DESTROY+CATEGORY_REMOVE)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e1:SetCountLimit(1,id+100)
+	e1:SetTarget(s.destg)
+	e1:SetOperation(s.desop)
 	c:RegisterEffect(e1)
 	
-	-- 2: Summon Token
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
+	-- Monster Effect 2: Same trigger when summoned to a linked zone
+	local e2=e1:Clone()
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,2})
-	e2:SetCondition(s.rmcon)
-	e2:SetTarget(s.rmtg)
-	e2:SetOperation(s.rmop)
+	e2:SetCondition(s.linkcon)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e3)
+
+	-- Monster Effect 3: If sent to Extra Deck face-up, place in Pendulum Zone
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,2))
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e4:SetCode(EVENT_TO_EXTRA)
+	e4:SetRange(LOCATION_EXTRA)
+	e4:SetCountLimit(1,id+200)
+	e4:SetTarget(s.pzontg)
+	e4:SetOperation(s.pzonop)
+	c:RegisterEffect(e4)
 end
 
-s.listed_names={id,220542} -- Replace 12345679 with your Token's ID
-
--- Effect 1: Return banished to GY
-function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_REMOVED) end
-	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,1,0,0)
+-- Pendulum Effect Logic
+function s.tkcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,800) end
+	Duel.PayLPCost(tp,800)
 end
-function s.gyop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
-		Duel.SendtoGrave(tc,REASON_EFFECT+REASON_RETURN)
+function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local zone=e:GetHandler():GetLinkedZone(tp)
+	if chk==0 then return zone~=0 and Duel.GetLocationCount(tp,LOCATION_MZONE,tp,LOCATION_REASON_TOFIELD,zone)>0
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
+end
+function s.tkop(e,tp,eg,ep,ev,re,r,rp)
+	local zone=e:GetHandler():GetLinkedZone(tp)
+	if zone~=0 and Duel.GetLocationCount(tp,LOCATION_MZONE,tp,LOCATION_REASON_TOFIELD,zone)>0 then
+		local token=Duel.CreateToken(tp,220542)
+		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP,zone)
 	end
 end
 
--- Effect 2: Token Generation
--- Effect 2: Temporary Banishment
-function s.tkfilter(c,tp,lg)
-	return c:IsLocation(LOCATION_MZONE) and lg:IsContains(c)
+-- Monster Effect Logic
+function s.linkcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(function(c,lc) return lc:GetLinkedGroup():IsContains(c) end,1,nil,e:GetHandler())
 end
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	local lg=e:GetHandler():GetLinkedGroup()
-	return lg and eg:IsExists(s.tkfilter,1,nil,tp,lg)
-end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsFaceup() end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
+function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return false end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local g1=Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
+	local g2=Duel.SelectTarget(tp,function(c,ec) return c~=ec and c:IsFaceup() end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,g1:GetFirst(),g1:GetFirst())
+	g1:Merge(g2)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g1,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,1,0,0)
 end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
-		if Duel.Remove(tc,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)>0 then
-			-- Banish until opponent's next End Phase
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-			e1:SetCode(EVENT_PHASE+PHASE_END)
-			e1:SetReset(RESET_PHASE+PHASE_END+RESET_OPPO_TURN,1)
-			e1:SetCountLimit(1)
-			e1:SetLabelObject(tc)
-			e1:SetCondition(s.retcon)
-			e1:SetOperation(s.retop)
-			Duel.RegisterEffect(e1,tp)
-		end
+function s.desop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS):Filter(Card.IsRelateToEffect,nil)
+	if #g<2 then return end
+	local tc1=g:GetFirst()
+	local tc2=g:GetNext()
+	if Duel.Destroy(tc1,REASON_EFFECT)>0 then
+		Duel.BanishUntilEndPhase(tc2,tp)
 	end
 end
-function s.retcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnPlayer()~=tp
+
+-- Extra Deck to Pendulum Zone Logic
+function s.pzontg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1) end
 end
-function s.retop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.ReturnToField(e:GetLabelObject())
+function s.pzonop(e,tp,eg,ep,ev,re,r,rp)
+	if not (Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1)) then return end
+	Duel.MoveToField(e:GetHandler(),tp,tp,LOCATION_PZONE,POS_FACEUP,true)
 end
