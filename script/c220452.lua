@@ -73,7 +73,7 @@ function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) and tc:IsControler(1-tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		if Duel.GetControl(tc,tp) then
-			-- Negate effect
+				-- Negate effects
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_DISABLE)
@@ -82,14 +82,17 @@ function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 			local e2=e1:Clone()
 			e2:SetCode(EFFECT_DISABLE_EFFECT)
 			tc:RegisterEffect(e2)
-			-- Change level to 7
+			-- Attribute to DARK
+			local e3=e1:Clone()
+			e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+			e3:SetValue(ATTRIBUTE_DARK)
+			tc:RegisterEffect(e3)
+			-- Level to 7
 			if tc:HasLevel() then
-				local e3=Effect.CreateEffect(e:GetHandler())
-				e3:SetType(EFFECT_TYPE_SINGLE)
-				e3:SetCode(EFFECT_CHANGE_LEVEL)
-				e3:SetValue(7)
-				e3:SetReset(RESET_EVENT+RESETS_STANDARD)
-				tc:RegisterEffect(e3)
+				local e4=e1:Clone()
+				e4:SetCode(EFFECT_CHANGE_LEVEL)
+				e4:SetValue(7)
+				tc:RegisterEffect(e4)
 			end
 		end
 	end
