@@ -4,17 +4,6 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK),7,2,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
 	c:SetSPSummonOnce(id)
-	-- Alternative Xyz Summon
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e0:SetCode(EFFECT_SPSUMMON_PROC)
-	e0:SetRange(LOCATION_EXTRA)
-	e0:SetCondition(s.xyzcon)
-	e0:SetTarget(s.xyztg)
-	e0:SetOperation(s.xyzop)
-	e0:SetValue(SUMMON_TYPE_XYZ)
-	c:RegisterEffect(e0)
 	
 	-- Special Summon Once Per Turn
 	local e1=Effect.CreateEffect(c)
