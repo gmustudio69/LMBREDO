@@ -47,7 +47,8 @@ end
 
 --Send filter
 function s.tgfilter(c)
-	return (c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WARRIOR)) or c:IsCode(220462))
+	return (c:IsAttribute(ATTRIBUTE_DARK)
+	and c:IsRace(RACE_WARRIOR) or c:IsCode(220462))
 	and c:IsAbleToGrave()
 	end
 
