@@ -77,7 +77,7 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(function(c) return c:IsType(TYPE_SYNCHRO) and c:IsLevel(13) end,1,nil)
 end
 function s.thfilter(c)
-	return c:IsLevel(7) and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WARRIOR) and c:IsAbleToHand()
+	return c:IsAttribute(ATTRIBUTE_DARK) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.thfilter(chkc) end
