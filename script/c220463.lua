@@ -1,106 +1,99 @@
---E.V.O
 local s,id=GetID()
-local LIMIT_BREAK_CODE=220406 -- << change to your "Limit Break!!!" card ID
-
 function s.initial_effect(c)
+	-- Xyz Summon Procedure
 	c:EnableReviveLimit()
-	-- Xyz: 2+ Level 7 Warrior
-	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),7,2,nil,nil,99)
-
-	-- Quick: detach 3 → rank-up using this card
+	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK),7,2,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
+	c:SetSPSummonOnce(id)
+	-- Alternative Xyz Summon
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_FIELD)
+	e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
+	e0:SetCode(EFFECT_SPSUMMON_PROC)
+	e0:SetRange(LOCATION_EXTRA)
+	e0:SetCondition(s.xyzcon)
+	e0:SetTarget(s.xyztg)
+	e0:SetOperation(s.xyzop)
+	e0:SetValue(SUMMON_TYPE_XYZ)
+	c:RegisterEffect(e0)
+	
+	-- Special Summon Once Per Turn
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DAMAGE)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCountLimit(1,id)
-	e1:SetCost(s.rucost)
-	e1:SetTarget(s.rutg)
-	e1:SetOperation(s.ruop)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e1:SetValue(aux.xyzlimit)
 	c:RegisterEffect(e1)
-
-	-- End Phase: attach 1 "Limit Break!!!" from GY as material
+	
+	-- Quick Effect: Change opponent's effect
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_PHASE+PHASE_END)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetTarget(s.attachtg)
-	e2:SetOperation(s.attachop)
+	e2:SetCountLimit(1,id)
+	e2:SetCondition(s.negcon)
+	e2:SetCost(s.negcost)
+	e2:SetOperation(s.negop)
 	c:RegisterEffect(e2)
+	
+	-- Destroyed: SS 1 DARK Warrior from GY
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
+	e3:SetCode(EVENT_DESTROYED)
+	e3:SetCountLimit(1,id+100)
+	e3:SetTarget(s.sptg)
+	e3:SetOperation(s.spop)
+	c:RegisterEffect(e3)
+	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
+end
+function s.xyzfilter(c,tp,xyzc)
+	return c:IsFaceup() and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR)
 end
 
--- ===== Rank-up filter =====
-
-function s.xyzfilter(c,e,tp,mc)
-	return c:IsRank(7)
-		and c:IsType(TYPE_XYZ)
-		and not c:IsSetCard(0x48) -- exclude "Number"
-		and mc:IsCanBeXyzMaterial(c)
-		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
+function s.xyzop(e,tp,chk)
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
+		Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
+	return true
 end
 
--- detach 3
-function s.rucost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,3,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,3,3,REASON_COST)
+-- E2: Effect Manipulation
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return rp==1-tp and re:IsActiveType(TYPE_MONSTER)
 end
-
-function s.rutg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,c)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
-
-function s.ruop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if not (c:IsFaceup() and c:IsRelateToEffect(e)) then return end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local xc=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c):GetFirst()
-	if not xc then return end
-
-	local atk=xc:GetOriginalAttack()
-
-	-- transfer materials
-	local mg=c:GetOverlayGroup()
-	if #mg>0 then Duel.Overlay(xc,mg) end
-
-	xc:SetMaterial(Group.FromCards(c))
-	Duel.Overlay(xc,Group.FromCards(c))
-
-	if Duel.SpecialSummon(xc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
-		xc:CompleteProcedure()
-		if atk>0 then
-			Duel.Damage(tp,atk,REASON_EFFECT)
-		end
-	end
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.ChangeChainOperation(ev,s.repop)
 end
-
--- ===== End Phase attach =====
-
-function s.attachfilter(c)
-	return c:IsCode(LIMIT_BREAK_CODE)
-end
-
-function s.attachtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return e:GetHandler():IsType(TYPE_XYZ)
-			and Duel.IsExistingMatchingCard(s.attachfilter,tp,LOCATION_GRAVE,0,1,nil)
-	end
-end
-
-function s.attachop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if not c:IsRelateToEffect(e) or not c:IsFaceup() then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.attachfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_CARD,0,id)
+	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DESTROY)
+	local g=Duel.SelectMatchingCard(1-tp,nil,1-tp,LOCATION_MZONE,0,1,1,nil)
 	if #g>0 then
-		Duel.Overlay(c,g)
+		Duel.Destroy(g,REASON_EFFECT)
+	end
+end
+
+-- E3: GY Recovery
+function s.spfilter(c,e,tp)
+	return c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WARRIOR) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+end
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
+	if #g>0 then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
