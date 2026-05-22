@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	--Synchro summon
 	Synchro.AddProcedure(c,aux.FilterBoolFunction(Card.IsAttribute,ATTRIBUTE_DARK),1,1,Synchro.NonTuner(nil),1,99)
 	c:EnableReviveLimit()
-
+	c:SetSPSummonOnce(id)
 	--Cannot attack the turn it is summoned
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)

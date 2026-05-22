@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,{id,1})
 	e1:SetCondition(s.tgcon)
 	e1:SetCost(s.tgcost)
 	e1:SetTarget(s.tgtg)
@@ -26,10 +26,10 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCountLimit(1,id+1)
-	e2:SetCondition(s.setcon)
-	e2:SetTarget(s.settg)
-	e2:SetOperation(s.setop)
+	e2:SetCountLimit(1,{id,2})
+	e2:SetCondition(s.thcon)
+	e2:SetTarget(s.thtg)
+	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
 end
@@ -73,28 +73,23 @@ function s.synfilter(c,tp)
 	return c:IsFaceup() and c:IsType(TYPE_SYNCHRO) and c:IsLevel(13)
 end
 
-function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.synfilter,1,nil,tp)
+-- E2: Recovery Logic
+function s.thcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(function(c) return c:IsType(TYPE_SYNCHRO) and c:IsLevel(13) end,1,nil)
 end
-
---Limit Continuous Trap filter
-function s.setfilter(c)
-	return c:IsType(TYPE_TRAP) and c:IsType(TYPE_CONTINUOUS) and c:IsSSetable() and c:IsSetCard(0xf86)
+function s.thfilter(c)
+	return c:IsLevel(7) and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WARRIOR) and c:IsAbleToHand()
 end
-
-function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-	return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-	and Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil)
-	end
-	end
-
-	function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
-	local tc=g:GetFirst()
-	if tc then
-	Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.thfilter(chkc) end
+	if chk==0 then return Duel.IsExistingTarget(s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectTarget(tp,s.thfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,1,0,0)
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if tc and tc:IsRelateToEffect(e) then
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 	end
 end
