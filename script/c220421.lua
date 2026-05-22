@@ -77,7 +77,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return not c:IsAttribute(ATTRIBUTE_DARK)
+	return c:IsLocation(LOCATION_DECK|LOCATION_EXTRA) and not c:IsAttribute(ATTRIBUTE_DARK)
 end
 
 --COUNTER TRAP TO GY CONDITION
