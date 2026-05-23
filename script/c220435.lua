@@ -65,16 +65,16 @@ end
 --Operation
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateSummon(eg) then
-		Duel.Destroy(eg,REASON_EFFECT)	 
+		Duel.Destroy(eg,REASON_EFFECT)   
 	end
 end
+function s.disconfilter(c,tp)
+	return c:IsOnField() and c:IsControler(tp)
+end
 function s.condition2(e,tp,eg,ep,ev,re,r,rp)
-	local res=false
-	if re:IsActiveType(TYPE_MONSTER) and re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then
-		local tg=Duel.GetChainInfo(ev,CHAININFO_TARGET_CARDS)
-		if tg and tg:IsExists(Card.IsControler,1,nil,tp) then res=true end
-	end
-	return (re:IsHasType(EFFECT_TYPE_ACTIVATE) or res) and Duel.IsChainNegatable(ev)
+	if not (rp==1-tp and re:IsActiveType(TYPE_MONSTER) and re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) and Duel.IsChainDisablable(ev)) then return false end
+	local tg=Duel.GetChainInfo(ev,CHAININFO_TARGET_CARDS)
+	return tg 
 end
 function s.cost2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil,tp)
