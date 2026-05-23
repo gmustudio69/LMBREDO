@@ -43,7 +43,7 @@ end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=g:SelectGroup(tp,aux.dncheck,false,2,2)
+	local sg=aux.SelectUnselectGroup(tp,aux.dncheck,false,2,2)
 	if sg then
 		sg:KeepAlive()
 		e:SetLabelObject(sg)
