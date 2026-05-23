@@ -25,11 +25,14 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 --Check summon negatable
+-- Condition: Check if valid target
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	local tc=eg:GetFirst()
-	local res=tc:IsLevelAbove(7) and  tc:GetFlagEffect(id)~=0
-	tc:ResetFlagEffect(id)
-	return res
+	if Duel.GetCurrentChain()~=0 then return false end -- Trap activation requires chain 1
+	if re and re:IsActiveType(TYPE_MONSTER) and re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then
+		local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
+		return tg and tg:IsExists(Card.IsControler,1,nil,tp)
+	end
+	return eg and eg:IsExists(function(c) return c:IsLevelAbove(7) end,1,nil)
 end
 
 function s.xyzfilter(c,tp)
