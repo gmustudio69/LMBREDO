@@ -64,11 +64,15 @@ function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
 end
+-- Fix 2: Token Summoning to Linked Zone
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
-	local zone=e:GetHandler():GetLinkedZone(tp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	local c=e:GetHandler()
+	local zone=c:GetLinkedZone(tp)
+	-- Check if there is a valid zone AND space for the token
+	if zone~=0 and Duel.GetLocationCount(tp,LOCATION_MZONE,tp,LOCATION_REASON_TOFIELD,zone)>0 then
 		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
 		local token=Duel.CreateToken(tp,220542)
+		-- The zone argument in SpecialSummon restricts it to that specific zone
 		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP,zone)
 	end
 end
@@ -77,15 +81,22 @@ end
 function s.linkcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(function(c,lc) return lc:GetLinkedGroup():IsContains(c) end,1,nil,e:GetHandler())
 end
+-- Fix 1: Targeting Logic in Monster Effect
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local c=e:GetHandler()
 	if chkc then return false end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil)
-		and Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
+	-- We need 1 monster I control AND 1 other card on the field
+	if chk==0 then 
+		return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil)
+			and Duel.IsExistingTarget(function(c,ec) return c~=ec end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e:GetHandler()) 
+	end
+	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 	local g1=Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,nil)
+	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g2=Duel.SelectTarget(tp,function(c,ec) return c~=ec and c:IsFaceup() end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,g1:GetFirst(),g1:GetFirst())
+	-- Ensure the second target is not the first target
+	local g2=Duel.SelectTarget(tp,function(c,tc) return c~=tc end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,g1:GetFirst(),g1:GetFirst())
+	
 	g1:Merge(g2)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g1,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,1,0,0)
