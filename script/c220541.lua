@@ -111,7 +111,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 
 	-- 3. Ask player to pick 1 to Destroy
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local tc1=g:Select(tp,1,1,nil):GetFirst()
+	local tc1=g:GetFirstTarget()
 	
 	-- 4. The other card is automatically chosen for Banish
 	g:RemoveCard(tc1)
