@@ -102,23 +102,39 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	-- Retrieve all cards that are still on the field/relevant
-	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS):Filter(Card.IsRelateToEffect,e)
+	-- 1. Get the target group
+	local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
+	-- 2. Filter for cards that are still on the field and related to the effect
+	local g=tg:Filter(Card.IsRelateToEffect,nil,e)
 	
-	-- Ask the player to choose which of the two targets to Destroy, 
-	-- then the other will be Banished.
+	if #g < 2 then return end
+
+	-- 3. Ask player to pick 1 to Destroy
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 	local tc1=g:Select(tp,1,1,nil):GetFirst()
 	
-	if tc1 then
-		g:RemoveCard(tc1) -- Remove the chosen one from the group
-		local tc2=g:GetFirst() -- The remaining card is the one to be banished
-		
-		-- Perform the actions
-		if Duel.Destroy(tc1,REASON_EFFECT)>0 and tc2 then
-			Duel.BanishUntilEndPhase(tc2,tp)
-		end
+	-- 4. The other card is automatically chosen for Banish
+	g:RemoveCard(tc1)
+	local tc2=g:GetFirst()
+	
+	-- 5. Perform actions
+	if tc1 and Duel.Destroy(tc1,REASON_EFFECT)>0 and tc2 then
+		-- This uses the standard way to banish until End Phase
+		Duel.Remove(tc2,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		e1:SetCode(EVENT_PHASE+PHASE_END)
+		e1:SetReset(RESET_PHASE+PHASE_END)
+		e1:SetLabelObject(tc2)
+		e1:SetCountLimit(1)
+		e1:SetOperation(s.retop)
+		Duel.RegisterEffect(e1,tp)
 	end
+end
+
+-- Helper function to return the card
+function s.retop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.ReturnToField(e:GetLabelObject())
 end
 
 -- Extra Deck to Pendulum Zone Logic
