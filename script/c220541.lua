@@ -69,11 +69,11 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local zone=c:GetLinkedZone(tp)
 	-- Check if there is a valid zone AND space for the token
-	if zone~=0 then
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
 		local token=Duel.CreateToken(tp,220542)
 		-- The zone argument in SpecialSummon restricts it to that specific zone
-		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
+		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP,zone)
 	end
 end
 
@@ -102,12 +102,22 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS):Filter(Card.IsRelateToEffect,nil)
-	if #g<2 then return end
-	local tc1=g:GetFirst()
-	local tc2=g:GetNext()
-	if Duel.Destroy(tc1,REASON_EFFECT)>0 then
-		Duel.BanishUntilEndPhase(tc2,tp)
+	-- Retrieve all cards that are still on the field/relevant
+	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS):Filter(Card.IsRelateToEffect,e)
+	
+	-- Ask the player to choose which of the two targets to Destroy, 
+	-- then the other will be Banished.
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local tc1=g:Select(tp,1,1,nil):GetFirst()
+	
+	if tc1 then
+		g:RemoveCard(tc1) -- Remove the chosen one from the group
+		local tc2=g:GetFirst() -- The remaining card is the one to be banished
+		
+		-- Perform the actions
+		if Duel.Destroy(tc1,REASON_EFFECT)>0 and tc2 then
+			Duel.BanishUntilEndPhase(tc2,tp)
+		end
 	end
 end
 
