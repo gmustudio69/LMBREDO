@@ -102,9 +102,11 @@ end
 
 function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	local typ,att=e:GetLabel()
-	-- Check if the summoned monsters match the targeted type/attribute
+	-- Bitwise check for type, exact check for attribute (since a card usually has only one)
 	if eg:IsExists(function(c,t,a) 
-		return c:GetSummonPlayer()==1-tp and c:GetOriginalType()&t~=0 and c:GetOriginalAttribute()&a~=0 
+		return c:GetSummonPlayer()==1-tp 
+		   and (c:GetOriginalType()&t)~=0 
+		   and c:GetOriginalAttribute()==a 
 	end,1,nil,typ,att) then
 		Duel.Hint(HINT_CARD,0,id)
 		Duel.Draw(tp,1,REASON_EFFECT)
