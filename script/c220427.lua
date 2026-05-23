@@ -102,11 +102,9 @@ end
 
 function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	local typ,att=e:GetLabel()
-	-- Bitwise check for type, exact check for attribute (since a card usually has only one)
+	-- Use the built-in helper functions IsType and IsAttribute
 	if eg:IsExists(function(c,t,a) 
-		return c:GetSummonPlayer()==1-tp 
-		   and (c:GetOriginalType()&t)~=0 
-		   and c:GetOriginalAttribute()==a 
+		return c:GetSummonPlayer()==1-tp and c:IsType(t) and c:IsAttribute(a) 
 	end,1,nil,typ,att) then
 		Duel.Hint(HINT_CARD,0,id)
 		Duel.Draw(tp,1,REASON_EFFECT)
