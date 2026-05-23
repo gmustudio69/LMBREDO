@@ -71,7 +71,7 @@ function s.cttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 end
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	local tc= Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() and not c:IsAttribute(ATTRIBUTE_DARK) end,tp,0,LOCATION_MZONE,1,1,nil):GetFirst()
-	if tc and tc:IsRelateToEffect(e) and tc:IsControler(1-tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+	if tc and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		if Duel.GetControl(tc,tp) then
 				-- Negate effects
 			local e1=Effect.CreateEffect(e:GetHandler())
