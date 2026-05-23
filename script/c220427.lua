@@ -83,7 +83,7 @@ function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,0,LOCATION_MZONE,1,1,nil)
 	local tc=g:GetFirst()
-	e:SetLabel(tc:GetOriginalType(),tc:GetOriginalAttribute())
+	e:SetLabel(tc:GetOriginalRace(),tc:GetOriginalAttribute())
 end
 
 function s.drop(e,tp,eg,ep,ev,re,r,rp)
@@ -104,7 +104,7 @@ function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	local typ,att=e:GetLabel()
 	-- Use the built-in helper functions IsType and IsAttribute
 	if eg:IsExists(function(c,t,a) 
-		return c:GetSummonPlayer()==1-tp and c:IsType(t) and c:IsAttribute(a) 
+		return c:GetSummonPlayer()==1-tp and (c:IsRace(t) or c:IsAttribute(a)) 
 	end,1,nil,typ,att) then
 		Duel.Hint(HINT_CARD,0,id)
 		Duel.Draw(tp,1,REASON_EFFECT)
