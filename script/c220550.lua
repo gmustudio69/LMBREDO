@@ -6,16 +6,16 @@ function s.initial_effect(c)
 	-- Link Summon Procedure
 	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
 	
-	-- Special Summon Procedure: Send 2 face-down monsters to GY
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
-	c:RegisterEffect(e1)
+	local e0=Effect.CreateEffect(c)
+	e0:SetDescription(aux.Stringid(id,0))
+	e0:SetType(EFFECT_TYPE_FIELD)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e0:SetCode(EFFECT_SPSUMMON_PROC)
+	e0:SetRange(LOCATION_EXTRA)
+	e0:SetCondition(s.selfspcon)
+	e0:SetTarget(s.selfsptg)
+	e0:SetOperation(s.selfspop)
+	c:RegisterEffect(e0)
 
 	-- Effect: Change 1 opponent's monster to face-down
 	local e2=Effect.CreateEffect(c)
@@ -35,10 +35,10 @@ function s.spfilter(c)
 	return c:IsFacedown() and c:IsAbleToGraveAsCost()
 end
 function s.spcon(e,c,og,min,max)
-	if c==nil then return true end
+	if not c then return true end
 	local tp=c:GetControler()
-	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0 and g:GetCount()>=2
+	local mg=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil,tp,c)
+	return #mg>=2 and aux.SelectUnselectGroup(mg,e,tp,2,2,s.rescon,0)
 end
 -- Add this check function to ensure valid selection
 function s.fcheck(g)
@@ -46,23 +46,18 @@ function s.fcheck(g)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	
-	-- Fix: Use aux.SelectSubGroup instead of g:SelectSubGroup
-	local sg=aux.SelectSubGroup(g,tp,aux.dncheck,false,2,2)
-	
-	if sg then
-		sg:KeepAlive()
-		e:SetLabelObject(sg)
+	local mg=Duel.GetMatchingGroup(s.selfspcostfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil,tp,c)
+	local g=aux.SelectUnselectGroup(mg,e,tp,2,2,s.rescon,1,tp,HINTMSG_RELEASE,nil,nil,true)
+	if #g>0 then
+		e:SetLabelObject(g)
 		return true
 	end
 	return false
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local g=e:GetLabelObject()
-	Duel.SendtoGrave(g,REASON_COST)
-	g:DeleteGroup()
+	if not g then return end
+	Duel.Release(g,REASON_COST|REASON_MATERIAL)
 end
 
 -- Flip Face-down Effect
