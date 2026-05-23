@@ -121,19 +121,29 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 		e1:SetCode(EVENT_PHASE+PHASE_END)
-		e1:SetReset(RESET_PHASE+PHASE_END)
-		e1:SetLabelObject(tc2)
 		e1:SetCountLimit(1)
+		e1:SetLabel(Duel.GetTurnCount())
+		e1:SetLabelObject(tc)
+		if Duel.IsPhase(PHASE_END) and Duel.IsTurnPlayer(1-tp) then
+			e1:SetLabel(Duel.GetTurnCount())
+			e1:SetReset(RESETS_STANDARD_PHASE_END|RESET_OPPO_TURN,2)
+		else
+			e1:SetLabel(0)
+			e1:SetReset(RESETS_STANDARD_PHASE_END|RESET_OPPO_TURN)
+		end
+		e1:SetCondition(s.retcon)
 		e1:SetOperation(s.retop)
 		Duel.RegisterEffect(e1,tp)
 	end
 end
-
--- Helper function to return the card
+function s.retcon(e,tp,eg,ep,ev,re,r,rp)
+	local tc=e:GetLabelObject()
+	return Duel.GetTurnCount()~=e:GetLabel() and Duel.IsTurnPlayer(1-tp)
+		and tc and tc:GetReasonEffect() and tc:GetReasonEffect():GetHandler()==e:GetHandler()
+end
 function s.retop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.ReturnToField(e:GetLabelObject())
 end
-
 -- Extra Deck to Pendulum Zone Logic
 function s.pzontg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1) end
