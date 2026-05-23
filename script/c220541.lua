@@ -2,7 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- Link Summon procedure
 	c:EnableReviveLimit()
-	Pendulum.AddProcedure(c)
+	--Pendulum.AddProcedure(c)
 	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
 
 	-- Pendulum Effect
@@ -118,7 +118,7 @@ end
 function s.pzonop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not (Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1)) then return end
-	Duel.MoveToField(e:GetHandler(),tp,tp,LOCATION_PZONE,POS_FACEUP,true)
+	Duel.MoveToField(c,tp,tp,LOCATION_PZONE,POS_FACEUP,true)
 	local e1=Effect.CreateEffect(c)
 	e1:SetCode(EFFECT_CHANGE_TYPE)
 	e1:SetType(EFFECT_TYPE_SINGLE)
