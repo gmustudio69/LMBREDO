@@ -69,7 +69,7 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local zone=c:GetLinkedZone(tp)
 	-- Check if there is a valid zone AND space for the token
-	if zone~=0 and Duel.GetLocationCount(tp,LOCATION_MZONE,tp,LOCATION_REASON_TOFIELD,zone)>0 then
+	if zone~=0 then
 		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
 		local token=Duel.CreateToken(tp,220542)
 		-- The zone argument in SpecialSummon restricts it to that specific zone
