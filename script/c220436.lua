@@ -20,9 +20,8 @@ local s,id=GetID()
 	e1:SetCategory(CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
-	e1:SetCondition(s.descon)
+	e1:SetCode(EVENT_CHAINING)
+	e1:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==1-tp end)
 	e1:SetCost(s.descost)
 	e1:SetTarget(s.destg)
 	e1:SetOperation(s.desop)
@@ -50,11 +49,6 @@ end
 function s.atkcon(e)
 	local c=e:GetHandler()
 	return c:GetTurnID()==Duel.GetTurnCount()
-end
-
---Main Phase condition
-function s.descon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsMainPhase()
 end
 
 --Discard 2 cost
