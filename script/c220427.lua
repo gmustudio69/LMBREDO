@@ -71,18 +71,27 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 2: Draw logic
+--Opponent Special Summon condition
 function s.drcon(e,tp,eg,ep,ev,re,r,rp)
-	return ep~=tp and eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp)
+return eg:IsExists(Card.IsControler,1,nil,1-tp)
 end
-function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	local tc=eg:GetFirst()
+
+-- 2: Target monster and set up the draw effect
+function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,0,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,0,LOCATION_MZONE,1,1,nil)
+	local tc=g:GetFirst()
 	e:SetLabel(tc:GetOriginalType(),tc:GetOriginalAttribute())
 end
+
 function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	local typ,att=e:GetLabel()
-	local e1=Effect.CreateEffect(e:GetHandler())
+	local c=e:GetHandler()
+	
+	-- Register the monitor effect
+	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e1:SetLabel(typ,att)
@@ -90,9 +99,13 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
 end
+
 function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	local typ,att=e:GetLabel()
-	if eg:IsExists(function(c,t,a) return c:GetOriginalType()==t and c:GetOriginalAttribute()==a end,1,nil,typ,att) then
+	-- Check if the summoned monsters match the targeted type/attribute
+	if eg:IsExists(function(c,t,a) 
+		return c:GetSummonPlayer()==1-tp and c:GetOriginalType()&t~=0 and c:GetOriginalAttribute()&a~=0 
+	end,1,nil,typ,att) then
 		Duel.Hint(HINT_CARD,0,id)
 		Duel.Draw(tp,1,REASON_EFFECT)
 	end
