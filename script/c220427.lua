@@ -86,23 +86,22 @@ Duel.SetTargetCard(g)
 end
 
 function s.drop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if not tc or not tc:IsRelateToEffect(e) then return end
-
+	local tc=e:GetLabelObject()
+	if not tc then return end
+	local type=tc:GetOriginalType()
 	local attr=tc:GetOriginalAttribute()
-	local typ=tc:GetOriginalType()
-
-	local e1=Effect.CreateEffect(tc)
+	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	e1:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)
-		local g=eg:Filter(function(c)
-			return (c:GetOriginalAttribute()==attr or c:GetOriginalType()==typ)
-		end,nil)
-		if #g>0 then
-			Duel.Draw(tp,#g,REASON_EFFECT)
-		end
-	end)
+	e1:SetLabel(type,attr)
+	e1:SetReset(RESET_PHASE+PHASE_TURN)
+	e1:SetOperation(s.drawop2)
 	Duel.RegisterEffect(e1,tp)
+end
+function s.drawop2(e,tp,eg,ep,ev,re,r,rp)
+	local type,attr=e:GetLabel()
+	if eg:IsExists(function(c,t,a) return c:GetOriginalType()&t~=0 or c:GetOriginalAttribute()==a end,1,nil,type,attr) then
+		Duel.Hint(HINT_CARD,0,id)
+		Duel.Draw(tp,1,REASON_EFFECT)
+	end
 end
