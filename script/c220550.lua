@@ -12,9 +12,9 @@ function s.initial_effect(c)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e0:SetCode(EFFECT_SPSUMMON_PROC)
 	e0:SetRange(LOCATION_EXTRA)
-	e0:SetCondition(s.selfspcon)
-	e0:SetTarget(s.selfsptg)
-	e0:SetOperation(s.selfspop)
+	e0:SetCondition(s.spcon)
+	e0:SetTarget(s.sptg)
+	e0:SetOperation(s.spop)
 	c:RegisterEffect(e0)
 
 	-- Effect: Change 1 opponent's monster to face-down
