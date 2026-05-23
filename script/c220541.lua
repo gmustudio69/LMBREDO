@@ -73,7 +73,7 @@ function s.tkop(e,tp,eg,ep,ev,re,r,rp)
 		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
 		local token=Duel.CreateToken(tp,220542)
 		-- The zone argument in SpecialSummon restricts it to that specific zone
-		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP,zone)
+		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
