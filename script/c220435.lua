@@ -26,7 +26,10 @@ function s.initial_effect(c)
 end
 --Check summon negatable
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetCurrentChain()==0
+	local tc=eg:GetFirst()
+	local res=tc:IsLevelAbove(7) and  tc:GetFlagEffect(id)~=0
+	tc:ResetFlagEffect(id)
+	return res
 end
 
 function s.xyzfilter(c,tp)
