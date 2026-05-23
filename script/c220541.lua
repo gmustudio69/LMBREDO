@@ -65,11 +65,10 @@ function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
 end
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
-	local zone=e:GetHandler():GetLinkedZone(tp)
-	if zone~=0 and Duel.GetLocationCount(tp,LOCATION_MZONE,tp,nil,zone)>0 then
-		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE,zone) then return end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
 		local token=Duel.CreateToken(tp,220542)
-		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP,zone)
+		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
