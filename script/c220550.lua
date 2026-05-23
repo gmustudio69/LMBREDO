@@ -40,10 +40,16 @@ function s.spcon(e,c,og,min,max)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0 and g:GetCount()>=2
 end
+-- Add this check function to ensure valid selection
+function s.fcheck(g)
+	return g:GetCount()==2
+end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=aux.SelectUnselectGroup(tp,aux.dncheck,false,2,2)
+	-- Added s.fcheck as the second parameter
+	local sg=g:SelectSubGroup(tp,s.fcheck,false,2,2)
 	if sg then
 		sg:KeepAlive()
 		e:SetLabelObject(sg)
