@@ -66,11 +66,11 @@ function s.cttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and Duel.IsExistingTarget(function(c) return c:IsFaceup() and not c:IsAttribute(ATTRIBUTE_DARK) end,tp,0,LOCATION_MZONE,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-	local g=Duel.SelectTarget(tp,function(c) return c:IsFaceup() and not c:IsAttribute(ATTRIBUTE_DARK) end,tp,0,LOCATION_MZONE,1,1,nil)
+   
 	Duel.SetOperationInfo(0,CATEGORY_CONTROL,g,1,0,0)
 end
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
+	local tc= Duel.SelectMatchingCard(tp,function(c) return c:IsFaceup() and not c:IsAttribute(ATTRIBUTE_DARK) end,tp,0,LOCATION_MZONE,1,1,nil):GetFirst()
 	if tc and tc:IsRelateToEffect(e) and tc:IsControler(1-tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		if Duel.GetControl(tc,tp) then
 				-- Negate effects
