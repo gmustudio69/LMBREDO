@@ -48,8 +48,10 @@ end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	-- Added s.fcheck as the second parameter
-	local sg=g:SelectSubGroup(tp,s.fcheck,false,2,2)
+	
+	-- Fix: Use aux.SelectSubGroup instead of g:SelectSubGroup
+	local sg=aux.SelectSubGroup(g,tp,aux.dncheck,false,2,2)
+	
 	if sg then
 		sg:KeepAlive()
 		e:SetLabelObject(sg)
