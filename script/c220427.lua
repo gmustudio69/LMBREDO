@@ -71,36 +71,28 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Opponent Special Summon condition
+-- 2: Draw logic
 function s.drcon(e,tp,eg,ep,ev,re,r,rp)
-return eg:IsExists(Card.IsControler,1,nil,1-tp)
+	return ep~=tp and eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp)
 end
-
-function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-if chkc then return eg:IsContains(chkc) end
-if chk==0 then return eg:IsExists(Card.IsControler,1,nil,1-tp) end
-
-Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-local g=eg:FilterSelect(tp,Card.IsControler,1,1,nil,1-tp)
-Duel.SetTargetCard(g)
+function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	local tc=eg:GetFirst()
+	e:SetLabel(tc:GetOriginalType(),tc:GetOriginalAttribute())
 end
-
 function s.drop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	if not tc then return end
-	local type=tc:GetOriginalType()
-	local attr=tc:GetOriginalAttribute()
+	local typ,att=e:GetLabel()
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetLabel(type,attr)
-	e1:SetReset(RESET_PHASE+PHASE_TURN)
-	e1:SetOperation(s.drawop2)
+	e1:SetLabel(typ,att)
+	e1:SetOperation(s.drawop)
+	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
 end
-function s.drawop2(e,tp,eg,ep,ev,re,r,rp)
-	local type,attr=e:GetLabel()
-	if eg:IsExists(function(c,t,a) return c:GetOriginalType()&t~=0 or c:GetOriginalAttribute()==a end,1,nil,type,attr) then
+function s.drawop(e,tp,eg,ep,ev,re,r,rp)
+	local typ,att=e:GetLabel()
+	if eg:IsExists(function(c,t,a) return c:GetOriginalType()==t and c:GetOriginalAttribute()==a end,1,nil,typ,att) then
 		Duel.Hint(HINT_CARD,0,id)
 		Duel.Draw(tp,1,REASON_EFFECT)
 	end
