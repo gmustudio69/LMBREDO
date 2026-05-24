@@ -3,7 +3,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 
 	--Link summon
-	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),1,1)
+	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),1,1,s.lcheck)
 	c:EnableReviveLimit()
 
 	--Send Level 7 DARK Warrior
@@ -32,6 +32,9 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
+end
+function s.lcheck(g,lc,sumtype,tp)
+	return g:GetFirst():IsAttribute(ATTRIBUTE_DARK)
 end
 
 --Check Link summon

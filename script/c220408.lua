@@ -81,7 +81,7 @@ function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK+LOCATION_EXTRA)
 end
 function s.tgfilter(c)
-	return (c:IsSetCard(0xb67) or c:IsType(TYPE_XYZ)) and c:IsAbleToGrave()
+	return (c:IsSetCard(0xb67) or c:IsType(TYPE_SYNCHRO)) and c:IsAbleToGrave()
 end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
