@@ -41,6 +41,7 @@ function s.initial_effect(c)
 	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e4:SetCountLimit(1)
 	e4:SetCondition(s.elliecon)
+	e4:SetCost(s.copycost)
 	e4:SetTarget(s.copytg)
 	e4:SetOperation(s.copyop)
 	c:RegisterEffect(e4)
@@ -135,12 +136,11 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 	if not g then return end
 	local tc=g:Filter(Card.IsType,nil,TYPE_SPELL):GetFirst()
-	
-	-- Banish it and Detach 2
+
 	if tc and tc:IsRelateToEffect(e) and Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)>0 then
-		if c:CheckRemoveOverlayCard(tp,2,REASON_EFFECT) then
+		--if c:CheckRemoveOverlayCard(tp,2,REASON_EFFECT) then
 			Duel.BreakEffect()
-			c:RemoveOverlayCard(tp,2,2,REASON_EFFECT)
+			--c:RemoveOverlayCard(tp,2,2,REASON_EFFECT)
 			
 			-- Apply the effect
 			local te=e:GetLabelObject()
@@ -148,6 +148,6 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 				local op=te:GetOperation()
 				if op then op(e,tp,eg,ep,ev,re,r,rp) end
 			end
-		end
+	   -- end
 	end
 end
