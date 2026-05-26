@@ -61,13 +61,13 @@ function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
 end
 function s.detachtarget(e,c,tp,r)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:GetReason()&(REASON_COST+REASON_EFFECT)~=0
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:GetPreviousLocation(LOCATION_OVERLAY) and c:GetReason()&(REASON_EFFECT)~=0
 end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
 end
-function s.filter(c,xc,tp,e)
-	return c:GetOwner()~=xc:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and c:IsCanBeXyzMaterial(xc,tp,REASON_EFFECT) and not c:IsImmuneToEffect(e)
+function s.filter(c,e)
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and 
 end
 function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
