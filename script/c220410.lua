@@ -66,8 +66,8 @@ end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
 end
-function s.filter(c,e)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) 
+function s.filter(c,xc,tp,e)
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and c:IsCanBeXyzMaterial(xc,tp,REASON_EFFECT) and not c:IsImmuneToEffect(e)
 end
 function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
