@@ -61,7 +61,7 @@ function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
 end
 function s.detachtarget(e,c,tp,r)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:GetPreviousLocation(LOCATION_OVERLAY)~=0 and c:GetReason()&(REASON_COST|REASON_EFFECT)~=0 and c:GetReasonEffect(e:GetHandler())~=0
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:GetPreviousLocation(LOCATION_OVERLAY)~=0 and c:GetReason()&(REASON_COST|REASON_EFFECT)~=0 and and c:GetReasonPlayer(e:GetHandlerPlayer)~=0 and c:GetReasonEffect(e:GetHandler())~=0
 end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
