@@ -54,9 +54,7 @@ function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local op=Duel.SelectEffect(tp,{b1,aux.Stringid(id,1)},{b2,aux.Stringid(id,2)})
    e:SetLabel(op) -- Store the choice here
 	   -- Set Category and Operation Info dynamically based on selection
-	if op==1 then
-		Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
-	else
+	if op==2 then
 		e:SetCategory(CATEGORY_SET)	  
 	end
 end
