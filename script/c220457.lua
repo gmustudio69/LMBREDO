@@ -43,12 +43,13 @@ end
 function s.posfilter(c)
 	return c:IsSetCard(0xf86) and c:IsType(TYPE_CONTINUOUS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and not c:IsForbidden()
 -- Updated Target Function
+end
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1 = Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
 			   and Duel.IsExistingMatchingCard(s.spellfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
 	local b2 = Duel.CheckLPCost(tp,800) 
 			   and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
-			   and Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,1,nil,220407) -- Replace 0x123
+			   and Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,1,nil,220407)
 
 	if chk==0 then return b1 or b2 end
 	
@@ -66,7 +67,7 @@ function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 		e:SetCategory(CATEGORY_TOFIELD)
 		Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
 	else
-		e:SetCategory(CATEGORY_SPECIAL_SUMMON) -- Placeholder for your Install Trap logic
+		e:SetCategory(CATEGORY_SPECIAL_SUMMON) -- Placeholder for your
 	end
 end
 
