@@ -48,18 +48,28 @@ function s.spconlimit(e,se,sp,st)
 	return se:IsHasType(EFFECT_TYPE_ACTIONS) and se:GetHandler():IsSetCard(0xb67)
 end
 
--- discard summon condition
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return false end
-	if c:IsLocation(LOCATION_SZONE) and not c:IsFaceup() then return false end
-	return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,c)
+	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,e:GetHandler())
 end
-
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,c)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
+		local g=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,LOCATION_HAND,0,0,1,e:GetHandler())
+		if #g>0 then
+			g:KeepAlive()
+			e:SetLabelObject(g)
+			return true
+		end
+	end
+	return false
+end
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
-	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
+	local g=e:GetLabelObject()
+	if not g then return end
+	Duel.SendtoGrave(g,REASON_COST|REASON_DISCARD)
+	g:DeleteGroup()
 end
 
 -- Set 1 "Limit Break" from Deck or Banished
