@@ -39,7 +39,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local opp=1-tp
 	local tc=Duel.GetFirstTarget()
 	if tc:IsRelateToEffect(e) then
-	   Duel.GetControl(g,tp,PHASE_END,1)
+	   Duel.GetControl(tc,tp,PHASE_END,1)
 	end
 	if e:IsHasType(EFFECT_TYPE_ACTIVATE) and e:GetLabel()==1 then
 		local g=Duel.GetMatchingGroup(Card.IsSSetable,opp,LOCATION_GRAVE,0,nil)
