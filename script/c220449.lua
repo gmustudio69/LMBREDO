@@ -23,7 +23,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 function s.chainfilter(re,tp,cid)
-	return not ((re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP)) and re:IsHasCategory(CATEGORY_SPECIAL_SUMMON)&(LOCATION_DECK|LOCATION_EXTRA)>0)
+	return not ((re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP)) and re:GetCategory(CATEGORY_SPECIAL_SUMMON)&(LOCATION_DECK|LOCATION_EXTRA)>=0)
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) and chkc:IsControlerCanBeChanged() end
