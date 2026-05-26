@@ -67,7 +67,7 @@ function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
 end
 function s.filter(c,e)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED)
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and not c:IsImmuneToEffect(e) and c:IsCanBeXyzMaterial(e:GetHandler(),tp,REASON_EFFECT)
 end
 function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -84,7 +84,8 @@ end
 function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
+	
+	if c:IsRelateToEffect(e) and tc:IsRelateToEffect(e) then
 		Duel.Overlay(c,Group.FromCards(tc))
 	end
 end
