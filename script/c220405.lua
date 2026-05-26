@@ -11,14 +11,15 @@ function s.initial_effect(c)
 	e0:SetValue(s.spconlimit)
 	c:RegisterEffect(e0)
 
-	--special summon procedure (hand / SZONE)
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e1:SetRange(LOCATION_HAND+LOCATION_SZONE)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetCondition(s.spcon)
+	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
@@ -47,7 +48,6 @@ end
 function s.spconlimit(e,se,sp,st)
 	return se:IsHasType(EFFECT_TYPE_ACTIONS) and se:GetHandler():IsSetCard(0xb67)
 end
-
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
