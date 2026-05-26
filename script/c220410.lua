@@ -41,7 +41,6 @@ function s.initial_effect(c)
 	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e4:SetCountLimit(1)
 	e4:SetCondition(s.elliecon)
-	e4:SetCost(s.copycost)
 	e4:SetTarget(s.copytg)
 	e4:SetOperation(s.copyop)
 	c:RegisterEffect(e4)
@@ -62,7 +61,13 @@ function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
 end
 function s.detachtarget(e,c,tp,r)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:GetPreviousLocation(LOCATION_OVERLAY)~=0 and c:GetReason()&(REASON_COST|REASON_EFFECT)~=0
+	local c=e:GetHandler()
+	local res = (c:GetReason() & (REASON_COST | REASON_EFFECT)) ~= 0
+	local is_own_effect = (c:GetReasonPlayer() == c:GetControler()) and (c:GetReasonEffect():GetHandler() == c)
+	
+	return c:GetOwner() ~= c:GetControler() 
+		   and c:GetPreviousLocation() == LOCATION_OVERLAY 
+		   and (res and is_own_effect)
 end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
@@ -94,18 +99,13 @@ end
 function s.elliecon(e)
 	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
 end
--- E5: Copy "Limit" Spell
-function s.copycost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,2,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,2,2,REASON_COST)
-end
 function s.copyfilter(c,e,tp,eg,ep,ev,re,r,rp)
 	if not (c:IsSetCard(0xf86) and c:IsType(TYPE_SPELL) and c:IsAbleToRemove()) then return false end
 	-- Ensure the spell has an activatable effect we can copy (bypassing cost)
 	local te=c:CheckActivateEffect(false,true,false)
 	if not te then return false end
 	-- Ensure we have 2 materials to detach later
-	--if e:GetHandler():GetOverlayCount()<2 then return false end
+	if e:GetHandler():GetOverlayCount()<2 then return false end
 	return true
 end
 function s.copytg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -137,9 +137,9 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:Filter(Card.IsType,nil,TYPE_SPELL):GetFirst()
 
 	if tc and tc:IsRelateToEffect(e) and Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)>0 then
-		--if c:CheckRemoveOverlayCard(tp,2,REASON_EFFECT) then
+		if c:CheckRemoveOverlayCard(tp,2,REASON_EFFECT) then
 			Duel.BreakEffect()
-			--c:RemoveOverlayCard(tp,2,2,REASON_EFFECT)
+			c:RemoveOverlayCard(tp,2,2,REASON_EFFECT)
 			
 			-- Apply the effect
 			local te=e:GetLabelObject()
@@ -147,6 +147,6 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 				local op=te:GetOperation()
 				if op then op(e,tp,eg,ep,ev,re,r,rp) end
 			end
-	   -- end
+		end
 	end
 end
