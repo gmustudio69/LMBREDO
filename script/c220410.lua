@@ -44,8 +44,21 @@ function s.initial_effect(c)
 	e4:SetTarget(s.copytg)
 	e4:SetOperation(s.copyop)
 	c:RegisterEffect(e4)
+	-- Any material detached from this card is banished instead
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_SINGLE)
+	e5:SetCode(EFFECT_REDIRECT)
+	e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetValue(LOCATION_REMOVED)
+	-- This ensures it only affects materials detached from this card
+	e5:SetCondition(s.detachcond) 
+	c:RegisterEffect(e5)
 end
-
+function s.detachcond(e)
+	local c=e:GetHandler()
+	return c:GetReason()&REASON_COST~=0 or c:GetReason()&REASON_EFFECT~=0
+end
 -- E1: Special Summon Limit
 function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
