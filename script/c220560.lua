@@ -75,11 +75,11 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
 		Duel.Equip(tp,c,tc)
 		local e1=Effect.CreateEffect(c)
-		e1:SetCode(EFFECT_CHANGE_TYPE)
 		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-		e1:SetValue(TYPE_SPELL+TYPE_EQUIP)
+		e1:SetCode(EFFECT_EQUIP_LIMIT)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		e1:SetLabelObject(tc)
+		e1:SetValue(s.eqlimit)
 		c:RegisterEffect(e1)
 	end
 end
@@ -98,11 +98,11 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	if c:IsRelateToEffect(e) and tc:IsRelateToEffect(e) then
 		Duel.Equip(tp,c,tc)
 		local e1=Effect.CreateEffect(c)
-		e1:SetCode(EFFECT_CHANGE_TYPE)
 		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-		e1:SetValue(TYPE_SPELL+TYPE_EQUIP)
+		e1:SetCode(EFFECT_EQUIP_LIMIT)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		e1:SetLabelObject(tc)
+		e1:SetValue(s.eqlimit)
 		c:RegisterEffect(e1)
 	end
 end
