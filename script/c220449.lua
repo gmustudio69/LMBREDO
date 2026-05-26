@@ -23,11 +23,11 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 function s.chainfilter(re,tp,cid)
-	return not ((re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP)) and re:GetCategory(CATEGORY_SPECIAL_SUMMON)&(LOCATION_DECK|LOCATION_EXTRA)>0)
+	return not ((re:IsActiveType(TYPE_SPELL) or re:IsActiveType(TYPE_TRAP) or re:IsHasType(EFFECT_TYPE_ACTIVATE)) and re:GetCategory(CATEGORY_SPECIAL_SUMMON)&(LOCATION_DECK|LOCATION_EXTRA)>0)
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) and chkc:IsControlerCanBeChanged() end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingTarget(Card.IsAbleToChangeControler,tp,0,LOCATION_MZONE,1,nil) end
 	local act_from_hand_chk=e:IsHasType(EFFECT_TYPE_ACTIVATE) and e:GetHandler():IsStatus(STATUS_ACT_FROM_HAND) and 1 or 0
 	e:SetLabel(act_from_hand_chk)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
@@ -39,7 +39,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local opp=1-tp
 	local tc=Duel.GetFirstTarget()
 	if tc:IsRelateToEffect(e) then
-	   Duel.GetControl(tc,tp)
+	   Duel.GetControl(g,tp,PHASE_END,1)
 	end
 	if e:IsHasType(EFFECT_TYPE_ACTIVATE) and e:GetLabel()==1 then
 		local g=Duel.GetMatchingGroup(Card.IsSSetable,opp,LOCATION_GRAVE,0,nil)
