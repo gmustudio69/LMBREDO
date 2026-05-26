@@ -61,6 +61,9 @@ end
 function s.spfilter(c,e,tp)
 	return c:IsSetCard(0xa58) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+function s.eqlimit(e,c)
+	return c==e:GetLabelObject()
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp) end
