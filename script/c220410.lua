@@ -9,15 +9,15 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e1:SetValue(s.splimit)
 	c:RegisterEffect(e1)
-	-- Banisher (Field to GY -> Banish)
+	-- Banishment: Field or Detached to Opponent's GY
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE+EFFECT_FLAG_IGNORE_RANGE)
 	e2:SetCode(EFFECT_TO_GRAVE_REDIRECT)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetTarget(s.rmtarget)
-	e2:SetTargetRange(0,LOCATION_ONFIELD)
+	e2:SetTargetRange(0,LOCATION_GRAVE)
 	e2:SetValue(LOCATION_REMOVED)
+	e2:SetTarget(s.rmtarget)
 	c:RegisterEffect(e2)
 
 	-- Attach banished card
@@ -44,27 +44,13 @@ function s.initial_effect(c)
 	e4:SetTarget(s.copytg)
 	e4:SetOperation(s.copyop)
 	c:RegisterEffect(e4)
-	-- Any material detached from this card is banished instead
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_SINGLE)
-	e5:SetCode(EFFECT_REDIRECT)
-	e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetValue(LOCATION_REMOVED)
-	-- This ensures it only affects materials detached from this card
-	e5:SetCondition(s.detachcond) 
-	c:RegisterEffect(e5)
-end
-function s.detachcond(e)
-	local c=e:GetHandler()
-	return c:GetReason()&REASON_COST~=0 or c:GetReason()&REASON_EFFECT~=0
 end
 -- E1: Special Summon Limit
 function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
 end
-function s.rmtarget(e,c)
-	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
+function s.rmtarget(e,c,tp,r)
+	return c:GetReason()&(REASON_DESTROY+REASON_DISCARD+REASON_COST+REASON_EFFECT)~=0
 end
 function s.filter(c,e)
 	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) 
