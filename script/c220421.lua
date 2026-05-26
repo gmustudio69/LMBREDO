@@ -5,6 +5,7 @@ function s.initial_effect(c)
 	--Tribute from hand/field to set Diagram System
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetCategory(CATEGORY_SET)
 	e1:SetRange(LOCATION_HAND+LOCATION_MZONE)
 	e1:SetCountLimit(1,id)
 	e1:SetCost(s.setcost)

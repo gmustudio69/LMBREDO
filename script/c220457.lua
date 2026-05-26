@@ -50,31 +50,21 @@ function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b2 = Duel.CheckLPCost(tp,800) 
 			   and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
 			   and Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,1,nil,220407)
-
 	if chk==0 then return b1 or b2 end
-	
-	local op = -1
-	if b1 and b2 then
-		op = Duel.SelectOption(tp, aux.Stringid(id,1), aux.Stringid(id,2)) -- Option 1 or 2
-	elseif b1 then
-		op = Duel.SelectOption(tp, aux.Stringid(id,1)) -- Only Option 1
-	else
-		op = Duel.SelectOption(tp, aux.Stringid(id,2)) + 1 -- Only Option 2
-	end	
+	local op=Duel.SelectEffect(tp,{b1,aux.Stringid(id,1)},{b2,aux.Stringid(id,2)})
    e:SetLabel(op) -- Store the choice here
 	   -- Set Category and Operation Info dynamically based on selection
-	if op==0 then
-		e:SetCategory(CATEGORY_TOFIELD)
+	if op==1 then
 		Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
 	else
-		e:SetCategory(CATEGORY_SPECIAL_SUMMON) -- Placeholder for your
+		e:SetCategory(CATEGORY_SET)	  
 	end
 end
 
 -- Updated Operation Function
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	local op = e:GetLabel() -- Retrieve the choice-
-	if op==0 then
+	if op==1 then
 		-- Logic for placing Continuous Spell/Trap
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local tc=Duel.SelectMatchingCard(tp,s.posfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil):GetFirst()
@@ -82,6 +72,7 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	else
 		-- Logic for "Limit Break - Install"
 		Duel.Damage(tp,800,REASON_EFFECT)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 		local tc=Duel.GetFirstMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,nil,220407)
 		if tc then 
 			Duel.SSet(tp,tc)
