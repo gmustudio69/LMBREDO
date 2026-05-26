@@ -30,15 +30,15 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-	-- Main Phase: move to S/T zone → SS 2 World Decoder from GY (different names)
+	--Revive from S/T zone
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,{id,1})
-	e3:SetTarget(s.wdtg)
-	e3:SetOperation(s.wdop)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_PHASE+PHASE_STANDBY)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCondition(s.rvcon)
+	e3:SetTarget(s.rvtg)
+	e3:SetOperation(s.rvop)
 	c:RegisterEffect(e3)
 end
 
@@ -73,39 +73,6 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	e2:SetReset(RESET_EVENT|RESETS_STANDARD)
 	tc:RegisterEffect(e2)
 end
-function s.wdfilter(c,e,tp)
-	return c:IsSetCard(0xb67) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
-end
-
-function s.wdtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-			and Duel.GetLocationCount(tp,LOCATION_MZONE)>=2
-			and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_GRAVE,0,2,nil,e,tp)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_GRAVE)
-end
-
-function s.wdop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
-	if Duel.MoveToField(c,tp,tp,LOCATION_SZONE,POS_FACEUP,true) then
-		local e1=Effect.CreateEffect(c)
-		e1:SetCode(EFFECT_CHANGE_TYPE)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TURN_SET)
-		e1:SetValue(TYPE_SPELL+TYPE_CONTINUOUS)
-		c:RegisterEffect(e1)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.wdfilter),
-			tp,LOCATION_GRAVE,0,2,2,nil,e,tp)
-		if #g==2 and g:GetClassCount(Card.GetCode)==2 then
-			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
-		end
-	end
-end
-
 --========================
 -- Special Summon Limit
 --========================
@@ -128,6 +95,22 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) then
-		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+	end
+end
+--===== Revive condition =====
+function s.rvcon(e, tp, eg, ep, ev, re, r, rp)
+	local c = e:GetHandler()
+	return c:IsType(TYPE_SPELL) and c:IsType(TYPE_CONTINUOUS)
+end
+function s.rvtg(e, tp, eg, ep, ev, re, r, rp, chk)
+	if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0
+		and e:GetHandler():IsCanBeSpecialSummoned(e, 0, tp, false, false) end
+	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, e:GetHandler(), 1, 0, 0)
+end
+function s.rvop(e, tp, eg, ep, ev, re, r, rp)
+	local c = e:GetHandler()
+	if c:IsRelateToEffect(e) then
+		Duel.SpecialSummon(c, 0, tp, tp, false, false, POS_FACEUP)
 	end
 end
