@@ -46,7 +46,18 @@ function s.initial_effect(c)
 	e5:SetTarget(s.eqtg)
 	e5:SetOperation(s.eqop)
 	c:RegisterEffect(e5)
-	
+	local e6=e5:Clone()
+	e6:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e6:SetProperty(EFFECT_FLAG_DELAY,EFFECT_FLAG2_CHECK_SIMULTANEOUS)
+	e6:SetRange(LOCATION_GRAVE)
+	e6:SetCondition(s.eqcon)
+	c:RegisterEffect(e6)
+end
+function s.eqconfilter(c,tp)
+	return c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_DARK) and (c:IsLevel(7) or c:IsRank(7)) and c:IsSummonPlayer(tp) and c:IsFaceup()
+end
+function s.eqcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.eqconfilter,1,nil,tp)
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsFaceup() end
