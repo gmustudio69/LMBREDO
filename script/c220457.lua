@@ -47,18 +47,19 @@ end
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1 = Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
 			   and Duel.IsExistingMatchingCard(s.spellfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
-	local b2 = Duel.CheckLPCost(tp,800) 
-			   and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
-			   and Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,1,nil,220407)
+	local b2 = Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil)
 	if chk==0 then return b1 or b2 end
 	local op=Duel.SelectEffect(tp,{b1,aux.Stringid(id,1)},{b2,aux.Stringid(id,2)})
    e:SetLabel(op) -- Store the choice here
 	   -- Set Category and Operation Info dynamically based on selection
 	if op==2 then
-		e:SetCategory(CATEGORY_SET)	  
+		e:SetCategory(CATEGORY_TOGRAVE)
+		Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 	end
 end
-
+function s.tgfilter(c)
+	return ((c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsLevel(7)) or c:IsType(TYPE_EQUIP)) and c:IsAbleToGrave()
+end
 -- Updated Operation Function
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	local op = e:GetLabel() -- Retrieve the choice-
@@ -71,29 +72,13 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp)
 		-- Logic for "Limit Break - Install"
 		Duel.Damage(tp,800,REASON_EFFECT)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-		local tc=Duel.GetFirstMatchingCard(Card.IsCode,tp,LOCATION_DECK,0,nil,220407)
-		if tc then 
-			Duel.SSet(tp,tc)
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
-			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-			e1:SetCondition(s.actcon) -- Check for opponent's non-DARK extra deck monster
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-			tc:RegisterEffect(e1)
+		local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
+		if #g>0 then 
+			Duel.SendtoGrave(g,REASON_EFFECT)
 		end
 	end
 end
 
--- New Condition for "Install" activation
-function s.actcon(e)
-	local c=e:GetHandler()
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(function(c) 
-		return c:IsLocation(LOCATION_MZONE) and c:IsControler(1-tp) 
-			   and c:IsSummonLocation(LOCATION_EXTRA) and not c:IsAttribute(ATTRIBUTE_DARK) 
-	end,tp,0,LOCATION_MZONE,1,nil)
-end
 -- E3: Special Summon DARK Warrior from GY
 function s.spfilter(c,e,tp)
 	return c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WARRIOR) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
