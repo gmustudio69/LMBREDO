@@ -40,7 +40,7 @@ function s.initial_effect(c)
 	e5:SetDescription(aux.Stringid(id,1))
 	e5:SetCategory(CATEGORY_EQUIP)
 	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e5:SetCode(EVENT_TO_GY) -- Note: See below for multi-trigger
+	e5:SetCode(EVENT_TO_GRAVE) -- Note: See below for multi-trigger
 	e5:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e5:SetCountLimit(1,id)
 	e5:SetTarget(s.eqtg)
