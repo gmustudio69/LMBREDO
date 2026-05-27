@@ -1,5 +1,6 @@
 local s,id=GetID()
 function s.initial_effect(c)
+	aux.AddEquipProcedure(c)
 	-- Activate
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_EQUIP)
@@ -28,8 +29,9 @@ function s.initial_effect(c)
 
 	-- Granted Effect: Gain the "Take Control" ability
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_EQUIP)
-	e4:SetCode(EFFECT_GRANT_EFFECT)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
+	e4:SetRange(LOCATION_SZONE)
+	e4:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
 	e4:SetValue(s.gain_effect)
 	e4:SetCondition(function(e) return e:GetHandler():GetEquipTarget():IsRace(RACE_WARRIOR) end)
 	c:RegisterEffect(e4)
