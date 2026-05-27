@@ -46,7 +46,7 @@ function s.posfilter(c)
 end
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1 = Duel.GetLocationCount(tp,LOCATION_SZONE)>0 
-			   and Duel.IsExistingMatchingCard(s.spellfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
+			   and Duel.IsExistingMatchingCard(s.posfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
 	local b2 = Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil)
 	if chk==0 then return b1 or b2 end
 	local op=Duel.SelectEffect(tp,{b1,aux.Stringid(id,1)},{b2,aux.Stringid(id,2)})
