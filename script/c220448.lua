@@ -117,9 +117,9 @@ end
 -- GY Re-Equip
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and chkc:IsRace(RACE_WARRIOR) end
-	if chk==0 then return Duel.IsExistingTarget(function(e,c) return c:IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,nil) end
+	if chk==0 then return Duel.IsExistingTarget(function(e) return e:GetHandler():IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-	Duel.SelectTarget(tp,function(e,c) return c:IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.SelectTarget(tp,function(e) return e:GetHandler():IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,1,nil)
 end
 function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
