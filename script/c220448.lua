@@ -42,7 +42,7 @@ function s.initial_effect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e5:SetCode(EVENT_TO_GRAVE) -- Note: See below for multi-trigger
 	e5:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-	e5:SetCountLimit(1,id)
+	e5:SetCountLimit(1,{id,1})
 	e5:SetTarget(s.eqtg)
 	e5:SetOperation(s.eqop)
 	c:RegisterEffect(e5)
@@ -117,9 +117,9 @@ end
 -- GY Re-Equip
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and chkc:IsRace(RACE_WARRIOR) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil) end
+	if chk==0 then return Duel.IsExistingTarget(function(e,c) return c:IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-	Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.SelectTarget(tp,function(e,c) return c:IsRace(RACE_WARRIOR) end,tp,LOCATION_MZONE,0,1,1,nil)
 end
 function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
