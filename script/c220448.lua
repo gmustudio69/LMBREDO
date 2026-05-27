@@ -54,7 +54,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e6)
 end
 function s.eqconfilter(c,tp)
-	return c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_DARK) and (c:IsLevel(7) or c:IsRank(7)) and c:IsSummonPlayer(tp) and c:IsFaceup()
+	return c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_DARK) and c:IsLevel(7) or c:IsRank(7) and c:IsSummonPlayer(tp) and c:IsFaceup()
 end
 function s.eqcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.eqconfilter,1,nil,tp)
