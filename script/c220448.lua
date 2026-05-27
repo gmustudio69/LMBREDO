@@ -56,7 +56,6 @@ function s.gain_effect(e,c)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCountLimit(1)
 	-- Logic to turn into Quick Effect based on condition
-	e1:SetCondition(s.controlcon) 
 	e1:SetTarget(s.controltg)
 	e1:SetOperation(s.controlop)
 	local e2=e1:Clone()
