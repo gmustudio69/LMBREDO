@@ -49,7 +49,7 @@ function s.initial_effect(c)
 	e5:SetTarget(s.eqtg)
 	e5:SetOperation(s.eqop)
 	c:RegisterEffect(e5)
-	local e7=Effect.CreateEffect(e:GetHandler())
+	local e7=Effect.CreateEffect(c)
 	e7:SetDescription(aux.Stringid(id,0))
 	e7:SetType(EFFECT_TYPE_IGNITION) -- Default to Ignition
 	e7:SetRange(LOCATION_MZONE)
