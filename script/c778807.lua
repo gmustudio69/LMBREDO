@@ -64,72 +64,96 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
 	end
 end
-function s.costfilter(c)
-	return c:IsAbleToRemove()and (c:IsSetCard(0x76b) or (c:IsMonster() and c:IsFacedown()))
+function s.rmfilter2(c)
+	return c:IsAbleToRemoveAsCost()
+		and (
+			c:IsSetCard(0x76b)
+			or (c:IsMonster() and c:IsFacedown())
+		)
 end
-function s.lkfilter(c,e,tp,ct,g)
-	return c:IsSetCard(0x76b) and c:IsType(TYPE_LINK) and c:IsLink(ct) c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP) and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
-end
-function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
-	if chk==0 then
-		return #g>0 and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler())>0 and Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,1)
-	end
-end
-function s.exfilter(c,e,tp)
+function s.spfilter(c,e,tp,ct,g)
 	return c:IsSetCard(0x76b)
 		and c:IsType(TYPE_LINK)
-		and c:IsCanBeSpecialSummoned(
-			e,SUMMON_TYPE_LINK,tp,false,false)
+		and c:IsLink(ct)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
 end
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=Duel.GetMatchingGroup(
+		s.rmfilter2,tp,
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		nil)
 
-function s.lkop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
+	local nums={}
 
-	if #g==0 then return end
+	for i=1,#g do
+		if Duel.IsExistingMatchingCard(
+			s.spfilter,tp,
+			LOCATION_EXTRA,0,
+			1,nil,e,tp,i,g
+		) then
+			table.insert(nums,i)
+		end
+	end
+
+	if chk==0 then
+		return #nums>0
+	end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_LVRANK)
+
+	local ct=Duel.AnnounceNumber(tp,table.unpack(nums))
+
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,#g,
-		function(sg)
-			local ct=#sg
-			return Duel.IsExistingMatchingCard(
-				s.lkfilter,tp,
-				LOCATION_EXTRA,0,
-				1,nil,e,tp,ct)
-		end,
-		1,tp,HINTMSG_REMOVE)
 
-	if not sg or #sg==0 then return end
+	local rg=g:Select(tp,ct,ct,nil)
 
-	local ct=#sg
+	Duel.Remove(rg,POS_FACEUP,REASON_COST)
 
-	if Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)==0 then
-		return
-	end
+	e:SetLabel(ct)
+end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
 
-	if Duel.GetLocationCountFromEx(tp,tp,nil)<=0 then
-		return
-	end
+	Duel.SetOperationInfo(
+		0,
+		CATEGORY_SPECIAL_SUMMON,
+		nil,
+		1,
+		tp,
+		LOCATION_EXTRA
+	)
+end
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local ct=e:GetLabel()
+	if not ct then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
-	local tg=Duel.SelectMatchingCard(
+	local g=Duel.SelectMatchingCard(
 		tp,
-		s.lkfilter,
+		s.spfilter,
 		tp,
 		LOCATION_EXTRA,
 		0,
-		1,1,nil,
-		e,tp,ct)
+		1,
+		1,
+		nil,
+		e,tp,ct
+	)
 
-	local tc=tg:GetFirst()
+	local tc=g:GetFirst()
 
 	if tc then
-		Duel.SpecialSummon(tc,
-			SUMMON_TYPE_LINK,
-			tp,tp,
-			false,false,
-			POS_FACEUP)
-		tc:CompleteProcedure()
+		Duel.SpecialSummon(
+			tc,
+			0,
+			tp,
+			tp,
+			false,
+			false,
+			POS_FACEUP
+		)
 	end
 end
