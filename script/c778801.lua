@@ -41,9 +41,9 @@ function s.mysthichfilter(c)
 	return c:IsSetCard(0x76b)
 end
 
--- Face-down monster
-function s.fdfilter(c)
-	return c:IsFacedown() and c:IsMonster()
+-- Face-down monster (excluding selected card)
+function s.fdfilter(c,exc)
+	return c:IsFacedown() and c:IsMonster() and c~=exc
 end
 
 function s.spcon(e,c)
@@ -51,8 +51,10 @@ function s.spcon(e,c)
 	local tp=c:GetControler()
 
 	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(s.mysthichfilter,tp,LOCATION_MZONE,0,1,nil)
-		and Duel.IsExistingMatchingCard(s.fdfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+		and Duel.IsExistingMatchingCard(
+			s.mysthichfilter,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingMatchingCard(
+			s.fdfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil,nil)
 end
 
 function s.spfilter(c,tp)
@@ -60,24 +62,48 @@ function s.spfilter(c,tp)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
+	-- Select 1 Mysthich monster you control
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g1=Duel.SelectMatchingCard(tp,s.mysthichfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	local g1=Duel.SelectMatchingCard(
+		tp,
+		s.mysthichfilter,
+		tp,
+		LOCATION_MZONE,
+		0,
+		1,
+		1,
+		nil
+	)
+
 	local mc=g1:GetFirst()
+	if not mc then return end
 
+	-- Select 1 OTHER face-down monster on the field
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g2=Duel.SelectMatchingCard(tp,s.fdfilter,tp,
-		LOCATION_MZONE,LOCATION_MZONE,1,1,mc)
-	local fc=g2:GetFirst()
+	local g2=Duel.SelectMatchingCard(
+		tp,
+		s.fdfilter,
+		tp,
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		1,
+		1,
+		nil,
+		mc
+	)
 
-	-- Reveal the Mysthich monster if face-down
+	local fc=g2:GetFirst()
+	if not fc then return end
+
+	-- Reveal Mysthich if it was face-down
 	if mc:IsFacedown() then
 		Duel.ConfirmCards(1-tp,mc)
 	end
 
 	local sg=Group.FromCards(mc,fc)
-	Duel.SendtoGrave(sg,REASON_MATERIAL+REASON_LINK)
 
 	c:SetMaterial(sg)
+	Duel.SendtoGrave(sg,REASON_MATERIAL+REASON_LINK)
 end
 -- Face-down monster count
 function s.fdcountfilter(c)
