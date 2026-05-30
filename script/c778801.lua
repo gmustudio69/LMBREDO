@@ -144,7 +144,7 @@ end
 
 -- Moon Trap
 function s.trapfilter(c)
-	return c:IsSetCard(0xaa)
+	return c:IsSetCard(0xaaf)
 		and c:IsTrap()
 		and c:IsSSetable()
 end
