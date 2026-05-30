@@ -44,7 +44,8 @@ end
 
 -- Monster in hand
 function s.handspfilter(c,e,tp)
-	return c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE)
+	return c:IsMonster()
+		and not c:IsForbidden()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
@@ -84,26 +85,22 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 
 	-- Moon Gate bonus summon
-	if Duel.IsExistingMatchingCard(
-		s.mgfilter,tp,LOCATION_FZONE,0,1,nil)
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(
-			s.handspfilter,tp,LOCATION_HAND,0,1,nil)
-		and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
+	if Duel.IsExistingMatchingCard(s.mgfilter,tp,LOCATION_FZONE,0,1,nil)
+	and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+	and Duel.IsExistingMatchingCard(s.handspfilter,tp,LOCATION_HAND,0,1,nil)
+	and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
 
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
-		local sg=Duel.SelectMatchingCard(tp,
-			s.handspfilter,tp,LOCATION_HAND,0,1,1,nil)
+	local sg=Duel.SelectMatchingCard(tp,
+		s.handspfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp)
 
-		local sc=sg:GetFirst()
+	local sc=sg:GetFirst()
 
-		if sc then
-			Duel.SpecialSummon(
-				sc,0,tp,tp,false,false,
-				POS_FACEDOWN_DEFENSE)
-		end
+	if sc then
+		Duel.SpecialSummon(sc,0,tp,tp,false,false,POS_FACEDOWN_DEFENSE)
 	end
+end
 
 	-- Then Set this card
 	if c:IsRelateToEffect(e)
