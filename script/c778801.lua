@@ -119,7 +119,7 @@ end
 
 -- Moon Trap
 function s.trapfilter(c)
-	return c:IsSetCard(0xaaf)
+	return c:IsSetCard(0xaa)
 		and c:IsTrap()
 		and c:IsSSetable()
 end
@@ -147,7 +147,6 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		LOCATION_DECK,0,1,1,nil)
 	if #g2==0 then return end
 
-	--g1:Merge(g2)
+	g1:Merge(g2)
 	Duel.SSet(tp,g1)
-	Duel.SSet(tp,g2)
 end
