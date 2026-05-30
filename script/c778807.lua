@@ -65,33 +65,14 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.costfilter(c)
-	return c:IsAbleToRemove()
-		and (
-			c:IsSetCard(0x76b)
-			or (c:IsMonster() and c:IsFacedown())
-		)
+	return c:IsAbleToRemove()and (c:IsSetCard(0x76b) or (c:IsMonster() and c:IsFacedown()))
 end
 function s.lkfilter(c,e,tp,ct)
-	return c:IsSetCard(0x76b)
-		and c:IsType(TYPE_LINK)
-		and c:GetLink()==ct
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_LINK,tp,false,false)
-end
+	return c:IsSetCard(0x76b) and c:IsType(TYPE_LINK) and c:IsLink(ct) c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP)and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(
-		s.costfilter,tp,
-		LOCATION_MZONE,
-		LOCATION_MZONE,
-		nil)
-
+	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 	if chk==0 then
-		return #g>0
-			and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler())>0
-			and Duel.IsExistingMatchingCard(
-				s.lkfilter,tp,
-				LOCATION_EXTRA,
-				0,
-				1,nil,e,tp,1)
+		return #g>0 and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler())>0 and Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,1)
 	end
 end
 function s.exfilter(c,e,tp)
@@ -103,19 +84,11 @@ end
 
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-
-	local g=Duel.GetMatchingGroup(
-		s.costfilter,tp,
-		LOCATION_MZONE,
-		LOCATION_MZONE,
-		nil)
+	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 
 	if #g==0 then return end
-
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-
-	local sg=aux.SelectUnselectGroup(
-		g,e,tp,1,#g,
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,#g,
 		function(sg)
 			local ct=#sg
 			return Duel.IsExistingMatchingCard(
