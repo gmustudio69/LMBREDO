@@ -93,19 +93,18 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local sg=aux.SelectUnselectGroup(
 		g,e,tp,3,3,s.rescon,1,tp,HINTMSG_CONFIRM)
 
-	if #sg~=3 then return end
+	if not sg or #sg~=3 then return end
 
 	Duel.ConfirmCards(1-tp,sg)
 
-	local tc=sg:RandomSelect(1-tp,1):GetFirst()
+	local rg=sg:RandomSelect(1-tp,1)
+	local tc=rg:GetFirst()
 
-	sg:RemoveCard(tc)
+	sg:Sub(rg)
 
-	if tc:IsRelateToEffect(e) then
-		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+	if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
+		Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)
 	end
-
-	Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)
 
 	Duel.ShuffleDeck(tp)
 end
