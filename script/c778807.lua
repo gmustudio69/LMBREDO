@@ -13,6 +13,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.rmtg)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
+	-- Quick Link Climb
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_REMOVE+CATEGORY_SPECIAL_SUMMON)
@@ -20,14 +21,13 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e2:SetCountLimit(1,{id,2})
-	e2:SetTarget(s.sptg)
-	e2:SetOperation(s.spop)
+	e2:SetCountLimit(1,id+100)
+	e2:SetTarget(s.lktg)
+	e2:SetOperation(s.lkop)
 	c:RegisterEffect(e2)
 end
 function s.linkmatfilter(c)
-	return c:IsSetCard(0x76b)
-		and not c:IsRace(RACE_WARRIOR)
+	return c:IsSetCard(0x76b) and not c:IsRace(RACE_WARRIOR)
 end
 function s.rmfilter(c)
 	return c:IsAbleToRemove()
@@ -68,18 +68,16 @@ function s.costfilter(c)
 	return c:IsAbleToRemove()
 		and (
 			c:IsSetCard(0x76b)
-			or (c:IsFacedown() and c:IsMonster())
+			or (c:IsMonster() and c:IsFacedown())
 		)
 end
-
-function s.spfilter(c,e,tp,ct)
+function s.lkfilter(c,e,tp,ct)
 	return c:IsSetCard(0x76b)
 		and c:IsType(TYPE_LINK)
 		and c:GetLink()==ct
-		and c:IsCanBeSpecialSummoned(
-			e,SUMMON_TYPE_SPECIAL,tp,false,false)
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_LINK,tp,false,false)
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(
 		s.costfilter,tp,
 		LOCATION_MZONE,
@@ -88,18 +86,22 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 
 	if chk==0 then
 		return #g>0
-			and Duel.GetLocationCountFromEx(tp)>0
+			and Duel.GetLocationCountFromEx(tp,tp,e:GetHandler())>0
 			and Duel.IsExistingMatchingCard(
-				s.spfilter,tp,
-				LOCATION_EXTRA,0,
+				s.lkfilter,tp,
+				LOCATION_EXTRA,
+				0,
 				1,nil,e,tp,1)
 	end
-
-	Duel.SetOperationInfo(
-		0,CATEGORY_SPECIAL_SUMMON,
-		nil,1,tp,LOCATION_EXTRA)
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
+function s.exfilter(c,e,tp)
+	return c:IsSetCard(0x76b)
+		and c:IsType(TYPE_LINK)
+		and c:IsCanBeSpecialSummoned(
+			e,SUMMON_TYPE_LINK,tp,false,false)
+end
+
+function s.lkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
 	local g=Duel.GetMatchingGroup(
@@ -113,46 +115,47 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 
 	local sg=aux.SelectUnselectGroup(
-		g,e,tp,
-		1,#g,
-		nil,
-		1,tp,
-		HINTMSG_REMOVE)
+		g,e,tp,1,#g,
+		function(sg)
+			local ct=#sg
+			return Duel.IsExistingMatchingCard(
+				s.lkfilter,tp,
+				LOCATION_EXTRA,0,
+				1,nil,e,tp,ct)
+		end,
+		1,tp,HINTMSG_REMOVE)
 
 	if not sg or #sg==0 then return end
 
 	local ct=#sg
 
-	local rg=sg:Filter(Card.IsFacedown,nil)
-	if #rg>0 then
-		Duel.ConfirmCards(1-tp,rg)
-	end
-
 	if Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)==0 then
 		return
 	end
 
-	if Duel.GetLocationCountFromEx(tp)<=0 then
+	if Duel.GetLocationCountFromEx(tp,tp,nil)<=0 then
 		return
 	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
 	local tg=Duel.SelectMatchingCard(
-		tp,s.spfilter,
 		tp,
-		LOCATION_EXTRA,0,
+		s.lkfilter,
+		tp,
+		LOCATION_EXTRA,
+		0,
 		1,1,nil,
 		e,tp,ct)
 
 	local tc=tg:GetFirst()
 
 	if tc then
-		Duel.SpecialSummon(
-			tc,
-			SUMMON_TYPE_SPECIAL,
+		Duel.SpecialSummon(tc,
+			SUMMON_TYPE_LINK,
 			tp,tp,
 			false,false,
 			POS_FACEUP)
+		tc:CompleteProcedure()
 	end
 end
