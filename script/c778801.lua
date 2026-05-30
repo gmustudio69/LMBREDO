@@ -50,11 +50,23 @@ function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
 
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(
-			s.mysthichfilter,tp,LOCATION_MZONE,0,1,nil)
-		and Duel.IsExistingMatchingCard(
-			s.fdfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil,nil)
+	if Duel.GetLocationCountFromEx(tp,tp,nil,c)<=0 then
+		return false
+	end
+
+	local g=Duel.GetMatchingGroup(s.mysthichfilter,tp,LOCATION_MZONE,0,nil)
+
+	return g:IsExists(function(mc,tp)
+		return Duel.IsExistingMatchingCard(
+			s.fdfilter,
+			tp,
+			LOCATION_MZONE,
+			LOCATION_MZONE,
+			1,
+			nil,
+			mc
+		)
+	end,1,nil,tp)
 end
 
 function s.spfilter(c,tp)
