@@ -36,12 +36,10 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
--- "Mysthich" monster
 function s.mysthichfilter(c)
 	return c:IsSetCard(0x76b)
 end
 
--- Face-down monster (excluding selected card)
 function s.fdfilter(c,exc)
 	return c:IsFacedown() and c:IsMonster() and c~=exc
 end
@@ -56,17 +54,17 @@ function s.spcon(e,c)
 
 	local g=Duel.GetMatchingGroup(s.mysthichfilter,tp,LOCATION_MZONE,0,nil)
 
-	return g:IsExists(function(mc,tp)
-		return Duel.IsExistingMatchingCard(
-			s.fdfilter,
-			tp,
-			LOCATION_MZONE,
-			LOCATION_MZONE,
-			1,
-			nil,
-			mc
-		)
-	end,1,nil,tp)
+	for mc in aux.Next(g) do
+		if Duel.IsExistingMatchingCard(
+			s.fdfilter,tp,
+			LOCATION_MZONE,LOCATION_MZONE,
+			1,nil,mc
+		) then
+			return true
+		end
+	end
+
+	return false
 end
 
 function s.spfilter(c,tp)
@@ -74,7 +72,6 @@ function s.spfilter(c,tp)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	-- Select 1 Mysthich monster you control
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local g1=Duel.SelectMatchingCard(
 		tp,
@@ -90,7 +87,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local mc=g1:GetFirst()
 	if not mc then return end
 
-	-- Select 1 OTHER face-down monster on the field
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local g2=Duel.SelectMatchingCard(
 		tp,
@@ -107,7 +103,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local fc=g2:GetFirst()
 	if not fc then return end
 
-	-- Reveal Mysthich if it was face-down
 	if mc:IsFacedown() then
 		Duel.ConfirmCards(1-tp,mc)
 	end
