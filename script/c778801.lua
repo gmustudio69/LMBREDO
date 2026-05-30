@@ -36,14 +36,17 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
-function s.mysthichfilter(c)
-	return c:IsSetCard(0x76b)
+function s.matfilter(c,tp)
+	return (c:IsSetCard(0x76b) and c:IsControler(tp))
+		or (c:IsFacedown() and c:IsMonster())
 end
-
-function s.fdfilter(c,exc)
-	return c:IsFacedown() and c:IsMonster() and c~=exc
+function s.matcheck(g,tp)
+	return #g==2
+		and g:IsExists(function(c)
+			return c:IsSetCard(0x76b) and c:IsControler(tp)
+		end,1,nil)
+		and g:IsExists(Card.IsFacedown,1,nil)
 end
-
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
@@ -52,19 +55,18 @@ function s.spcon(e,c)
 		return false
 	end
 
-	local g=Duel.GetMatchingGroup(s.mysthichfilter,tp,LOCATION_MZONE,0,nil)
+	local g=Duel.GetMatchingGroup(
+		s.matfilter,tp,
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		nil,tp
+	)
 
-	for mc in aux.Next(g) do
-		if Duel.IsExistingMatchingCard(
-			s.fdfilter,tp,
-			LOCATION_MZONE,LOCATION_MZONE,
-			1,nil,mc
-		) then
-			return true
-		end
-	end
-
-	return false
+	return aux.SelectUnselectGroup(
+		g,e,tp,2,2,
+		function(sg) return s.matcheck(sg,tp) end,
+		0
+	)
 end
 
 function s.spfilter(c,tp)
@@ -72,42 +74,30 @@ function s.spfilter(c,tp)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g1=Duel.SelectMatchingCard(
-		tp,
-		s.mysthichfilter,
-		tp,
+	local g=Duel.GetMatchingGroup(
+		s.matfilter,tp,
 		LOCATION_MZONE,
-		0,
-		1,
-		1,
-		nil
+		LOCATION_MZONE,
+		nil,tp
 	)
 
-	local mc=g1:GetFirst()
-	if not mc then return end
-
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g2=Duel.SelectMatchingCard(
-		tp,
-		s.fdfilter,
-		tp,
-		LOCATION_MZONE,
-		LOCATION_MZONE,
-		1,
-		1,
-		nil,
-		mc
+
+	local sg=aux.SelectUnselectGroup(
+		g,e,tp,2,2,
+		function(g) return s.matcheck(g,tp) end,
+		1,tp,HINTMSG_TOGRAVE
 	)
 
-	local fc=g2:GetFirst()
-	if not fc then return end
+	if not sg or #sg~=2 then return end
 
-	if mc:IsFacedown() then
-		Duel.ConfirmCards(1-tp,mc)
+	local rg=sg:Filter(function(tc)
+		return tc:IsSetCard(0x76b) and tc:IsFacedown()
+	end,nil)
+
+	if #rg>0 then
+		Duel.ConfirmCards(1-tp,rg)
 	end
-
-	local sg=Group.FromCards(mc,fc)
 
 	c:SetMaterial(sg)
 	Duel.SendtoGrave(sg,REASON_MATERIAL+REASON_LINK)
