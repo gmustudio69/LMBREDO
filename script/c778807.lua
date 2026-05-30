@@ -22,7 +22,7 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
 	e2:SetCountLimit(1,{id,2})
-	e2:SetCost(s.spcost)
+	--e2:SetCost(s.spcost)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
@@ -79,12 +79,14 @@ function s.spfilter(c,e,tp,ct,g)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
 end
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(
-		s.rmfilter2,tp,
+		function(c) return s.rmfilter2(c,e) end,
+		tp,
 		LOCATION_MZONE,
 		LOCATION_MZONE,
-		nil)
+		nil
+	)
 
 	local nums={}
 
@@ -92,7 +94,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		if Duel.IsExistingMatchingCard(
 			s.spfilter,tp,
 			LOCATION_EXTRA,0,
-			1,nil,e,tp,i,g
+			1,nil,e,tp,i
 		) then
 			table.insert(nums,i)
 		end
@@ -102,20 +104,14 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		return #nums>0
 	end
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_LVRANK)
-
-	local ct=Duel.AnnounceNumber(tp,table.unpack(nums))
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-
-	local rg=g:Select(tp,ct,ct,nil)
-
-	Duel.Remove(rg,POS_FACEUP,REASON_COST)
-
-	e:SetLabel(ct)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	Duel.SetOperationInfo(
+		0,
+		CATEGORY_REMOVE,
+		nil,
+		1,
+		0,
+		LOCATION_MZONE
+	)
 
 	Duel.SetOperationInfo(
 		0,
@@ -127,12 +123,51 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local ct=e:GetLabel()
-	if not ct then return end
+	local g=Duel.GetMatchingGroup(
+		function(c) return s.rmfilter2(c,e) end,
+		tp,
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		nil
+	)
+
+	local nums={}
+
+	for i=1,#g do
+		if Duel.IsExistingMatchingCard(
+			s.spfilter,tp,
+			LOCATION_EXTRA,0,
+			1,nil,e,tp,i
+		) then
+			table.insert(nums,i)
+		end
+	end
+
+	if #nums==0 then return end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_LVRANK)
+	local ct=Duel.AnnounceNumber(tp,table.unpack(nums))
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local rg=g:Select(tp,ct,ct,nil)
+
+	local removed=Duel.Remove(
+		rg,
+		POS_FACEUP,
+		REASON_EFFECT
+	)
+
+	if removed~=ct then
+		return
+	end
+
+	if Duel.GetLocationCountFromEx(tp,tp,nil)<=0 then
+		return
+	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
-	local g=Duel.SelectMatchingCard(
+	local sg=Duel.SelectMatchingCard(
 		tp,
 		s.spfilter,
 		tp,
@@ -144,7 +179,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e,tp,ct
 	)
 
-	local tc=g:GetFirst()
+	local tc=sg:GetFirst()
 
 	if tc then
 		Duel.SpecialSummon(
