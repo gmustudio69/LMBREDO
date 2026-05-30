@@ -35,7 +35,7 @@ function s.thfilter(c,e,tp)
 		and c:IsMonster()
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-				and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
+				and c:IsCanBeSpecialSummoned(e,0,tp,false,false))) and not c:IsCode(id)
 end
 
 -- Moon Gate
