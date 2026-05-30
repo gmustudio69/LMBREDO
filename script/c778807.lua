@@ -67,7 +67,7 @@ end
 function s.costfilter(c)
 	return c:IsAbleToRemove()and (c:IsSetCard(0x76b) or (c:IsMonster() and c:IsFacedown()))
 end
-function s.lkfilter(c,e,tp,ct)
+function s.lkfilter(c,e,tp,ct,g)
 	return c:IsSetCard(0x76b) and c:IsType(TYPE_LINK) and c:IsLink(ct) c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP) and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
 end
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
