@@ -112,3 +112,47 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ChangePosition(c,POS_FACEDOWN_DEFENSE)
 	end
 end
+function s.exctg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return Duel.GetFieldGroupCount(1-tp,LOCATION_DECK,0)>=1
+	end
+end
+function s.excspfilter(c,e,tp)
+	return c:IsMonster()
+		and c:IsCanBeSpecialSummoned(
+			e,0,tp,false,false,
+			POS_FACEDOWN_DEFENSE,1-tp)
+end
+
+function s.excop(e,tp,eg,ep,ev,re,r,rp)
+	local p=1-tp
+
+	local ct=math.min(5,Duel.GetFieldGroupCount(p,LOCATION_DECK,0))
+	if ct==0 then return end
+
+	Duel.ConfirmDecktop(p,ct)
+
+	local g=Duel.GetDecktopGroup(p,ct)
+
+	local mg=g:Filter(Card.IsMonster,nil)
+
+	if #mg>0
+		and Duel.GetLocationCount(p,LOCATION_MZONE)>0
+		and Duel.SelectYesNo(tp,aux.Stringid(id,5)) then
+
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+
+		local sg=mg:Select(tp,1,1,nil)
+		local sc=sg:GetFirst()
+
+		if sc then
+			Duel.DisableShuffleCheck()
+
+			Duel.SpecialSummon(
+				sc,0,tp,p,false,false,
+				POS_FACEDOWN_DEFENSE)
+		end
+	end
+
+	Duel.ShuffleDeck(p)
+end
