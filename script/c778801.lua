@@ -20,8 +20,7 @@ end
 function s.sprcon(e,c,tp)
 	if c==nil then return true end
 	-- Send 1 "Mysthich" (can be face-down) + 1 face-down monster on the field
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(s.cfilter1,tp,LOCATION_MZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.cfilter1,tp,LOCATION_MZONE,0,1,nil)
 		and Duel.IsExistingMatchingCard(s.cfilter2,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
 
