@@ -1,66 +1,61 @@
 local s,id=GetID()
+
 function s.initial_effect(c)
-	-- 1: Link Summon Procedure
-	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
+	-- Link Summon
+	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_EFFECT),2)
 	c:EnableReviveLimit()
 
-	-- 2: Special Summon Procedure (Alternative)
+	-- Special Summon procedure from Extra Deck
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.sprcon)
-	e1:SetTarget(s.sprtg)
-	e1:SetOperation(s.sprop)
+	e1:SetCondition(s.spcon)
+	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 end
 
--- Filter for Mysthich monster (Face-up or Face-down)
-function s.mysthich_filter(c,tp)
-	return c:IsSetCard(0xb67) and c:IsType(TYPE_MONSTER) and (c:IsFaceup() or c:IsFacedown()) and c:IsAbleToGraveAsCost()
+-- "Mysthich" monster
+function s.mysthichfilter(c)
+	return c:IsSetCard(0xb67)
 end
 
--- Filter for any face-down monster on the field
-function s.facedown_filter(c,tp)
-	return c:IsFacedown() and c:IsAbleToGraveAsCost()
+-- Face-down monster
+function s.fdfilter(c)
+	return c:IsFacedown() and c:IsMonster()
 end
 
--- Condition for Alternative SS
-function s.sprcon(e,c,tp)
+function s.spcon(e,c)
 	if c==nil then return true end
-	local g1=Duel.GetMatchingGroup(s.mysthich_filter,tp,LOCATION_MZONE,0,nil)
-	local g2=Duel.GetMatchingGroup(s.facedown_filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0 and #g1>0 and #g2>0
+	local tp=c:GetControler()
+
+	return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+		and Duel.IsExistingMatchingCard(s.mysthichfilter,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.fdfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
 
--- Target for Alternative SS
-function s.sprtg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g1=Duel.GetMatchingGroup(s.mysthich_filter,tp,LOCATION_MZONE,0,nil)
-	local g2=Duel.GetMatchingGroup(s.facedown_filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-	
-	local mg=Group.CreateGroup()
+function s.spfilter(c,tp)
+	return s.mysthichfilter(c)
+end
+
+function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sc1=g1:SelectUnselect(mg,tp,false,true,1,1)
-	if not sc1 then return false end
-	mg:AddCard(sc1)
-	
+	local g1=Duel.SelectMatchingCard(tp,s.mysthichfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	local mc=g1:GetFirst()
+
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sc2=g2:SelectUnselect(mg,tp,false,true,1,1)
-	if not sc2 then return false end
-	mg:AddCard(sc2)
-	
-	if #mg==2 then
-		-- Reveal face-down Mysthich if it was sent
-		if mg:GetFirst():IsFacedown() then Duel.ConfirmCards(1-tp,mg:GetFirst()) end
-		e:SetLabelObject(mg)
-		return true
+	local g2=Duel.SelectMatchingCard(tp,s.fdfilter,tp,
+		LOCATION_MZONE,LOCATION_MZONE,1,1,mc)
+	local fc=g2:GetFirst()
+
+	-- Reveal the Mysthich monster if face-down
+	if mc:IsFacedown() then
+		Duel.ConfirmCards(1-tp,mc)
 	end
-	return false
-end
 
--- Operation for Alternative SS
-function s.sprop(e,tp,eg,ep,ev,re,r,rp,c)
-	local mg=e:GetLabelObject()
-	Duel.SendtoGrave(mg,REASON_COST)
+	local sg=Group.FromCards(mc,fc)
+	Duel.SendtoGrave(sg,REASON_MATERIAL+REASON_LINK)
+
+	c:SetMaterial(sg)
 end
