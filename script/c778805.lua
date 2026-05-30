@@ -94,7 +94,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
 		local sg=Duel.SelectMatchingCard(tp,
-			s.handspfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp)
+			s.handspfilter,tp,LOCATION_HAND,0,1,1,nil)
 
 		local sc=sg:GetFirst()
 
