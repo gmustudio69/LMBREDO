@@ -53,7 +53,6 @@ function s.fdfilter(c)
 end
 function s.spcon(e,c)
 	if c==nil then return true end
-
 	local tp=c:GetControler()
 
 	if Duel.HasFlagEffect(tp,id) then
@@ -64,103 +63,120 @@ function s.spcon(e,c)
 		return false
 	end
 
-	local myst=Duel.GetMatchingGroup(
-		s.mystfilter,tp,
-		LOCATION_MZONE,0,nil,tp)
-
-	local fd=Duel.GetMatchingGroup(
+	local fd=Duel.IsExistingMatchingCard(
 		s.fdfilter,tp,
-		LOCATION_MZONE,LOCATION_MZONE,nil)
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		1,nil)
 
-	local link2=Duel.GetMatchingGroup(
+	local myst2=Duel.IsExistingMatchingCard(
+		s.mystfilter,tp,
+		LOCATION_MZONE,0,
+		2,nil)
+
+	local link2=Duel.IsExistingMatchingCard(
 		s.link2filter,tp,
-		LOCATION_MZONE,0,nil,tp)
+		LOCATION_MZONE,0,
+		1,nil)
 
-	return (#fd>0 and #myst>=2)
-		or (#fd>0 and #link2>0)
+	return fd and (myst2 or link2)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 
-	local fd=Duel.SelectMatchingCard(
-		tp,s.fdfilter,
-		tp,
-		LOCATION_MZONE,
-		LOCATION_MZONE,
-		1,1,nil)
-
-	local fdc=fd:GetFirst()
-
-	if not fdc then return end
+	local sg=Group.CreateGroup()
 
 	local b1=Duel.IsExistingMatchingCard(
 		s.link2filter,tp,
-		LOCATION_MZONE,0,1,nil,tp)
+		LOCATION_MZONE,0,
+		1,nil)
 
 	local b2=Duel.IsExistingMatchingCard(
 		s.mystfilter,tp,
-		LOCATION_MZONE,0,2,nil,tp)
+		LOCATION_MZONE,0,
+		2,nil)
 
 	local op
 
 	if b1 and b2 then
 		op=Duel.SelectOption(
 			tp,
-			aux.Stringid(id,0),
-			aux.Stringid(id,1))
+			aux.Stringid(id,0), -- Link-2 route
+			aux.Stringid(id,1)  -- 2 Mysthich route
+		)
 	elseif b1 then
 		op=0
 	else
 		op=1
 	end
 
-	local sg=Group.CreateGroup()
-
-	------------------------------------------------
-	-- Link 2 Route
-	------------------------------------------------
+	-----------------------------------------
+	-- Route A : Link-2 Mysthich
+	-----------------------------------------
 
 	if op==0 then
 
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 
-		local g=Duel.SelectMatchingCard(
-			tp,s.link2filter,
+		local g1=Duel.SelectMatchingCard(
+			tp,
+			s.link2filter,
 			tp,
 			LOCATION_MZONE,
 			0,
-			1,1,nil,tp)
+			1,1,nil)
 
-		sg:Merge(g)
+		sg:Merge(g1)
 
-	------------------------------------------------
-	-- 2 Mysthich Route
-	------------------------------------------------
+	-----------------------------------------
+	-- Route B : 2 Mysthich
+	-----------------------------------------
 
 	else
 
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 
-		local g=Duel.SelectMatchingCard(
-			tp,s.mystfilter,
+		local g1=Duel.SelectMatchingCard(
+			tp,
+			s.mystfilter,
 			tp,
 			LOCATION_MZONE,
 			0,
-			2,2,nil,tp)
+			2,2,nil)
 
-		local rg=g:Filter(Card.IsFacedown,nil)
+		local rg=g1:Filter(Card.IsFacedown,nil)
 
 		if #rg>0 then
 			Duel.ConfirmCards(1-tp,rg)
 		end
 
-		sg:Merge(g)
+		sg:Merge(g1)
 	end
 
-	if fdc:IsFacedown() then
-		Duel.ConfirmCards(tp,fdc)
+	-----------------------------------------
+	-- Face-down monster
+	-----------------------------------------
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+
+	local g2=Duel.SelectMatchingCard(
+		tp,
+		s.fdfilter,
+		tp,
+		LOCATION_MZONE,
+		LOCATION_MZONE,
+		1,1,nil)
+
+	local fd=g2:GetFirst()
+
+	if fd:IsFacedown() then
+		Duel.ConfirmCards(tp,fd)
 	end
 
-	sg:AddCard(fdc)
+	sg:Merge(g2)
+
+	-----------------------------------------
+	-- Send everything together
+	-----------------------------------------
 
 	c:SetMaterial(sg)
 
@@ -169,7 +185,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 		REASON_MATERIAL+REASON_LINK)
 
 	Duel.RegisterFlagEffect(
-		tp,id,
+		tp,
+		id,
 		RESET_PHASE|PHASE_END,
 		0,1)
 end
@@ -239,7 +256,7 @@ function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local atk=0
 
 	for tc in aux.Next(g) do
-		atk=atk+math.max(tc:GetOriginalAttack(),0)
+		atk=atk+math.max(tc:GetAttack(),0)
 	end
 
 	if Duel.SpecialSummon(
