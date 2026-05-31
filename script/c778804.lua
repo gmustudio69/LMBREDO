@@ -123,7 +123,7 @@ function s.costfilter(c)
 end
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local g=eg:Filter(s.posfilter,nil,tp)
+	local g=eg:Filter(s.posfilter,nil,e,tp)
 	if chkc then
 		return g:IsContains(chkc)
 	end
