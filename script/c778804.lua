@@ -109,29 +109,56 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.ShuffleDeck(tp)
 end
+function s.posfilter(c,tp)
+	return c:IsSummonPlayer(1-tp)
+		and c:IsCanTurnSet()
+end
+
 function s.poscon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp)
+	return eg:IsExists(s.posfilter,1,nil,tp)
 end
 function s.costfilter(c)
 	return c:IsSetCard(0x76b)
 		and c:IsAbleToRemove()
 end
 
-function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=eg:Filter(Card.IsSummonPlayer,nil,1-tp)
-	if chk==0 then
-	return #g>0 and Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil)
+function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local g=eg:Filter(s.posfilter,nil,tp)
+
+	if chkc then
+		return g:IsContains(chkc)
 	end
-	Duel.SetTargetCard(g)
+
+	if chk==0 then
+		return #g>0
+			and Duel.IsExistingMatchingCard(
+				s.costfilter,tp,LOCATION_MZONE,0,1,nil)
+	end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
+
+	local tg=g:Select(tp,1,1,nil)
+
+	Duel.SetTargetCard(tg)
 end
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
-	local g=eg:Filter(Card.IsSummonPlayer,nil,1-tp)
-	if #g==0 then return end
+	local tc=Duel.GetFirstTarget()
+
+	if not tc or not tc:IsRelateToEffect(e) then
+		return
+	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 
-	local rg=Duel.SelectMatchingCard(tp,
-		s.costfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	local rg=Duel.SelectMatchingCard(
+		tp,
+		s.costfilter,
+		tp,
+		LOCATION_MZONE,
+		0,
+		1,1,
+		nil
+	)
 
 	local rc=rg:GetFirst()
 
@@ -141,9 +168,7 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp)
 		return
 	end
 
-	local tg=g:Filter(Card.IsCanTurnSet,nil)
-
-	if #tg>0 then
-		Duel.ChangePosition(tg,POS_FACEDOWN_DEFENSE)
+	if tc:IsCanTurnSet() then
+		Duel.ChangePosition(tc,POS_FACEDOWN_DEFENSE)
 	end
 end
