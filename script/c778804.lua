@@ -109,7 +109,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.ShuffleDeck(tp)
 end
-function s.posfilter(c,tp)
+function s.posfilter(c,tp,e)
 	return c:IsSummonPlayer(1-tp)
 		and c:IsCanTurnSet()
 end
