@@ -96,12 +96,14 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local nums={}
 
 	for i=0,#g do
-		if Duel.IsExistingMatchingCard(
-			s.spfilter,tp,
-			LOCATION_EXTRA,0,
-			1,nil,e,tp,i+1
-		) then
-			table.insert(nums,i)
+	local link=i+1 -- Fresnel counts as 1
+
+	if Duel.IsExistingMatchingCard(
+		s.spfilter,tp,
+		LOCATION_EXTRA,0,
+		1,nil,e,tp,link
+	) then
+			table.insert(nums,link)
 		end
 	end
 
@@ -111,24 +113,19 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_LVRANK)
 
-	local ct=Duel.AnnounceNumber(tp,table.unpack(nums))
+	local link=Duel.AnnounceNumber(tp,table.unpack(nums))
 
 	local rg=Group.CreateGroup()
+		rg:AddCard(c)
 
-	-- Always include Fresnel
-	rg:AddCard(c)
-
-	if ct>0 then
+	if extra>0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-
-		local sg=g:Select(tp,ct,ct,nil)
-
+		local sg=g:Select(tp,extra,extra,nil)
 		rg:Merge(sg)
 	end
 
 	Duel.Remove(rg,POS_FACEUP,REASON_COST)
-
-	e:SetLabel(#rg)
+	e:SetLabel(link)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
