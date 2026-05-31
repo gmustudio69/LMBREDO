@@ -122,7 +122,7 @@ end
 
 function s.reptg(e,c)
 	return c:IsFaceup()
-		and c:IsCode(MOON_GATE_ID)
+		and c:IsCode(778804)
 		and c:IsReason(REASON_EFFECT)
 end
 
