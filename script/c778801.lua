@@ -56,7 +56,6 @@ function s.spcon(e,c)
 	if Duel.GetLocationCountFromEx(tp,tp,nil,c)<=0 then
 		return false
 	end
-
 	local g=Duel.GetMatchingGroup(
 		s.matfilter,tp,
 		LOCATION_MZONE,
