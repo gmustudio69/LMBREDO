@@ -92,7 +92,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		LOCATION_MZONE,
 		c
 	)
-
+	
 	local nums={}
 
 	for i=0,#g do
@@ -114,7 +114,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_LVRANK)
 
 	local link=Duel.AnnounceNumber(tp,table.unpack(nums))
-
+	local extra=link-1
 	local rg=Group.CreateGroup()
 		rg:AddCard(c)
 
