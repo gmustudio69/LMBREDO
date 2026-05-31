@@ -112,10 +112,11 @@ end
 function s.posfilter(c,tp,e)
 	return c:IsSummonPlayer(1-tp)
 		and c:IsCanTurnSet()
+		and c:IsCanBeEffectTarget(e)
 end
 
 function s.poscon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.posfilter,1,nil,tp)
+	return eg:IsExists(s.posfilter,1,nil,tp,e)
 end
 function s.costfilter(c)
 	return c:IsSetCard(0x76b)
@@ -123,7 +124,7 @@ function s.costfilter(c)
 end
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local g=eg:Filter(s.posfilter,nil,e,tp)
+	local g=eg:Filter(s.posfilter,nil,tp,e)
 
 	if chkc then
 		return g:IsContains(chkc)
@@ -142,7 +143,9 @@ end
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 
-	if not tc or not tc:IsRelateToEffect(e) then
+	if not tc
+		or not tc:IsRelateToEffect(e)
+		or not tc:IsCanTurnSet() then
 		return
 	end
 
