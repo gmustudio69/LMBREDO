@@ -124,6 +124,7 @@ end
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local g=eg:Filter(s.posfilter,nil,e,tp)
+
 	if chkc then
 		return g:IsContains(chkc)
 	end
@@ -135,9 +136,7 @@ function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-
-	local tg=g:SelectUnselect(tp,1,1,nil)
-
+	local tg=g:Select(tp,1,1,nil)
 	Duel.SetTargetCard(tg)
 end
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
