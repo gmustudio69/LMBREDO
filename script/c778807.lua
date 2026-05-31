@@ -78,6 +78,7 @@ function s.spfilter(c,e,tp,ct,g)
 		and c:IsLink(ct)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
+		and not c:IsLink(1)
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(
