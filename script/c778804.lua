@@ -47,6 +47,7 @@ function s.initial_effect(c)
 	e4:SetCategory(CATEGORY_POSITION+CATEGORY_REMOVE)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e4:SetRange(LOCATION_FZONE)
+	e4:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
 	e4:SetCode(EVENT_SUMMON_SUCCESS)
 	e4:SetCountLimit(1,id+100)
 	e4:SetCondition(s.poscon)
@@ -118,18 +119,13 @@ end
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=eg:Filter(Card.IsSummonPlayer,nil,1-tp)
-
 	if chk==0 then
-		return #g>0
-			and Duel.IsExistingMatchingCard(
-				s.costfilter,tp,LOCATION_MZONE,0,1,nil)
+	return #g>0 and Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil)
 	end
-
 	Duel.SetTargetCard(g)
 end
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	local g=eg:Filter(Card.IsSummonPlayer,nil,1-tp)
-
 	if #g==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
