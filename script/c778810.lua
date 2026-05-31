@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,{id,1})
 	e1:SetTarget(s.acttg)
 	e1:SetOperation(s.actop)
 	c:RegisterEffect(e1)
@@ -17,6 +17,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_DESTROY_SUBSTITUTE)
 	e2:SetRange(LOCATION_SZONE)
+	e2:SetCountLimit(1,{id,2})
 	e2:SetTarget(s.reptg)
 	c:RegisterEffect(e2)
 
@@ -26,7 +27,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
 	e3:SetRange(LOCATION_GRAVE)
-	e3:SetCountLimit(1,{id,1})
+	e3:SetCountLimit(1,{id,3})
 	e3:SetCost(aux.bfgcost)
 	e3:SetCondition(s.atkcon)
 	e3:SetOperation(s.atkop)
@@ -42,9 +43,7 @@ function s.mgfilter(c)
 end
 
 function s.mgplacefilter(c,tp)
-	return c:IsCode(MOON_GATE_ID)
-		and not Duel.IsExistingMatchingCard(
-			Card.IsCode,tp,LOCATION_FZONE,LOCATION_FZONE,1,nil,MOON_GATE_ID)
+	return c:IsCode(778804) and not Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_FZONE,0,1,nil,778804)
 end
 
 -------------------------------------------------
@@ -67,55 +66,91 @@ function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 end
 
+function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+end
+
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
+
 	local hasgate=Duel.IsExistingMatchingCard(
 		s.mgfilter,tp,LOCATION_FZONE,0,1,nil)
 
-	if hasgate then
-		if Duel.IsExistingMatchingCard(
-			s.thfilter,tp,LOCATION_DECK,0,1,nil)
-			and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+	local b1=not hasgate and (
+		Duel.IsExistingMatchingCard(
+			s.mgplacefilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp)
+	)
 
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local b2=hasgate and Duel.IsExistingMatchingCard(
+		s.thfilter,tp,LOCATION_DECK,0,1,nil)
 
-			local g=Duel.SelectMatchingCard(
-				tp,s.thfilter,
-				tp,LOCATION_DECK,0,
-				1,1,nil)
+	if not (b1 or b2) then return end
 
-			if #g>0 then
-				Duel.SendtoHand(g,nil,REASON_EFFECT)
-				Duel.ConfirmCards(1-tp,g)
-			end
+	local op
+
+	if b1 and b2 then
+		op=Duel.SelectOption(
+			tp,
+			aux.Stringid(id,2),
+			aux.Stringid(id,3)
+		)
+	elseif b1 then
+		op=0
+	else
+		op=1
+	end
+
+	--------------------------------------------------
+	-- Place Moon Gate
+	--------------------------------------------------
+	if op==0 then
+
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
+
+		local g=Duel.SelectMatchingCard(
+			tp,
+			s.mgplacefilter,
+			tp,
+			LOCATION_DECK+LOCATION_GRAVE,
+			0,
+			1,1,nil,tp
+		)
+
+		local tc=g:GetFirst()
+
+		if tc then
+			Duel.MoveToField(
+				tc,
+				tp,tp,
+				LOCATION_FZONE,
+				POS_FACEUP,
+				true
+			)
 		end
-		return
-	end
 
-	if Duel.GetLocationCount(tp,LOCATION_FZONE)<=0 then
-		return
-	end
+	--------------------------------------------------
+	-- Search Mysthich
+	--------------------------------------------------
+	else
 
-	local g=Duel.GetMatchingGroup(
-		s.mgplacefilter,tp,
-		LOCATION_DECK+LOCATION_GRAVE,
-		0,nil,tp)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 
-	if #g==0 then return end
+		local g=Duel.SelectMatchingCard(
+			tp,
+			s.thfilter,
+			tp,
+			LOCATION_DECK,
+			0,
+			1,1,nil
+		)
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
+		local tc=g:GetFirst()
 
-	local sg=g:Select(tp,1,1,nil)
-	local tc=sg:GetFirst()
-
-	if tc then
-		Duel.MoveToField(
-			tc,tp,tp,
-			LOCATION_FZONE,
-			POS_FACEUP,
-			true)
+		if tc then
+			Duel.SendtoHand(tc,nil,REASON_EFFECT)
+			Duel.ConfirmCards(1-tp,tc)
+		end
 	end
 end
-
 -------------------------------------------------
 -- Destroy substitute
 -------------------------------------------------
