@@ -64,7 +64,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
 function s.posfilter(c)
-	return c:IsFaceup() and c:IsMonster()
+	return c:IsFaceup() and c:IsMonster() and c:IsCanTurnSet()
 end
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
