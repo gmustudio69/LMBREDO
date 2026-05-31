@@ -88,11 +88,13 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 
 	local g=Duel.GetMatchingGroup(
-		s.rmfilter2,tp,
-		LOCATION_MZONE,
-		LOCATION_MZONE,
-		c
-	)
+	s.rmfilter2,
+	tp,
+	LOCATION_MZONE,
+	LOCATION_MZONE,
+	nil,
+	tp
+)
 	
 	local nums={}
 
