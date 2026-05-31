@@ -65,12 +65,9 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
 	end
 end
-function s.rmfilter2(c)
+function s.rmfilter2(c,e,tp)
 	return c:IsAbleToRemoveAsCost()
-		and (
-			c:IsSetCard(0x76b)
-			or (c:IsMonster() and c:IsFacedown())
-		)
+		and ((c:IsSetCard(0x76b) and c:IsControler(tp) or (c:IsMonster() and c:IsFacedown()))
 end
 function s.spfilter(c,e,tp,ct)
 	return c:IsSetCard(0x76b)
