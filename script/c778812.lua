@@ -130,7 +130,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 
 	if not own then return end
-
 	if not Duel.IsExistingMatchingCard(
 		s.otherfilter,
 		tp,
@@ -140,28 +139,29 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		tc,
 		tc
 	) then
-		return Duel.SelectYesNo(tp,aux.Stringid(id,0))
+		return
 	end
+	if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-
-	local g=Duel.SelectMatchingCard(
-		tp,
-		s.otherfilter,
-		tp,
-		LOCATION_ONFIELD,
-		LOCATION_ONFIELD,
-		1,1,
-		tc,
-		tc
-	)
-
-	if #g>0 then
-		Duel.Remove(
-			g,
-			POS_FACEUP,
-			REASON_EFFECT
+		local g=Duel.SelectMatchingCard(
+			tp,
+			s.otherfilter,
+			tp,
+			LOCATION_ONFIELD,
+			LOCATION_ONFIELD,
+			1,1,
+			tc,
+			tc
 		)
+
+		if #g>0 then
+			Duel.Remove(
+				g,
+				POS_FACEUP,
+				REASON_EFFECT
+			)
+		end
 	end
 end
 
