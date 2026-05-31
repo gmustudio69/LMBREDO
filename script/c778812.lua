@@ -139,7 +139,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		1,
 		tc,
 		tc
-	) then
+	) and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 		return
 	end
 
