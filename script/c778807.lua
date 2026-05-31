@@ -72,28 +72,34 @@ function s.rmfilter2(c)
 			or (c:IsMonster() and c:IsFacedown())
 		)
 end
-function s.spfilter(c,e,tp,ct,g)
+function s.spfilter(c,e,tp,ct)
 	return c:IsSetCard(0x76b)
 		and c:IsType(TYPE_LINK)
 		and c:IsLink(ct)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and Duel.GetLocationCountFromEx(tp,tp,g,c)>0
 		and not c:IsLink(1)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+
+	if not c:IsAbleToRemoveAsCost() then
+		return false
+	end
+
 	local g=Duel.GetMatchingGroup(
 		s.rmfilter2,tp,
 		LOCATION_MZONE,
 		LOCATION_MZONE,
-		nil)
+		c
+	)
 
 	local nums={}
 
-	for i=1,#g do
+	for i=0,#g do
 		if Duel.IsExistingMatchingCard(
 			s.spfilter,tp,
 			LOCATION_EXTRA,0,
-			1,nil,e,tp,i,g
+			1,nil,e,tp,i+1
 		) then
 			table.insert(nums,i)
 		end
@@ -107,13 +113,22 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 
 	local ct=Duel.AnnounceNumber(tp,table.unpack(nums))
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local rg=Group.CreateGroup()
 
-	local rg=g:Select(tp,ct,ct,nil)
+	-- Always include Fresnel
+	rg:AddCard(c)
+
+	if ct>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+
+		local sg=g:Select(tp,ct,ct,nil)
+
+		rg:Merge(sg)
+	end
 
 	Duel.Remove(rg,POS_FACEUP,REASON_COST)
 
-	e:SetLabel(ct)
+	e:SetLabel(#rg)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
