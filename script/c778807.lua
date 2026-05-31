@@ -92,7 +92,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	tp,
 	LOCATION_MZONE,
 	LOCATION_MZONE,
-	nil,
+	c,	  -- exclude Fresnel
 	tp
 )
 	
