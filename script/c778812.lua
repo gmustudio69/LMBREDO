@@ -140,7 +140,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		tc,
 		tc
 	) then
-		return
+		return Duel.SelectYesNo(tp,aux.Stringid(id,0))
 	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
@@ -156,7 +156,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		tc
 	)
 
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+	if #g>0 then
 		Duel.Remove(
 			g,
 			POS_FACEUP,
