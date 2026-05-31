@@ -235,6 +235,5 @@ function s.recop(e,tp,eg,ep,ev,re,r,rp)
 	local atk=tc:GetOriginalAttack()
 
 	if atk<0 then atk=0 end
-
 	Duel.Recover(tp,atk,REASON_EFFECT)
 end
