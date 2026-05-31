@@ -139,7 +139,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		1,
 		tc,
 		tc
-	) and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+	) then
 		return
 	end
 
@@ -156,7 +156,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		tc
 	)
 
-	if #g>0 then
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 		Duel.Remove(
 			g,
 			POS_FACEUP,
