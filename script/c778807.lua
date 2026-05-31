@@ -23,6 +23,7 @@ function s.initial_effect(c)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
 	e2:SetCountLimit(1,{id,2})
 	e2:SetCost(s.spcost)
+	e2:SetCondition(function() return Duel.IsMainPhase() end)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
@@ -92,7 +93,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	tp,
 	LOCATION_MZONE,
 	LOCATION_MZONE,
-	c,	  -- exclude Fresnel
+	c,	-- exclude Fresnel
 	tp
 )
 	
