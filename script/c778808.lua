@@ -18,6 +18,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetCountLimit(1,{id,1})
+	e2:SetTarget(s.postg)
 	e2:SetOperation(s.posop)
 	c:RegisterEffect(e2)
 	local e3=Effect.CreateEffect(c)
@@ -137,26 +138,16 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 		0,1
 	)
 end
-function s.posop(e,tp,eg,ep,ev,re,r,rp)
-
-	local g=Duel.GetMatchingGroup(
-		Card.IsCanTurnSet,
-		tp,
-		0,
-		LOCATION_MZONE,
-		nil)
-
-	if #g>0 then
-		Duel.ChangePosition(
-			g,
-			POS_FACEDOWN_DEFENSE)
-	end
+function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsCanTurnSet,tp,0,LOCATION_MZONE,1,nil) end
+	local g=Duel.GetMatchingGroup(Card.IsCanTurnSet,tp,0,LOCATION_MZONE,nil)
+	Duel.SetOperationInfo(0,CATEGORY_POSITION,g,#g,tp,POS_FACEDOWN_DEFENSE)
 end
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(0x76b)
-		and not c:IsCode(id)
-		and c:IsCanBeSpecialSummoned(
-			e,0,tp,false,false)
+function s.posop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetMatchingGroup(Card.IsCanTurnSet,tp,0,LOCATION_MZONE,nil)
+	if #g>0 then
+		Duel.ChangePosition(g,POS_FACEDOWN_DEFENSE)
+	end
 end
 function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 
