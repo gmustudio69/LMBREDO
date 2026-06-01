@@ -63,30 +63,14 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
-function s.posfilter(c)
-	return c:IsFaceup() and c:IsMonster() and c:IsCanTurnSet()
-end
+
 
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then
-		return chkc:IsControler(1-tp)
-			and chkc:IsLocation(LOCATION_MZONE)
-			and s.posfilter(chkc)
-	end
-
-	if chk==0 then
-		return Duel.IsExistingTarget(
-			s.posfilter,tp,0,LOCATION_MZONE,1,nil)
-	end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-
-	local g=Duel.SelectTarget(
-		tp,s.posfilter,
-		tp,0,LOCATION_MZONE,
-		1,1,nil)
-
-	Duel.SetOperationInfo(0,CATEGORY_POSITION,g,2,0,0)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsCanTurnSet() end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsCanTurnSet,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	local g=Duel.SelectTarget(tp,Card.IsCanTurnSet,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_POSITION,g,2,tp,POS_FACEDOWN_DEFENSE)
 end
 
 function s.posop(e,tp,eg,ep,ev,re,r,rp)
