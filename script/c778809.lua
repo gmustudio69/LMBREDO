@@ -27,7 +27,6 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_HAND)
 	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e3:SetCondition(function() return Duel.IsMainPhase() end)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(s.spcon)
 	e3:SetTarget(s.sptg)
@@ -115,8 +114,7 @@ end
 ----------------------------------------------------------
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(
-		s.mgfilter,tp,LOCATION_FZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.mgfilter,tp,LOCATION_FZONE,0,1,nil) and Duel.IsMainPhase()
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
