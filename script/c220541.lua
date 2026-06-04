@@ -5,17 +5,14 @@ function s.initial_effect(c)
 	--Pendulum.AddProcedure(c)
 	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
 
-	-- Pendulum Effect
-	local pe1=Effect.CreateEffect(c)
-	pe1:SetDescription(aux.Stringid(id,0))
-	pe1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
-	pe1:SetType(EFFECT_TYPE_IGNITION)
-	pe1:SetRange(LOCATION_PZONE)
-	pe1:SetCountLimit(1,id)
-	pe1:SetCost(s.tkcost)
-	pe1:SetTarget(s.tktg)
-	pe1:SetOperation(s.tkop)
-	c:RegisterEffect(pe1)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EFFECT_REPLACE_DISCARD)
+	e1:SetRange(LOCATION_PZONE)
+	e1:SetTarget(s.reptg)
+	e1:SetValue(s.repval)
+	e1:SetOperation(s.repop)
+	c:RegisterEffect(e1)
 
 	-- Monster Effect 1: Trigger on Summon
 	local e1=Effect.CreateEffect(c)
@@ -53,28 +50,18 @@ function s.initial_effect(c)
 end
 
 -- Pendulum Effect Logic
-function s.tkcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,800) end
-	Duel.PayLPCost(tp,800)
-end
-function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
-end
--- Fix 2: Token Summoning to Linked Zone
-function s.tkop(e,tp,eg,ep,ev,re,r,rp)
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local zone=c:GetLinkedZone(tp)
-	-- Check if there is a valid zone AND space for the token
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-		if not Duel.IsPlayerCanSpecialSummonMonster(tp,220542,0,TYPES_TOKEN,0,0,1,RACE_WARRIOR,ATTRIBUTE_FIRE) then return end
-		local token=Duel.CreateToken(tp,220542)
-		-- The zone argument in SpecialSummon restricts it to that specific zone
-		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
-	end
+	if chk==0 then return c:IsDestructable() end
+	return true
+end
+
+function s.repval(e,c)
+	return true
+end
+
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Destroy(e:GetHandler(),REASON_EFFECT+REASON_REPLACE)
 end
 
 -- Monster Effect Logic
