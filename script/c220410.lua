@@ -15,6 +15,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
 	e2:SetCode(EFFECT_TO_GRAVE_REDIRECT)
 	e2:SetRange(LOCATION_MZONE)
+	e2:SetCondition(s.elliecon)
 	e2:SetTarget(s.rmtarget)
 	e2:SetTargetRange(0,LOCATION_ONFIELD)
 	e2:SetValue(LOCATION_REMOVED)
@@ -27,10 +28,12 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_REMOVE)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e3:SetCondition(s.mtcon)
 	e3:SetCost(s.mtcost)
 	e3:SetTarget(s.mttg)
 	e3:SetOperation(s.mtop)
 	c:RegisterEffect(e3)
+
 
 	-- 3: Quick Effect while controlling Ellie: Copy "Limit" Spell
 	local e4=Effect.CreateEffect(c)
@@ -51,6 +54,7 @@ function s.initial_effect(c)
 	e5:SetCode(EFFECT_TO_GRAVE_REDIRECT)
 	e5:SetRange(LOCATION_MZONE)
 	e5:SetTargetRange(0,LOCATION_GRAVE)
+	e5:SetCondition(s.elliecon)
 	e5:SetValue(LOCATION_REMOVED)
 	e5:SetTarget(s.detachtarget)
 	c:RegisterEffect(e5)
@@ -88,7 +92,10 @@ function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Overlay(c,Group.FromCards(tc))
 	end
 end
-
+-- Attachment logic
+function s.mtcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(Card.IsPreviousControler,1,nil,1-tp)
+end
 -- E4/E5: Ellie Condition
 function s.elliecon(e)
 	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
