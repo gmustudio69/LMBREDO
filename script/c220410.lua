@@ -22,19 +22,6 @@ function s.initial_effect(c)
 	e1:SetTarget(s.mattg)
 	e1:SetOperation(s.matop)
 	c:RegisterEffect(e1)
-
-	-- Attach banished card
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
-	e3:SetCode(EVENT_REMOVE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e3:SetCost(s.mtcost)
-	e3:SetTarget(s.mttg)
-	e3:SetOperation(s.mtop)
-	c:RegisterEffect(e3)
-
 	---------------------------------------------------
 	-- Gain effects if you control Ellie
 	---------------------------------------------------
@@ -83,11 +70,11 @@ end
 ---------------------------------------------------
 -- CHECK ELLIE CONTROL
 ---------------------------------------------------
-function s.elcon(e,tp,eg,ep,ev,re,r,rp)
+function s.elliecon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_ONFIELD,0,1,nil,220405)
 end
 
-function s.elop(e,tp,eg,ep,ev,re,r,rp)
+function s.ellieop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
 	---------------------------------------------------
@@ -99,7 +86,7 @@ function s.elop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetTargetRange(LOCATION_ONFIELD,LOCATION_ONFIELD)
 	e1:SetValue(LOCATION_REMOVED)
-	e1:SetCondition(s.elcon)
+	e1:SetCondition(s.elliecon)
 	c:RegisterEffect(e1)
 
 	---------------------------------------------------
