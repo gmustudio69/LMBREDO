@@ -62,9 +62,12 @@ function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and tc:IsRelateToEffect(e) then
-		Duel.Overlay(c,Group.FromCards(tc))
+	if not c:IsRelateToEffect(e) then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+	local g=Duel.SelectMatchingCard(tp,s.filter,tp,0,LOCATION_REMOVED,1,1,nil,c,tp,e)
+	if #g>0 then
+		Duel.HintSelection(g,true)
+		Duel.Overlay(c,g)
 	end
 end
 
