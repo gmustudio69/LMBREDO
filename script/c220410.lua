@@ -52,10 +52,10 @@ function s.splimit(e,se,sp,st)
 end
 
 function s.rmtarget(e,c)
-	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c)
+	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c) and c:GetOwner()~=e:GetHandlerPlayer()
 end
 function s.filter(c,e)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and not c:IsImmuneToEffect(e)
+	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and c:IsPreviousLocation(LOCATION_ONFIELD) and not c:IsImmuneToEffect(e)
 end
 function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
