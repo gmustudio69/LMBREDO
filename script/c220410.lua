@@ -55,7 +55,6 @@ function s.initial_effect(c)
 	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(s.elcon)
-	e3:SetCost(s.copycost)
 	e3:SetTarget(s.copytg)
 	e3:SetOperation(s.copyop)
 	c:RegisterEffect(e3)
@@ -110,40 +109,51 @@ end
 function s.limitfilter(c)
 	return c:IsSetCard(0xf86)
 		and c:IsSpell()
-		and c:IsAbleToRemoveAsCost()
+		and c:IsAbleToRemove()
 end
 
-function s.copycost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
 
+function s.copytg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then
-		return c:IsType(TYPE_XYZ)
-			and c:GetOverlayCount()>=2
-			and Duel.IsExistingMatchingCard(s.limitfilter,tp,LOCATION_GRAVE,0,1,nil)
+		return Duel.IsExistingMatchingCard(s.limitfilter,tp,LOCATION_GRAVE,0,1,nil)
+			and e:GetHandler():GetOverlayCount()>=2
 	end
 
-	c:RemoveOverlayCard(tp,2,2,REASON_COST)
-end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 
-function s.copytg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	local g=Duel.SelectTarget(tp,s.limitfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
 end
-
 ---------------------------------------------------
 -- QUICK EFFECT OPERATION
 ---------------------------------------------------
 function s.copyop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
 
-	local g=Duel.SelectMatchingCard(tp,s.limitfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	local tc=g:GetFirst()
+	if not tc or not tc:IsRelateToEffect(e) then return end
 
-	if not tc then return end
+	---------------------------------------------------
+	-- STEP 1: check & detach 2 materials
+	---------------------------------------------------
+	if c:GetOverlayCount()<2 then return end
 
-	Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
+	if not c:CheckRemoveOverlayCard(tp,2,REASON_EFFECT) then return end
 
+	c:RemoveOverlayCard(tp,2,2,REASON_EFFECT)
+
+	---------------------------------------------------
+	-- STEP 2: banish targeted Spell
+	---------------------------------------------------
+	if tc:IsAbleToRemove() then
+		if Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)==0 then return end
+	else
+		return
+	end
+	---------------------------------------------------
+	-- STEP 3: apply Spell effect
+	---------------------------------------------------
 	local ce=tc:CopyEffect(id,RESET_EVENT+RESETS_STANDARD)
-
 	if ce then
 		ce:SetOwnerPlayer(tp)
 	end
