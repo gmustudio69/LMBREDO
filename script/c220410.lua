@@ -3,12 +3,12 @@ local s,id,o=GetID()
 function s.initial_effect(c)
 	-- Must be Special Summoned by "Limit" S/T
 	c:EnableReviveLimit()
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetValue(s.splimit)
-	c:RegisterEffect(e1)
+	local e0=Effect.CreateEffect(c)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e0:SetValue(s.spconlimit)
+	c:RegisterEffect(e0)
 	-- Banisher (Field to GY -> Banish)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
@@ -47,8 +47,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 
 -- E1: Special Summon Limit
-function s.splimit(e,se,sp,st)
-	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
+function s.spconlimit(e,se,sp,st)
+	return se:IsHasType(EFFECT_TYPE_ACTIONS) and se:GetHandler():IsSetCard(0xf86)
 end
 
 function s.rmtarget(e,c)
