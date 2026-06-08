@@ -43,7 +43,7 @@ c:EnableReviveLimit()
 	e3:SetTarget(s.reptg)
 	e3:SetOperation(function(e,tp) 
 		local c=e:GetHandler()
-		if Duel.GetLocationCount(tp,LOCATION_SZONE)>0  then
+			if Duel.GetLocationCount(tp,LOCATION_SZONE)>0 then
 			Duel.MoveToField(c,tp,c:GetOwner(),LOCATION_SZONE,POS_FACEUP,true)
 			local e1=Effect.CreateEffect(c)
 			e1:SetCode(EFFECT_CHANGE_TYPE)
