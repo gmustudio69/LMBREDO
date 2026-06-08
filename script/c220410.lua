@@ -71,7 +71,7 @@ end
 -- CHECK ELLIE CONTROL
 ---------------------------------------------------
 function s.elliecon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_ONFIELD,0,1,nil,220405)
+	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
 end
 
 function s.ellieop(e,tp,eg,ep,ev,re,r,rp)
