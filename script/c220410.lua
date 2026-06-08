@@ -48,7 +48,7 @@ function s.initial_effect(c)
 end
 -- E1: Special Summon Limit
 function s.splimit(e,se,sp,st)
-	return se:GetHandler():IsSetCard(0xf86) -- Replace 0xXXXX with your "Limit" SetCode
+	return se:IsHasType(EFFECT_TYPE_ACTIONS) and se:GetHandler():IsSetCard(0xf86)
 end
 
 function s.rmtarget(e,c)
@@ -83,10 +83,8 @@ function s.elliecon(e)
 end
 function s.copyfilter(c,e,tp,eg,ep,ev,re,r,rp)
 	if not (c:IsSetCard(0xf86) and c:IsType(TYPE_SPELL) and c:IsAbleToRemove()) then return false end
-	-- Ensure the spell has an activatable effect we can copy (bypassing cost)
 	local te=c:CheckActivateEffect(false,true,false)
 	if not te then return false end
-	-- Ensure we have 2 materials to detach later
 	if e:GetHandler():GetOverlayCount()<2 then return false end
 	return true
 end
@@ -130,4 +128,5 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 				if op then op(e,tp,eg,ep,ev,re,r,rp) end
 			end
 		end
+	end
 end
