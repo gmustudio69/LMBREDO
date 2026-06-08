@@ -44,7 +44,7 @@ function s.initial_effect(c)
 	e2:SetCondition(s.elliecon)
 	e2:SetOperation(s.ellieop)
 	c:RegisterEffect(e2)
-
+end
 function s.splimit(e,se,sp,st)
 	return se and se:IsHasType(EFFECT_TYPE_ACTIONS)
 		and se:GetHandler():IsSetCard(0xf86)
