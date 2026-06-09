@@ -10,10 +10,10 @@ function s.initial_effect(c)
 	---------------------------------------------------
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetCode(EFFECT_REPLACE_DESTROY)
+	e0:SetCode(EFFECT_TO_GRAVE_REDIRECT)
 	e0:SetRange(LOCATION_MZONE)
 	e0:SetTarget(s.reptg)
-	e0:SetValue(s.repval)
+	e0:SetValue(LOCATION_HAND)
 	c:RegisterEffect(e0)
 
 	---------------------------------------------------
