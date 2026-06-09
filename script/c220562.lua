@@ -122,9 +122,8 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	-- schedule revive at start of next Battle Phase
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
+	e1:SetCode(EVENT_PHASE_START+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
-	e1:SetCondition(function() return Duel.GetTurnPlayer()==tp end)
 	e1:SetOperation(function()
 		if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
 
@@ -136,6 +135,6 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 	end)
-
+	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
 	Duel.RegisterEffect(e1,tp)
 end
