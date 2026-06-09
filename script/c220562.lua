@@ -11,7 +11,7 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_FIELD)
 	e0:SetCode(EFFECT_TO_GRAVE_REDIRECT)
 	e0:SetRange(LOCATION_MZONE)
-	e0:SetTarget(s.reptg)
+	e0:SetTarget(s.rmtarget)
 	e0:SetTargetRange(LOCATION_ALL,LOCATION_ALL)
 	e0:SetValue(LOCATION_HAND)
 	c:RegisterEffect(e0)
@@ -53,10 +53,8 @@ end
 ---------------------------------------------------
 -- REPLACEMENT: destroy → add to hand
 ---------------------------------------------------
-function s.repfilter(c)
-	return c:IsReason(REASON_DESTROY)
-		and c:IsLocation(LOCATION_GRAVE)
-		and c:IsAbleToHand()
+function s.rmtarget(e,c)
+	return c:IsReason(REASON_DESTROY) and c:IsLocation(LOCATION_GRAVE)
 end
 
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
