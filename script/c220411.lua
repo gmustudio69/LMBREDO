@@ -64,12 +64,35 @@ end
 function s.revsp(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetLabelObject()
 	local loc=e:GetLabel()
-	if c and c:IsLocation(loc)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+
+	if not c then return end
+
+	-- check correct zone
+	if loc==LOCATION_GRAVE then
+		if c:IsLocation(LOCATION_GRAVE)
+			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		end
+
+	elseif loc==LOCATION_REMOVED then
+		if c:IsLocation(LOCATION_REMOVED)
+			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		end
+
+	elseif loc==LOCATION_DECK then
+		if c:IsLocation(LOCATION_DECK)
+			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		end
+
+	elseif loc==LOCATION_HAND then
+		if c:IsLocation(LOCATION_HAND)
+			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		end
 	end
 end
-
 --XYZ condition
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
