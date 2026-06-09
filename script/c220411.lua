@@ -40,9 +40,7 @@ end
 function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
-	local loc=c:GetPreviousLocation()
-	local seq=c:GetPreviousSequence()
-	local p=c:GetPreviousControler()
+	local loc=c:GetLocation()
 
 	-- store original location zone
 	e:SetLabel(loc)
@@ -52,10 +50,8 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
-
 	e1:SetLabel(loc)
 	e1:SetLabelObject(c)
-
 	e1:SetOperation(s.revsp)
 	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
 	Duel.RegisterEffect(e1,tp)
@@ -64,35 +60,12 @@ end
 function s.revsp(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetLabelObject()
 	local loc=e:GetLabel()
-
-	if not c then return end
-
-	-- check correct zone
-	if loc==LOCATION_GRAVE then
-		if c:IsLocation(LOCATION_GRAVE)
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		end
-
-	elseif loc==LOCATION_REMOVED then
-		if c:IsLocation(LOCATION_REMOVED)
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		end
-
-	elseif loc==LOCATION_DECK then
-		if c:IsLocation(LOCATION_DECK)
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		end
-
-	elseif loc==LOCATION_HAND then
-		if c:IsLocation(LOCATION_HAND)
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		end
+	if c and c:IsLocation(loc)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
+
 --XYZ condition
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
