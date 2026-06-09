@@ -110,7 +110,7 @@ function s.revcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xdet)
+	return c:IsSetCard(0xc25)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
