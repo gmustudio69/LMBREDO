@@ -54,7 +54,7 @@ end
 -- REPLACEMENT: destroy → add to hand
 ---------------------------------------------------
 function s.rmtarget(e,c)
-	return c:IsReason(REASON_DESTROY) and c:IsLocation(LOCATION_GRAVE)
+	return c:IsReason(REASON_DESTROY)
 end
 
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
