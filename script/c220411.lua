@@ -39,12 +39,23 @@ end
 --Register Battle Phase revive
 function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not c:IsLocation(LOCATION_GRAVE) then return end
+
+	local loc=c:GetPreviousLocation()
+	local seq=c:GetPreviousSequence()
+	local p=c:GetPreviousControler()
+
+	-- store original location zone
+	e:SetLabel(loc)
+	e:SetLabelObject(c)
+
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE_START+PHASE_BATTLE_START)
+	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
+
+	e1:SetLabel(loc)
 	e1:SetLabelObject(c)
+
 	e1:SetOperation(s.revsp)
 	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
 	Duel.RegisterEffect(e1,tp)
@@ -52,7 +63,8 @@ end
 
 function s.revsp(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetLabelObject()
-	if c and c:IsLocation(LOCATION_GRAVE)
+	local loc=e:GetLabel()
+	if c and c:IsLocation(loc)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
