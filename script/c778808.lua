@@ -171,8 +171,6 @@ function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 		LOCATION_REMOVED)
 end
 function s.ssop(e,tp,eg,ep,ev,re,r,rp)
-
-	function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 
 	if ft<=0 then return end
