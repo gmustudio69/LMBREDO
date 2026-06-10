@@ -52,10 +52,6 @@ end
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-
-	if Duel.GetLocationCountFromEx(tp,tp,nil,c)<=0 then
-		return false
-	end
 	local g=Duel.GetMatchingGroup(
 		s.matfilter,tp,
 		LOCATION_MZONE,
@@ -163,12 +159,12 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 	local g1=Duel.SelectMatchingCard(tp,s.spellfilter,tp,
-		LOCATION_DECK,0,1,1,nil)
+		LOCATION_DECK+LOCATION_REMOVED,0,1,1,nil)
 	if #g1==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 	local g2=Duel.SelectMatchingCard(tp,s.trapfilter,tp,
-		LOCATION_DECK,0,1,1,nil)
+		LOCATION_DECK+LOCATION_REMOVED,0,1,1,nil)
 	if #g2==0 then return end
 
 	g1:Merge(g2)

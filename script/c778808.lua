@@ -149,12 +149,14 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ChangePosition(g,POS_FACEDOWN_DEFENSE)
 	end
 end
+function s.spfilter(c,e,tp)
+	return c:IsSetCard(0x76b)
+		and not c:IsCode(id)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
 function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
-
 	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsExistingMatchingCard(
-				s.spfilter,tp,
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,
 				LOCATION_REMOVED,
 				0,
 				1,nil,e,tp)
@@ -170,43 +172,27 @@ function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 
+	function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 
 	if ft<=0 then return end
-
-	if ft>3 then
-		ft=3
-	end
+	if ft>3 then ft=3 end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
-	local g=Duel.SelectMatchingCard(
-		tp,
-		s.spfilter,
-		tp,
-		LOCATION_REMOVED,
-		0,
-		1,ft,
-		nil,e,tp)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_REMOVED,0,1,ft,nil,e,tp)
 
 	if #g==0 then return end
 
-	local atk=0
+	if Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
 
-	for tc in aux.Next(g) do
-		atk=atk+math.max(tc:GetAttack(),0)
-	end
-
-	if Duel.SpecialSummon(
-		g,
-		0,
-		tp,tp,
-		false,false,
-		POS_FACEUP)>0 then
-
-		Duel.Damage(
-			tp,
-			atk,
-			REASON_EFFECT)
+		local atk=0
+		for tc in aux.Next(g) do
+			if tc:IsLocation(LOCATION_MZONE) then
+				atk=atk+math.max(tc:GetBaseAttack(),0)
+			end
+		end
+		Duel.BreakEffect()
+		Duel.Damage(tp,atk,REASON_EFFECT)
 	end
 end
