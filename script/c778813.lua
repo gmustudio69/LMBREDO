@@ -46,7 +46,7 @@ end
 function s.fdmatfilter(c,tp)
 	return c:IsSetCard(0x76b)
 		and c:IsFacedown()
-		and c:IsControler(tp)
+		and c:IsControler(tp) and c:IsAbleToGraveAsCost()
 end
 function s.spcon(e,c)
 	if c==nil then return true end

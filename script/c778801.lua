@@ -40,7 +40,7 @@ end
 
 function s.matfilter(c,tp)
 	return (c:IsSetCard(0x76b) and c:IsControler(tp))
-		or (c:IsFacedown() and c:IsMonster())
+		or (c:IsFacedown() and c:IsMonster()) and c:IsAbleToGraveAsCost()
 end
 function s.matcheck(g,tp)
 	return #g==2
