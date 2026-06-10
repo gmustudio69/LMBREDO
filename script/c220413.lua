@@ -93,17 +93,11 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.Recover(tp,tc:GetLevel()*300,REASON_EFFECT)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2))then
 		Duel.BreakEffect()
 		-- 2. Return to Extra
-		if c:IsRelateToEffect(e) and Duel.SendtoExtraP(c,nil,REASON_EFFECT)>0 then
+		if c:IsRelateToEffect(e) and Duel.SendtoDeck(c,nil,REASON_EFFECT)>0 then
 			Duel.BreakEffect()
 			local b1=tc:IsAbleToHand()
 			local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,false,false)
-			if (b1 or b2) then
-				if b1 and (not b2 or Duel.SelectOption(tp,aux.Stringid(id,3))) then
 					Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
-				else
-					Duel.SendtoHand(tc,nil,REASON_EFFECT)
-				end
-			end
 		end
 	end
 end

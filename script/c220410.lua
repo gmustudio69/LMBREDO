@@ -21,7 +21,6 @@ function s.initial_effect(c)
 	e2:SetValue(LOCATION_REMOVED)
 	c:RegisterEffect(e2)
 
-	-- Attach banished card
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
@@ -53,8 +52,11 @@ end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c) and c:GetOwner()~=e:GetHandlerPlayer()
 end
-function s.mtfilter(c,xc,tp,e)
-	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and c:IsPreviousLocation(LOCATION_ONFIELD) and not c:IsImmuneToEffect(e)
+function s.mtfilter(c,e,tp)
+	return c:GetOwner()~=tp
+		and c:IsPreviousLocation(LOCATION_ONFIELD)
+		and c:IsLocation(LOCATION_REMOVED)
+		and not c:IsImmuneToEffect(e)
 end
 function s.mtcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.mtfilter,1,nil,e,tp)
@@ -67,14 +69,17 @@ end
 function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.mtfilter,tp,0,LOCATION_REMOVED,1,1,nil,c,tp,e)
-	if #g>0 then
-		Duel.HintSelection(g,true)
-		Duel.Overlay(c,g)
-	end
-end
 
+	local g=eg:Filter(s.mtfilter,nil,e,tp)
+
+	if #g==0 then return end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+	local sg=g:Select(tp,1,1,nil)
+
+	Duel.HintSelection(sg,true)
+	Duel.Overlay(c,sg)
+end
 -- E4/E5: Ellie Condition
 function s.elliecon(e)
 	return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil,220405)
