@@ -185,14 +185,11 @@ function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	if #g==0 then return end
 
 	if Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
-
+		local sg=Duel.GetOperatedGroup():Filter(Card.IsFaceup,nil)
 		local atk=0
-		for tc in aux.Next(g) do
-			if tc:IsLocation(LOCATION_MZONE) then
-				atk=atk+math.max(tc:GetBaseAttack(),0)
-			end
+		for tc in aux.Next(sg) do
+			atk=atk+math.max(tc:GetBaseAttack(),0)
 		end
-		Duel.BreakEffect()
 		Duel.Damage(tp,atk,REASON_EFFECT)
 	end
 end
