@@ -27,6 +27,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e3:SetCode(EVENT_REMOVE)
 	e3:SetRange(LOCATION_MZONE)
+	e3:SetCondition(s.mtcon)
 	e3:SetCost(s.mtcost)
 	e3:SetOperation(s.mtop)
 	c:RegisterEffect(e3)
@@ -52,8 +53,11 @@ end
 function s.rmtarget(e,c)
 	return Duel.IsPlayerCanRemove(e:GetHandlerPlayer(),c) and c:GetOwner()~=e:GetHandlerPlayer()
 end
-function s.filter(c,xc,tp,e)
+function s.mtfilter(c,xc,tp,e)
 	return c:GetOwner()~=e:GetHandlerPlayer() and c:IsLocation(LOCATION_REMOVED) and c:IsPreviousLocation(LOCATION_ONFIELD) and not c:IsImmuneToEffect(e)
+end
+function s.mtcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.mtfilter,1,nil,e,tp)
 end
 function s.mtcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -64,7 +68,7 @@ function s.mtop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.filter,tp,0,LOCATION_REMOVED,1,1,nil,c,tp,e)
+	local g=Duel.SelectMatchingCard(tp,s.mtfilter,tp,0,LOCATION_REMOVED,1,1,nil,c,tp,e)
 	if #g>0 then
 		Duel.HintSelection(g,true)
 		Duel.Overlay(c,g)

@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 function s.linkmatfilter(c)
-	return c:IsSetCard(0x76b) and not c:IsRace(RACE_WARRIOR)
+	return c:IsSetCard(0x76b) and not c:IsRace(RACE_WARRIOR) 
 end
 function s.rmfilter(c)
 	return c:IsAbleToRemove()
@@ -93,7 +93,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	tp,
 	LOCATION_MZONE,
 	LOCATION_MZONE,
-	c,	-- exclude Fresnel
+	c,  -- exclude Fresnel
 	tp
 )
 	

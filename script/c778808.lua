@@ -40,7 +40,7 @@ function s.sumlimit(c,sump,sumtype,sumpos,targetp,se)
 end
 function s.matfilter(c,tp)
 	return (c:IsSetCard(0x76b) and c:IsControler(tp))
-		or (c:IsFacedown() and c:IsMonster())
+		or (c:IsFacedown() and c:IsMonster()) and c:IsAbleToGrave()
 end
 function s.matcheck(g,tp)
 	local fd=g:FilterCount(Card.IsFacedown,nil)

@@ -104,35 +104,35 @@ end
 -- REVIVE AFTER DESTRUCTION
 ---------------------------------------------------
 function s.revcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsReason(REASON_EFFECT)
+	return r&REASON_EFFECT~=0
 end
 
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xc25)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
-
+--Register Battle Phase revive
 function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	local loc=c:GetLocation()
 
-	-- schedule revive at start of next Battle Phase
+	-- store original location zone
+	e:SetLabel(loc)
+	e:SetLabelObject(c)
+
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE_START+PHASE_BATTLE_START)
+	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
-	e1:SetOperation(function()
-		if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-
-			local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
-			if #g>0 then
-				Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
-			end
-		end
-	end)
+	e1:SetLabel(loc)
+	e1:SetLabelObject(c)
+	e1:SetOperation(s.revsp)
 	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
 	Duel.RegisterEffect(e1,tp)
+end
+
+function s.revsp(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetLabelObject()
+	local loc=e:GetLabel()
+	if c and c:IsLocation(loc)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+	end
 end
