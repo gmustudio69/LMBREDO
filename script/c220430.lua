@@ -40,7 +40,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
 	
 	-- Merge properties to ensure we don't lose the CARD_TARGET flag
-	e:SetProperty(te:GetProperty()|EFFECT_FLAG_CARD_TARGET)
+	e:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e:SetLabelObject(te)
 	
 	local tg=te:GetTarget()
