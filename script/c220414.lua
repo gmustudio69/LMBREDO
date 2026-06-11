@@ -24,14 +24,12 @@ function s.initial_effect(c)
 	-- =========================
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_NEGATE)
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetRange(LOCATION_HAND)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.negcon)
-	e2:SetCost(s.negcost)
-	e2:SetOperation(s.negop)
+	e2:SetCondition(s.lvcon)
+	e2:SetCost(s.lvtarget)
+	e2:SetOperation(s.lvop)
 	c:RegisterEffect(e2)
 
 	-- =========================
@@ -81,21 +79,24 @@ end
 
 -- ===== Negate targeting effect =====
 
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	if not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then return false end
-	local tg=Duel.GetChainInfo(ev,CHAININFO_TARGET_CARDS)
-	if not tg then return false end
-	return tg:IsExists(function(c) return c:IsControler(tp) and c:IsLocation(LOCATION_MZONE) end,1,nil)
-		and Duel.IsChainNegatable(ev)
+--Graveyard effect
+function s.lvtarget(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsFaceup()end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,nil)
 end
-
-function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsDiscardable() end
-	Duel.SendtoGrave(e:GetHandler(),REASON_COST+REASON_DISCARD)
+function s.lvfilter(c)
+	return c:HasLevel() and not c:IsLevel(7)
 end
-
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.NegateActivation(ev)
+function s.lvop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CHANGE_LEVEL)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	e1:SetValue(7)
+	tc:RegisterEffect(e1)
 end
 
 -- ===== Destroyed by card effect → return =====
