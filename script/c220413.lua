@@ -92,8 +92,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	-- 1. Gain LP
 	if Duel.Recover(tp,tc:GetLevel()*300,REASON_EFFECT)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2))then
 		Duel.BreakEffect()
-		-- 2. Return to Extra
-		if c:IsRelateToEffect(e) and Duel.SendtoDeck(c,nil,REASON_EFFECT)>0 then
+		if c:IsRelateToEffect(e) and Duel.SendtoDeck(c,nil,SEQ_DECKTOP,REASON_EFFECT)>0 then
 			Duel.BreakEffect()
 			local b1=tc:IsAbleToHand()
 			local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,false,false)
