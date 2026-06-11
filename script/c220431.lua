@@ -37,11 +37,12 @@ function s.elliefilter(c)
 	return c:IsFaceup() and c:IsCode(220405) -- Update with your <World Decoder> Ellie card ID
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
 	if chkc then return chkc:IsOnField() and s.targetfilter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.targetfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
-	local ct=Duel.GetMatchingGroupCount(s.lbreakerfilter,tp,LOCATION_MZONE,0,nil)+1
+	if chk==0 then return Duel.IsExistingTarget(s.targetfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,c) end
+	local ct=Duel.GetMatchingGroupCount(s.lbreakerfilter,tp,LOCATION_MZONE,0,c)+1
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,s.targetfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,ct,nil)
+	local g=Duel.SelectTarget(tp,s.targetfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,ct,c)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)

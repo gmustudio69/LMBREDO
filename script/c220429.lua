@@ -38,11 +38,12 @@ function s.elliefilter(c)
 	return c:IsFaceup() and c:IsCode(220405) 
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
 	if chkc then return chkc:IsOnField() and s.filter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
-	local ct=Duel.GetMatchingGroupCount(s.lbcfilter,tp,LOCATION_MZONE,0,nil)+1
+	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,c) end
+	local ct=Duel.GetMatchingGroupCount(s.lbcfilter,tp,LOCATION_MZONE,0,c)+1
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,ct,nil)
+	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,ct,c)
 	e:SetLabel(#g)
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
