@@ -61,11 +61,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			ct=ct+1
 		end
 	end
-	if ct>0 and Duel.IsExistingMatchingCard(s.elliefilter,tp,LOCATION_ONFIELD,0,1,nil) and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-		local gtop=Duel.GetDecktopGroup(1-tp,ct)
-		Duel.DisableShuffleCheck()
-		Duel.Remove(gtop,POS_FACEDOWN,REASON_EFFECT)
-	end
 end
 
 function s.spfilter(c,e,tp)

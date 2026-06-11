@@ -48,15 +48,10 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetTargetCards(e)
 	local ct=#g
 	if ct==0 then return end
-	local ellie=Duel.IsExistingMatchingCard(s.elliefilter,tp,LOCATION_ONFIELD,0,1,nil)
-	if ellie and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-		for tc in aux.Next(g) do
+	for tc in aux.Next(g) do
 			if tc:IsRelateToEffect(e) then
-				Duel.Remove(tc,POS_FACEDOWN,REASON_EFFECT)
+				Duel.Destroy(g,REASON_EFFECT)
 			end
-		end
-	else
-		Duel.Destroy(g,REASON_EFFECT)
 	end
 end
 
