@@ -95,8 +95,13 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil)
 	local tc=g:GetFirst()
 
-	if tc then
-		Duel.Destroy(tc,REASON_EFFECT)
+	if tc and Duel.Destroy(tc,REASON_EFFECT)>0 then
+		if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+			local g=Duel.SelectMatchingCard(tp,Card.IsMonster(),tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+			if #g>0 then
+				Duel.Destroy(g,REASON_EFFECT)
+			end
+		end
 	end
 end
 
