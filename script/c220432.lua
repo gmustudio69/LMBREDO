@@ -45,8 +45,8 @@ end
 
 --On summon effect
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 and return Duel.IsExistingMatchingCard(Card.IsAbleToGrave,tp,0,LOCATION_ONFIELD,1,1,nil)
-	then return true end
+	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToGrave,tp,0,LOCATION_ONFIELD,1,1,nil) end
+	return true
 end
 
 function s.attachfilter(c)
