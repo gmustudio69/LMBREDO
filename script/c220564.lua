@@ -80,7 +80,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 	-- Target filters checking the owner's possession fields specifically
 	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
-	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 and and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		-- Proceed to Special Summon from hand if destruction is successful
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local sg=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp)
