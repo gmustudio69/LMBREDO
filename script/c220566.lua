@@ -1,0 +1,147 @@
+--<World Breaker> Titan of the Grid
+local s,id=GetID()
+function s.initial_effect(c)
+	--3+ Level 13 monsters
+	Xyz.AddProcedure(c,nil,13,3,nil,nil,99)
+	c:EnableReviveLimit()
+
+	--Cannot be destroyed by battle
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_INDESTRUCTIBLE_BATTLE)
+	e1:SetValue(1)
+	c:RegisterEffect(e1)
+
+	--Opponent cannot target other cards if you control "<World Decoder> Ellie"
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e2:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetTargetRange(LOCATION_ONFIELD,LOCATION_ONFIELD)
+	e2:SetCondition(s.tgcon)
+	e2:SetTarget(s.tgtg)
+	e2:SetValue(aux.tgoval)
+	c:RegisterEffect(e2)
+
+	--Original ATK/DEF = 1000 x materials
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_SINGLE)
+	e3:SetCode(EFFECT_SET_BASE_ATTACK)
+	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetValue(s.atkval)
+	c:RegisterEffect(e3)
+	local e4=e3:Clone()
+	e4:SetCode(EFFECT_SET_BASE_DEFENSE)
+	c:RegisterEffect(e4)
+
+	--Quick Effect: Detach 1, destroy 1 card, then optionally lock its zone
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetCategory(CATEGORY_DESTROY)
+	e5:SetType(EFFECT_TYPE_QUICK_O)
+	e5:SetCode(EVENT_CHAINING)
+	e5:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCondition(s.descon)
+	e5:SetCost(aux.dxzcost)
+	e5:SetTarget(s.destg)
+	e5:SetOperation(s.desop)
+	c:RegisterEffect(e5)
+
+	--Battle Phase Start: Board wipe and gain a 3rd attack
+	local e6=Effect.CreateEffect(c)
+	e6:SetDescription(aux.Stringid(id,1))
+	e6:SetCategory(CATEGORY_DESTROY)
+	e6:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e6:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
+	e6:SetRange(LOCATION_MZONE)
+	e6:SetTarget(s.bptg)
+	e6:SetOperation(s.bpop)
+	c:RegisterEffect(e6)
+end
+
+-- 1. Protection Condition Filters
+function s.elliefilter(c)
+	return c:IsFaceup() and c:IsCode(98765432) -- Replace 98765432 with the actual card ID of "<World Decoder> Ellie"
+end
+
+function s.tgcon(e)
+	return Duel.IsExistingMatchingCard(s.elliefilter,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil)
+end
+
+function s.tgtg(e,c)
+	return c~=e:GetHandler()
+end
+
+-- 2. Dynamic Stat Scaling
+function s.atkval(e,c)
+	return c:GetOverlayCount()*1000
+end
+
+-- 3. Intercept & Zone Lock Logic
+function s.descon(e,tp,eg,ep,ev,re,r,rp)
+	return re:GetHandler()~=e:GetHandler()
+end
+
+function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsOnField() end
+	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
+end
+
+function s.desop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
+	if tc and tc:IsRelateToEffect(e) then
+		local seq=tc:GetSequence()
+		local loc=tc:GetLocation()
+		local p=tc:GetControler()
+		
+		if Duel.Destroy(tc,REASON_EFFECT)>0 then
+			-- Check if the destroyed card was in a valid Main Monster Zone or Spell & Trap Zone
+			if loc==LOCATION_MZONE and seq<5 then
+				if c:IsFaceup() and c:IsRelateToEffect(e) then
+					Duel.BreakEffect()
+					Duel.LockField(p,loc,seq,RESET_DISABLE,id)
+				end
+			elseif loc==LOCATION_SZONE and seq<5 then
+				if c:IsFaceup() and c:IsRelateToEffect(e) then
+					Duel.BreakEffect()
+					Duel.LockField(p,loc,seq,RESET_DISABLE,id)
+				end
+			end
+		end
+	end
+end
+
+-- 4. Battle Phase Wipe and Multi-Attack
+function s.bpfilter(c,hc)
+	return c~=hc and c:IsType(TYPE_MONSTER) and c:IsDestructable()
+end
+
+function s.bptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.IsExistingMatchingCard(s.bpfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,c,c) end
+	local g=Duel.GetMatchingGroup(s.bpfilter,tp,LOCATION_MZONE,LOCATION_MZONE,c,c)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
+end
+
+function s.bpop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local g=Duel.GetMatchingGroup(s.bpfilter,tp,LOCATION_MZONE,LOCATION_MZONE,c,c)
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
+		if c:IsRelateToEffect(e) and c:IsFaceup() then
+			-- Grants the ability to attack up to 3 times during this battle phase
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_EXTRA_ATTACK)
+			e1:SetValue(2)
+			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_BATTLE)
+			c:RegisterEffect(e1)
+		end
+	end
+end
