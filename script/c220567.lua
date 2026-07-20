@@ -43,7 +43,7 @@ end
 -- Filter for destruction: FIRE with 0 DEF OR "Pyrea" card
 function s.desfilter(c)
 	return (c:IsLocation(LOCATION_HAND+LOCATION_DECK) or c:IsFaceup()) 
-		and ( (c:IsAttribute(ATTRIBUTE_FIRE) and c:GetDefense()==0) or c:IsSetCard(0xXXXX) ) -- Replace 0xXXXX with your actual "Pyrea" set code
+		and ( (c:IsAttribute(ATTRIBUTE_FIRE) and c:GetDefense()==0) or c:IsSetCard(0x989) ) -- Replace 0xXXXX with your actual "Pyrea" set code
 end
 
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
