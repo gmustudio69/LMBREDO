@@ -99,13 +99,20 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local sc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c):GetFirst()
 	if sc then
-		-- Restrict player from summoning another monster with this same original name this turn
-		Duel.RegisterFlagEffect(tp,sc:GetOriginalCode(),RESET_PHASE+PHASE_END,0,1)
 		local mg=Group.FromCards(c)
 		sc:SetMaterial(mg)
 		Duel.Overlay(sc,mg)
 		if Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
 			sc:CompleteProcedure()
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_FIELD)
+			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			e1:SetCode(EFFECT_CANNOT_SUMMON)
+			e1:SetTargetRange(1,0)
+			e1:SetTarget(function(_e,_c) return _c:IsCode(_e:GetLabel()) end)
+			e1:SetLabel(sc:GetCode())
+			e1:SetReset(RESET_PHASE|PHASE_END)
+			Duel.RegisterEffect(e1,tp)
 		end
 	end
 end
