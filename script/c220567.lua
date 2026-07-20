@@ -51,12 +51,7 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 
-	local g=Duel.SelectMatchingCard(tp,
-		s.desfilter,
-		tp,
-		LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,
-		0,
-		1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
 
 	local tc=g:GetFirst()
 
@@ -100,4 +95,5 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 	end
+end
 end
