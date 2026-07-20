@@ -70,7 +70,7 @@ end
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local owner=e:GetHandler():GetOwner()
 	if chk==0 then 
-		return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_DECK|LOCATION_ONFIELD,0,1,nil,owner) 
+		return Duel.IsExistingMatchingCard(s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,nil,owner) 
 	end
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,owner,LOCATION_DECK|LOCATION_ONFIELD)
 end
