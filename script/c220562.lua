@@ -16,7 +16,7 @@ function s.initial_effect(c)
 	e0:SetValue(LOCATION_HAND)
 	c:RegisterEffect(e0)
 
-	-On Normal or Special Summon: Destroy 1 FIRE monster with 0 DEF from hand, deck, or face-up field
+	--On Normal or Special Summon: Destroy 1 FIRE monster with 0 DEF from hand, deck, or face-up field
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_DESTROY)
