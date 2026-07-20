@@ -69,7 +69,7 @@ function s.initial_effect(c)
 
 	-- Cannot be used as Ritual Material
 	local e11=e1:Clone()
-	e11:SetCode(EFFECT_CANNOT_BE_RITUAL_MATERIAL)
+	e11:SetCode(EFFECT_CANNOT_RELEASE)
 	e11:SetValue(1)
 	c:RegisterEffect(e11)
 	-- Cannot be destroyed by battle
