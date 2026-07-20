@@ -10,60 +10,98 @@ function s.initial_effect(c)
 	-- Cannot leave the field while face-up
 	-------------------------------------------------
 
-	-- Cannot be returned to hand
+	-- Cannot be sent to GY
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCode(EFFECT_CANNOT_TO_HAND)
 	e1:SetCondition(s.faceupcon)
+	e1:SetCode(EFFECT_CANNOT_TO_GRAVE)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
 
-	-- Cannot be returned to Deck
+	-- Cannot be banished
 	local e2=e1:Clone()
-	e2:SetCode(EFFECT_CANNOT_TO_DECK)
+	e2:SetCode(EFFECT_CANNOT_REMOVE)
 	c:RegisterEffect(e2)
 
-	-- Cannot be banished
+	-- Cannot return to hand
 	local e3=e1:Clone()
-	e3:SetCode(EFFECT_CANNOT_REMOVE)
+	e3:SetCode(EFFECT_CANNOT_TO_HAND)
 	c:RegisterEffect(e3)
 
-	-- Cannot be sent to GY
+	-- Cannot return to Deck/Extra
 	local e4=e1:Clone()
-	e4:SetCode(EFFECT_CANNOT_TO_GRAVE)
+	e4:SetCode(EFFECT_CANNOT_TO_DECK)
 	c:RegisterEffect(e4)
 
-	-- Cannot be released
+	-- Cannot change control
 	local e5=e1:Clone()
-	e5:SetCode(EFFECT_UNRELEASABLE_SUM)
+	e5:SetCode(EFFECT_CANNOT_CHANGE_CONTROL)
 	c:RegisterEffect(e5)
 
-	local e6=e5:Clone()
-	e6:SetCode(EFFECT_UNRELEASABLE_NONSUM)
+	-- Cannot be Tributed
+	local e6=e1:Clone()
+	e6:SetCode(EFFECT_UNRELEASABLE_SUM)
 	c:RegisterEffect(e6)
 
-	-- Cannot change control
-	local e7=e1:Clone()
-	e7:SetCode(EFFECT_CANNOT_CHANGE_CONTROL)
+	local e7=e6:Clone()
+	e7:SetCode(EFFECT_UNRELEASABLE_NONSUM)
 	c:RegisterEffect(e7)
+
+	-- Cannot be used as Fusion Material
+	local e8=e1:Clone()
+	e8:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
+	e8:SetValue(1)
+	c:RegisterEffect(e8)
+
+	-- Cannot be used as Synchro Material
+	local e9=e1:Clone()
+	e9:SetCode(EFFECT_CANNOT_BE_SYNCHRO_MATERIAL)
+	e9:SetValue(1)
+	c:RegisterEffect(e9)
+
+	-- Cannot be used as Link Material
+	local e10=e1:Clone()
+	e10:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
+	e10:SetValue(1)
+	c:RegisterEffect(e10)
+
+	-- Cannot be used as Ritual Material
+	local e11=e1:Clone()
+	e11:SetCode(EFFECT_CANNOT_BE_RITUAL_MATERIAL)
+	e11:SetValue(1)
+	c:RegisterEffect(e11)
+	-- Cannot be destroyed by battle
+	local e12=Effect.CreateEffect(c)
+	e12:SetType(EFFECT_TYPE_SINGLE)
+	e12:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e12:SetRange(LOCATION_MZONE)
+	e12:SetCondition(s.faceupcon)
+	e12:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
+	e12:SetValue(1)
+	c:RegisterEffect(e12)
+
+	-- Cannot be destroyed by card effects
+	local e13=e12:Clone()
+	e13:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e13:SetValue(1)
+	c:RegisterEffect(e13)
 
 	-------------------------------------------------
 	-- Quick Effect
 	-------------------------------------------------
-	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,0))
-	e8:SetCategory(CATEGORY_REMOVE)
-	e8:SetType(EFFECT_TYPE_QUICK_O)
-	e8:SetCode(EVENT_FREE_CHAIN)
-	e8:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e8:SetRange(LOCATION_MZONE)
-	e8:SetCountLimit(1,id)
-	e8:SetCost(s.rmcost)
-	e8:SetTarget(s.rmtg)
-	e8:SetOperation(s.rmop)
-	c:RegisterEffect(e8)
+	local e99=Effect.CreateEffect(c)
+	e99:SetDescription(aux.Stringid(id,0))
+	e99:SetCategory(CATEGORY_REMOVE)
+	e99:SetType(EFFECT_TYPE_QUICK_O)
+	e99:SetCode(EVENT_FREE_CHAIN)
+	e99:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
+	e99:SetRange(LOCATION_MZONE)
+	e99:SetCost(s.rmcost)
+	e99:SetTarget(s.rmtg)
+	e99:SetOperation(s.rmop)
+	c:RegisterEffect(e99)
 end
 
 -------------------------------------------------
