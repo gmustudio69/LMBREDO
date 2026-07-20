@@ -48,7 +48,7 @@ end
 -- REPLACEMENT: destroy → add to hand
 ---------------------------------------------------
 function s.rmtarget(e,c)
-	return c:IsReason(REASON_DESTROY)
+	return c:IsReason(REASON_DESTROY) and c:IsReason(REASON_EFFECT)
 end
 
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -80,11 +80,11 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_DESTROY)
 	-- Target filters checking the owner's possession fields specifically
 	local g=Duel.SelectMatchingCard(owner,s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
-	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 and Duel.SelectYesNo(owner,aux.Stringid(id,1)) then
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0  then
 		-- Proceed to Special Summon from hand if destruction is successful
 		Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SPSUMMON)
-		local sg=Duel.SelectMatchingCard(owner,s.spfilter,tp,LOCATION_HAND,0,1,1,nil)
-			if #sg>0 then
+		local sg=Duel.SelectMatchingCard(owner,s.spfilter,owner,LOCATION_HAND,0,1,1,nil)
+			if #sg>0 and Duel.SelectYesNo(owner,aux.Stringid(id,1)) then
 				Duel.BreakEffect()
 				Duel.SpecialSummon(sg,0,owner,owner,false,false,POS_FACEUP)
 			end

@@ -50,7 +50,7 @@ end
 -- 2. Choice Selection Filters
 function s.desfilter(c)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsDestructable()
-		and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
+		and (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 end
 
 function s.ctrlfilter(c)
