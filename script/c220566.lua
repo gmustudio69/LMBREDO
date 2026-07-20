@@ -21,18 +21,13 @@ function s.initial_effect(c)
 	e2:SetTarget(s.tgtg)
 	e2:SetValue(aux.tgoval)
 	c:RegisterEffect(e2)
-
-	--Original ATK/DEF = 1000 x materials
+	-- Snap-lock ATK/DEF instantly upon Xyz Summon without starting a chain link
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE)
-	e3:SetCode(EFFECT_SET_BASE_ATTACK)
-	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetValue(s.atkval)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e3:SetCondition(s.statcon)
+	e3:SetOperation(s.statop)
 	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_SET_BASE_DEFENSE)
-	c:RegisterEffect(e4)
 
 	--Quick Effect: Detach 1, destroy 1 card, then optionally lock its zone
 	local e5=Effect.CreateEffect(c)
@@ -73,9 +68,28 @@ function s.tgtg(e,c)
 	return c~=e:GetHandler()
 end
 
--- 2. Dynamic Stat Scaling
-function s.atkval(e,c)
-	return c:GetOverlayCount()*1000
+-- Permanent Stat Lock (Non-Chain Link Listener)
+function s.statcon(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsSummonType(SUMMON_TYPE_XYZ)
+end
+
+function s.statop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local mats=c:GetOverlayCount()
+	if mats>0 then
+		-- Set Permanent Base ATK
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_SET_BASE_ATTACK)
+		e1:SetValue(mats*1000)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+		c:RegisterEffect(e1)
+		
+		-- Set Permanent Base DEF
+		local e2=e1:Clone()
+		e2:SetCode(EFFECT_SET_BASE_DEFENSE)
+		c:RegisterEffect(e2)
+	end
 end
 
 -- 3. Intercept & Zone Lock Logic
@@ -156,4 +170,16 @@ function s.bpop(e,tp,eg,ep,ev,re,r,rp)
 			c:RegisterEffect(e1)
 		end
 	end
+end
+function s.effop(e,tp,eg,ep,ev,re,r,rp)
+	--Cannot Special Summon monsters, except "Gimmick Puppet" monsters
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(function(e,c) return not c:IsSetCard(SET_GIMMICK_PUPPET) end)
+	e1:SetReset(RESET_PHASE|PHASE_END)
+	Duel.RegisterEffect(e1,tp)
 end
