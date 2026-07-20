@@ -78,13 +78,13 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	-- Target filters checking the owner's possession fields specifically
 	local g=Duel.SelectMatchingCard(owner,s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
 	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND,0,1,nil,tp) end
-		local sg=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND,0,nil,e,tp)
-		if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		if Duel.GetLocationCount(owner,LOCATION_MZONE)<=0 then return Duel.IsExistingMatchingCard(s.spfilter,owner,LOCATION_HAND,0,1,nil,owner) end
+		local sg=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND,0,nil,e,owner)
+		if #sg>0 and Duel.SelectYesNo(owner,aux.Stringid(id,2)) then
 			Duel.BreakEffect()
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local sc=sg:Select(tp,1,1,nil)
-			Duel.SpecialSummon(sc,0,tp,tp,false,false,POS_FACEUP)
+			Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SPSUMMON)
+			local sc=sg:Select(owner,1,1,nil)
+			Duel.SpecialSummon(sc,0,owner,owner,false,false,POS_FACEUP)
 		end
 	end
 end
