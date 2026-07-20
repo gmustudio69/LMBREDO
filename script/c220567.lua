@@ -1,104 +1,123 @@
---Pyre - Limit Break!!!
-local s,id,o=GetID()
+--Card Name Placeholder (e.g., Pyrea Catalyst)
+local s,id=GetID()
 function s.initial_effect(c)
-	-- Activate: Continuous Spell
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetCode(EVENT_FREE_CHAIN)
-	c:RegisterEffect(e0)
-	-- Destruction protection
+	-- Activate Spell
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_COUNT)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	e1:SetTarget(s.indtg)
-	e1:SetValue(s.indct)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e1)
+
+	-- First time each FIRE Warrior would be destroyed by effect, it is not
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_DESTROY_SUBSTITUTE)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1)
-	e2:SetTarget(s.timetg)
-	e2:SetOperation(s.timeop)
+	e2:SetTargetRange(LOCATION_MZONE,0)
+	e2:SetTarget(s.subtg)
+	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e2:SetValue(s.subval)
 	c:RegisterEffect(e2)
-end
-function s.indtg(e,c)
-	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR)
+
+	-- Once per turn Main Phase trigger
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetCategory(CATEGORY_DESTROY)
+	e3:SetType(EFFECT_TYPE_IGNITION)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCountLimit(1)
+	e3:SetTarget(s.destg)
+	e3:SetOperation(s.desop)
+	c:RegisterEffect(e3)
 end
 
-function s.indct(e,re,r,rp)
+-- Substitute Target: FIRE Warrior monsters
+function s.subtg(e,c)
+	return c:IsFaceup() and c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR)
+end
+function s.subval(e,re,r,rp)
 	if (r&REASON_EFFECT)~=0 then
 		return 1
-	end
-	return 0
+	else return 0 end
 end
+
+-- Filter for destruction: FIRE with 0 DEF OR "Pyrea" card
 function s.desfilter(c)
-	return (c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) or c:IsSetCard(0x989))
-		and c:IsDestructable()
-		and (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return (c:IsLocation(LOCATION_HAND+LOCATION_DECK) or c:IsFaceup()) 
+		and ( (c:IsAttribute(ATTRIBUTE_FIRE) and c:GetDefense()==0) or c:IsSetCard(0xXXXX) ) -- Replace 0xXXXX with your actual "Pyrea" set code
 end
-function s.timetg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(
-			s.desfilter,tp,
-			LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,
-			0,1,nil)
-	end
-end
-function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 
+function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_ONFIELD,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_ONFIELD)
+end
+
+function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-
-	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
-
-	local tc=g:GetFirst()
-
-	if not tc then return end
-	if Duel.Destroy(tc,REASON_EFFECT)>0 then
-		Duel.BreakEffect()
-		if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
-			local p=Duel.GetTurnPlayer()
-			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
-			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-			local e1=Effect.GlobalEffect()
-			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-			e1:SetType(EFFECT_TYPE_FIELD)
-			e1:SetCode(EFFECT_CANNOT_BP)
-			e1:SetTargetRange(1,1)
-			e1:SetReset(RESET_PHASE+PHASE_END,1)
-			Duel.RegisterEffect(e1,tp)
-			local be=Effect.GlobalEffect()
-			be:SetType(EFFECT_TYPE_FIELD)
-			be:SetCode(EFFECT_CANNOT_EP)
-			be:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-			be:SetTargetRange(1,1)
-			be:SetReset(RESET_PHASE+PHASE_MAIN1,1)
-			Duel.RegisterEffect(be,tp)
-			------------------------------------------------
-			-- Opponent takes no damage
-			------------------------------------------------
-			local e1=Effect.GlobalEffect()
+	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_ONFIELD,0,1,1,nil)
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
+		-- Optional Once Per Duel choice
+		if Duel.GetFlagEffect(tp,id)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+			Duel.RegisterFlagEffect(tp,id,0,0,1) -- Once per Duel mark
+			
+			-- 1. Apply: No Damage to Opponent
+			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_FIELD)
 			e1:SetCode(EFFECT_CHANGE_DAMAGE)
 			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 			e1:SetTargetRange(0,1)
 			e1:SetValue(0)
-			e1:SetReset(RESET_PHASE|PHASE_BATTLE)
 			Duel.RegisterEffect(e1,tp)
 			local e2=e1:Clone()
 			e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
 			Duel.RegisterEffect(e2,tp)
-			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-			end
-	
+
+			-- 2. Skip Current Turn's Main Phase 2
+			local e3=Effect.CreateEffect(e:GetHandler())
+			e3:SetType(EFFECT_TYPE_FIELD)
+			e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			e3:SetCode(EFFECT_SKIP_M2)
+			e3:SetTargetRange(1,0)
+			e3:SetReset(RESET_PHASE+PHASE_END)
+			Duel.RegisterEffect(e3,tp)
+
+			-- 3. Master Phase Interceptor (skips EVERYTHING until YOUR next Battle Phase actually occurs)
+			local e4=Effect.CreateEffect(e:GetHandler())
+			e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+			e4:SetCode(EVENT_PHASE_START+PHASE_DRAW) -- Listen at the very gate of every phase step
+			e4:SetLabel(tp) -- Store who initiated the skip
+			e4:SetCondition(s.skipcon)
+			e4:SetOperation(s.skipop)
+			Duel.RegisterEffect(e4,tp)
+		end
 	end
+end
+
+-- The dynamic phase skipper condition
+function s.skipcon(e,tp,eg,ep,ev,re,r,rp)
+	local initiator = e:GetLabel()
+	local current_turn = Duel.GetTurnCount()
+	local current_phase = Duel.GetCurrentPhase()
+	local turn_player = Duel.GetTurnPlayer()
+
+	-- If we have successfully navigated back to the Initiator's Battle Phase, kill this listener immediately
+	if turn_player == initiator and current_phase == PHASE_BATTLE_START then
+		e:Reset()
+		return false
+	end
+
+	-- Skip conditions: Skip anything that isn't the initiator's Battle Phase
+	return true
+end
+
+-- The dynamic phase skipper execution
+function s.skipop(e,tp,eg,ep,ev,re,r,rp)
+	local initiator = e:GetLabel()
 	
+	-- Command the engine to immediately skip whatever phase just attempted to start
+	Duel.SkipPhase(Duel.GetTurnPlayer(), Duel.GetCurrentPhase(), RESET_PHASE+Duel.GetCurrentPhase(), 1)
+	
+	-- If we skip a phase that forces a turn shift (like End Phase), make sure the turn advances cleanly
+	if Duel.GetCurrentPhase() == PHASE_END then
+		Duel.TurnEnd()
+	end
 end
