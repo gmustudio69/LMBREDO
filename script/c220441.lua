@@ -34,7 +34,7 @@ function s.checkop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.RegisterFlagEffect(0,id+1,RESET_PHASE|PHASE_END,0,1)
 	end
 end
-function s.xyzfilter(c,tp,xyzc)
+function s.xyzfilter(c,tp)
 	return c:IsFaceup() and c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_FIRE)
 end
 function s.xyzop(e,tp,chk)
