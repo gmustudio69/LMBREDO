@@ -1,13 +1,12 @@
 --Pyre - Limit Break!!!
-local s,id=GetID()
+local s,id,o=GetID()
 function s.initial_effect(c)
 	-- Activate: Continuous Spell
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	
-	-- Destruction protection for FIRE Warrior
+	-- Destruction protection
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_INDESTRUCTABLE_COUNT)
@@ -16,11 +15,8 @@ function s.initial_effect(c)
 	e1:SetTarget(s.indtg)
 	e1:SetValue(s.indct)
 	c:RegisterEffect(e1)
-	
-	-- Main Phase Destruction + Turn Skip
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetCategory(CATEGORY_DESTROY)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetCountLimit(1)
@@ -28,7 +24,6 @@ function s.initial_effect(c)
 	e2:SetOperation(s.timeop)
 	c:RegisterEffect(e2)
 end
-
 function s.indtg(e,c)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR)
 end
@@ -39,132 +34,78 @@ function s.indct(e,re,r,rp)
 	end
 	return 0
 end
-
 function s.desfilter(c)
 	return (c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) or c:IsSetCard(0x989))
 		and c:IsDestructable()
-		and (c:IsLocation(LOCATION_DECK|LOCATION_HAND) or c:IsFaceup())
+		and (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 end
-
 function s.timetg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,nil)
+		return Duel.IsExistingMatchingCard(
+			s.desfilter,tp,
+			LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,
+			0,1,nil)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE)
 end
-
 function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
+
+	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
+
 	local tc=g:GetFirst()
+
 	if not tc then return end
-	
 	if Duel.Destroy(tc,REASON_EFFECT)>0 then
-		if Duel.GetFlagEffect(tp,id)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-			Duel.RegisterFlagEffect(tp,id,0,0,1)
-			
-			local current_turn = Duel.GetTurnCount()
-			
-			-- 1. Continuous turn flow manager
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-			e1:SetCode(EVENT_PREDRAW)
-			e1:SetLabel(current_turn, 0) 
-			e1:SetCondition(s.skipcon)
-			e1:SetOperation(s.skipop)
+		Duel.BreakEffect()
+		if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
+			local p=Duel.GetTurnPlayer()
+			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+			local be=Effect.GlobalEffect()
+			be:SetType(EFFECT_TYPE_FIELD)
+			be:SetCode(EFFECT_CANNOT_EP)
+			be:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			be:SetTargetRange(1,1)
+			be:SetReset(RESET_PHASE+PHASE_MAIN1,1)
+			Duel.RegisterEffect(be,tp)
+			------------------------------------------------
+			-- Opponent takes no damage
+			------------------------------------------------
+			- Opponent takes no battle damage
+			local e1=Effect.GlobalEffect()
+			e1:SetType(EFFECT_TYPE_FIELD)
+			e1:SetCode(EFFECT_CHANGE_DAMAGE)
+			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			e1:SetTargetRange(0,1)
+			e1:SetValue(0)
 			Duel.RegisterEffect(e1,tp)
 			
-			-- 2. Skip Main Phase 2 of this current active turn
-			local e_mp2=Effect.CreateEffect(e:GetHandler())
-			e_mp2:SetType(EFFECT_TYPE_FIELD)
-			e_mp2:SetCode(EFFECT_SKIP_M2)
-			e_mp2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-			e_mp2:SetTargetRange(1,0)
-			e_mp2:SetReset(RESET_PHASE+PHASE_END)
-			Duel.RegisterEffect(e_mp2,tp)
-
-			-- 3. Opponent takes NO damage
-			local e_dmg1=Effect.CreateEffect(e:GetHandler())
-			e_dmg1:SetType(EFFECT_TYPE_FIELD)
-			e_dmg1:SetCode(EFFECT_CHANGE_DAMAGE)
-			e_dmg1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-			e_dmg1:SetTargetRange(0,1)
-			e_dmg1:SetValue(0)
-			Duel.RegisterEffect(e_dmg1,tp)
+			-- Opponent takes no effect damage
+			local e2=e1:Clone()
+			e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
+			Duel.RegisterEffect(e2,tp)
 			
-			local e_dmg2=e_dmg1:Clone()
-			e_dmg2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
-			Duel.RegisterEffect(e_dmg2,tp)
-			
-			-- 4. Turn damage back on after the target Battle Phase ends
+			-- Dynamic cleaner: Waits specifically for your next actual Battle Phase to end
 			local e_clear=Effect.CreateEffect(e:GetHandler())
 			e_clear:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 			e_clear:SetCode(EVENT_PHASE+PHASE_BATTLE)
-			e_clear:SetLabel(tp) 
-			e_clear:SetCondition(s.clearcon)
-			e_clear:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)
-				e_dmg1:Reset()
-				e_dmg2:Reset()
-				e:Reset()
+			e_clear:SetLabel(tp) -- Store your player ID
+			e_clear:SetCondition(function(eff,tplayer,eg,ep,ev,re,r,rp)
+				return Duel.GetTurnPlayer() == eff:GetLabel() -- Triggers only when it's your turn's Battle Phase ending
+			end)
+			e_clear:SetOperation(function(eff,tplayer,eg,ep,ev,re,r,rp)
+				e1:Reset()
+				e2:Reset()
+				eff:Reset()
 			end)
 			Duel.RegisterEffect(e_clear,tp)
-			
-			-- End current phase/turn cleanly right now
-			Duel.SkipPhase(tp,PHASE_DRAW,RESET_PHASE+PHASE_END,1)
-			Duel.SkipPhase(tp,PHASE_STANDBY,RESET_PHASE+PHASE_END,1)
-			Duel.SkipPhase(tp,PHASE_MAIN1,RESET_PHASE+PHASE_END,1)
-			Duel.SkipPhase(tp,PHASE_BATTLE,RESET_PHASE+PHASE_END,1)
-			Duel.SkipPhase(tp,PHASE_MAIN2,RESET_PHASE+PHASE_END,1)
-		end
+			end
 	end   
-end
-
-function s.skipcon(e,tp,eg,ep,ev,re,r,rp)
-	local start_turn, state = e:GetLabel()
-	return Duel.GetTurnCount() ~= start_turn
-end
-
-function s.skipop(e,tp,eg,ep,ev,re,r,rp)
-	local start_turn, state = e:GetLabel()
-	local turn_player = Duel.GetTurnPlayer()
-	
-	-- state == 0: Handling opponent's skipped turn
-	if state == 0 then
-		e:SetLabel(start_turn, 1)
-		
-		-- Lock down drawing entirely for the turn player before the phase shifts
-		local e_nodraw = Effect.CreateEffect(e:GetHandler())
-		e_nodraw:SetType(EFFECT_TYPE_FIELD)
-		e_nodraw:SetCode(EFFECT_CANNOT_DRAW)
-		e_nodraw:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e_nodraw:SetTargetRange(1,1) -- Affects the active drawing system
-		e_nodraw:SetReset(RESET_PHASE+PHASE_END)
-		Duel.RegisterEffect(e_nodraw, turn_player)
-		
-		Duel.SkipPhase(turn_player, PHASE_DRAW, RESET_PHASE+PHASE_END, 1)
-		Duel.SkipPhase(turn_player, PHASE_STANDBY, RESET_PHASE+PHASE_END, 1)
-		Duel.SkipPhase(turn_player, PHASE_MAIN1, RESET_PHASE+PHASE_END, 1)
-		Duel.SkipPhase(turn_player, PHASE_BATTLE, RESET_PHASE+PHASE_END, 1)
-		Duel.SkipPhase(turn_player, PHASE_MAIN2, RESET_PHASE+PHASE_END, 1)
-		
-	-- state == 1: Back to your turn; skip straight to Battle Phase
-	elseif state == 1 then
-		-- Also block your normal turn draw since you are jumping directly to Battle Phase
-		local e_nodraw = Effect.CreateEffect(e:GetHandler())
-		e_nodraw:SetType(EFFECT_TYPE_FIELD)
-		e_nodraw:SetCode(EFFECT_CANNOT_DRAW)
-		e_nodraw:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e_nodraw:SetTargetRange(1,1)
-		e_nodraw:SetReset(RESET_PHASE+PHASE_BATTLE_START)
-		Duel.RegisterEffect(e_nodraw, tp)
-
-		Duel.SkipPhase(tp, PHASE_DRAW, RESET_PHASE+PHASE_BATTLE_START, 1)
-		Duel.SkipPhase(tp, PHASE_STANDBY, RESET_PHASE+PHASE_BATTLE_START, 1)
-		Duel.SkipPhase(tp, PHASE_MAIN1, RESET_PHASE+PHASE_BATTLE_START, 1)
-		e:Reset() 
-	end
-end
-
-function s.clearcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnPlayer() == e:GetLabel()
 end
