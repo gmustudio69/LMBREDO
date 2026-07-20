@@ -5,23 +5,34 @@ function s.initial_effect(c)
 	--Xyz Summon procedure
 	Xyz.AddProcedure(c,nil,7,2,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
 	
+	--Detach 1: Set 1 "Pyrea" Spell/Trap directly from Deck
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCountLimit(1,id)
+	e1:SetCost(aux.dxzcost)
+	e1:SetTarget(s.settg)
+	e1:SetOperation(s.setop)
+	c:RegisterEffect(e1)
+	--End of Damage Step Rank-Up Battle Trigger
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_DESTROY)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCost(s.descost)
-	e2:SetTarget(s.destg)
-	e2:SetOperation(s.desop)
+	e2:SetDescription(aux.Stringid(id,2))
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_BATTLED)
+	e2:SetCountLimit(1,id+100)
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
+	--Material Inheritance Effect: Grants the Rank-Up trigger to a FIRE Warrior Xyz
 	local e3=Effect.CreateEffect(c)
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_DAMAGE_STEP_END)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,{id,1})
-	e3:SetCondition(s.rkcon)
-	e3:SetTarget(s.rktg)
-	e3:SetOperation(s.rkop)
+	e3:SetType(EFFECT_TYPE_XMATERIAL)
+	e3:SetCode(EVENT_BATTLED)
+	e3:SetCountLimit(1)
+	e3:SetCondition(s.inhcon
+	e3:SetTarget(s.sptg)
+	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
 	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
 end
@@ -36,81 +47,58 @@ function s.xyzop(e,tp,chk)
 	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
 	return true
 end
-function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+-- 1. Deck Search/Set Logic
+function s.setfilter(c)
+	return c:IsSetCard(0x989) and c:IsType(TYPE_SPELL|TYPE_TRAP) and c:IsSSetable()
 end
 
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() end
-	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
 end
 
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.Destroy(tc,REASON_EFFECT)
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SSet(tp,g:GetFirst())
 	end
 end
 
-------------------------------------------------
---Quick Rank-Up condition
-------------------------------------------------
-function s.wdfilter(c)
-	return c:IsSetCard(0xb67)
-end
-
-function s.rkcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local bc=c:GetBattleTarget()
-	return bc and bc:IsRelateToBattle() and c:IsRelateToBattle() and Duel.IsExistingMatchingCard(s.wdfilter,tp,LOCATION_ONFIELD,0,1,nil)
-end
-
-------------------------------------------------
---Rank up target
-------------------------------------------------
-function s.xyzfilter2(c)
-	return c:IsRank(7)
+-- 2. Rank-Up Transformation Logic
+function s.spfilter(c,e,tp,mc)
+	return (c:IsSetCard(0xf86) or c:IsSetCard(0xb18)) -- Archetype IDs for "Limit Breaker" and "World Breaker"
 		and c:IsAttribute(ATTRIBUTE_FIRE)
-		and c:IsRace(RACE_WARRIOR)
+		and mc:IsCanBeXyzMaterial(c)
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_Xyz,tp,false,false)
+		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
 end
 
-function s.rktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.GetLocationCountFromEx(tp,tp,e:GetHandler(),e:GetHandler())>0
-		and Duel.IsExistingMatchingCard(s.xyzfilter2,tp,LOCATION_EXTRA,0,1,nil)
-	end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,c) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 
-------------------------------------------------
---Rank up operation
-------------------------------------------------
-function s.rkop(e,tp,eg,ep,ev,re,r,rp)
-
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-
-	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
-
+	if c:IsControler(1-tp) or not c:IsRelateToEffect(e) or c:IsFacedown() then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.xyzfilter2,tp,LOCATION_EXTRA,0,1,1,nil)
-
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c)
 	local sc=g:GetFirst()
-	if not sc then return end
-
-	local mg=c:GetOverlayGroup()
-
-	if #mg>0 then
-		Duel.Overlay(sc,mg)
+	if sc then
+		local mg=c:GetOverlayGroup()
+		if #mg>0 then
+			Duel.Overlay(sc,mg)
+		end
+		sc:SetMaterial(Group.FromCards(c))
+		Duel.Overlay(sc,Group.FromCards(c))
+		Duel.SpecialSummon(sc,SUMMON_TYPE_Xyz,tp,tp,false,false,POS_FACEUP)
+		sc:CompleteProcedure()
 	end
+end
 
-	sc:SetMaterial(Group.FromCards(c))
-	Duel.Overlay(sc,Group.FromCards(c))
-
-	Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
-	sc:CompleteProcedure()
-
+-- Inheritance safety filter verification 
+function s.inhcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ)
 end
