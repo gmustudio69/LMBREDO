@@ -1,7 +1,7 @@
---Lawrence's Pyrea
+--Detonator Payload Deployment
 local s,id=GetID()
 function s.initial_effect(c)
-	--Activate
+	--Activate Card
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
@@ -18,109 +18,117 @@ function s.initial_effect(c)
 	e1:SetOperation(s.placeop)
 	c:RegisterEffect(e1)
 
-	--Quick Effect: Destroy 1 FIRE monster with 0 DEF from Deck or face-up field
+	--Quick Effect: Activate 1 of 2 options
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_DESTROY)
+	e2:SetCategory(CATEGORY_DESTROY+CATEGORY_CONTROL)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetCountLimit(1,id)
-	e2:SetTarget(s.destg)
-	e2:SetOperation(s.desop)
+	e2:SetTarget(s.target)
+	e2:SetOperation(s.operation)
 	c:RegisterEffect(e2)
-
-	--Give control of 1 "Detonator" monster, then destroy adjacent cards
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetCategory(CATEGORY_CONTROL+CATEGORY_DESTROY)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetCountLimit(1,id)
-	e3:SetTarget(s.ctltg)
-	e3:SetOperation(s.ctlop)
-	c:RegisterEffect(e3)
 end
 
--- 1. Placement Trigger functions
+-- 1. Destruction Placement Functions
 function s.placecon(e,tp,eg,ep,ev,re,r,rp)
 	return (r&REASON_EFFECT)~=0
 end
+
 function s.placetg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
 end
+
 function s.placeop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 then
-		-- Moves the continuous trap back onto the field face-up
 		Duel.MoveToField(c,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 	end
 end
 
--- 2. Quick Effect Destruction functions
+-- 2. Choice Selection Filters
 function s.desfilter(c)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsDestructable()
 		and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
 end
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_DECK|LOCATION_MZONE)
+
+function s.ctrlfilter(c)
+	return c:IsSetCard(0xc25) -- Assuming 0x98a is the "Detonator" archetype string ID
+		and c:IsFaceup() and c:IsControlerCanBeChanged()
 end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	if not e:GetHandler():IsRelateToEffect(e) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE,0,1,1,nil)
-	if #g>0 then
-		Duel.Destroy(g,REASON_EFFECT)
+
+-- Target logic handling the split choices
+function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
+	local b1=Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,nil)
+	local b2=Duel.IsExistingMatchingCard(s.ctrlfilter,tp,LOCATION_MZONE,0,1,nil) 
+		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
+
+	if chk==0 then return b1 or b2 end
+
+	local op=0
+	if b1 and b2 then
+		op=Duel.SelectOption(tp,aux.Stringid(id,2),aux.Stringid(id,3))
+	elseif b1 then
+		op=Duel.SelectOption(tp,aux.Stringid(id,2))
+	else
+		op=Duel.SelectOption(tp,aux.Stringid(id,3))+1
+	end
+
+	e:SetLabel(op)
+	if op==0 then
+		e:SetCategory(CATEGORY_DESTROY)
+		Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE)
+	else
+		e:SetCategory(CATEGORY_CONTROL+CATEGORY_DESTROY)
+		Duel.SetOperationInfo(0,CATEGORY_CONTROL,nil,1,tp,LOCATION_MZONE)
+		Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,0,LOCATION_ONFIELD)
 	end
 end
 
--- 3. Control Change + Proximity Blast functions
-function s.ctlfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xc25) -- Assuming custom archetype code 0x990 for "Detonator"
-		and c:IsControlerCanBeChanged()
-end
-function s.ctltg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.ctlfilter,tp,LOCATION_MZONE,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_CONTROL,nil,1,tp,LOCATION_MZONE)
-end
-function s.ctlop(e,tp,eg,ep,ev,re,r,rp)
-	if not e:GetHandler():IsRelateToEffect(e) then return end
-	if Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then return end
+-- Execution Logic
+function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local op=e:GetLabel()
+	if op==0 then
+		-- Option 1: Destroy 1 FIRE monster with 0 DEF from Deck or Field
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+		local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
+		if #g>0 then
+			Duel.Destroy(g,REASON_EFFECT)
+		end
+	else
+		-- Option 2: Give control of 1 "Detonator" monster, then destroy adjacent cards
+		if Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<=0 then return end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
+		local g=Duel.SelectMatchingCard(tp,s.ctrlfilter,tp,LOCATION_MZONE,0,1,1,nil)
+		local tc=g:GetFirst()
+		if not tc then return end
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-	local g=Duel.SelectMatchingCard(tp,s.ctlfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	local tc=g:GetFirst()
-	if tc then
-		Duel.HintSelection(g)
-		-- Hand control over to the opponent
+		-- Swap control of the monster to opponent
 		if Duel.GetControl(tc,1-tp) then
-			-- Get its new zone layout position relative to your opponent's side
-			local seq=tc:GetSequence()
-			if seq>4 then return end -- Avoid bugs with extra monster zones
-			
-			local zone_mask=0
-			-- Check left adjacent zone
-			if seq>0 then zone_mask = zone_mask | (1 << (seq-1)) end
-			-- Check right adjacent zone
-			if seq<4 then zone_mask = zone_mask | (1 << (seq+1)) end
-			
-			-- Find both monster zone neighbors and corresponding backrow spaces directly behind them
-			local dg=Duel.GetMatchingGroup(nil,1-tp,LOCATION_MZONE|LOCATION_SZONE,0,nil)
-			local des_group=Group.CreateGroup()
-			
-			for dc in aux.Next(dg) do
-				local dseq=dc:GetSequence()
-				-- Filter items matching left/right sequence indicators
-				if dseq<=4 and (zone_mask & (1 << dseq)) ~= 0 then
-					des_group:AddCard(dc)
-				-- Match Spell & Trap Zone directly behind the target monster
-				elseif dc:IsLocation(LOCATION_SZONE) and dseq==seq then
-					des_group:AddCard(dc)
-				end
+			-- Collect adjacent card slots from the monster's new perspective position
+			local sequence=tc:GetSequence()
+			local controller=tc:GetControler()
+			local dg=Group.CreateGroup()
+
+			-- Left adjacent Monster Zone check
+			if sequence>0 and sequence<5 then
+				local lc=Duel.GetFieldCard(controller,LOCATION_MZONE,sequence-1)
+				if lc then dg:AddCard(lc) end
 			end
-			
+			-- Right adjacent Monster Zone check
+			if sequence>=0 and sequence<4 then
+				local rc=Duel.GetFieldCard(controller,LOCATION_MZONE,sequence+1)
+				if rc then dg:AddCard(rc) end
+			end
+			-- Behind Spell & Trap Zone check 
+			if sequence>=0 and sequence<=4 then
+				local sc=Duel.GetFieldCard(controller,LOCATION_SZONE,sequence)
+				if sc then dg:AddCard(sc) end
+			end
+
+			-- Clean filter to group only destructible objects remaining
+			local des_group=dg:Filter(Card.IsDestructable,nil)
 			if #des_group>0 then
 				Duel.BreakEffect()
 				Duel.Destroy(des_group,REASON_EFFECT)

@@ -28,9 +28,9 @@ function s.initial_effect(c)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e3:SetRange(LOCATION_HAND|LOCATION_GRAVE) -- Assumed hand/GY baseline for deployment
+	e3:SetRange(LOCATION_HAND) -- Assumed hand/GY baseline for deployment
 	e3:SetCountLimit(1,id+100)
 	e3:SetCondition(s.spcon1)
 	e3:SetTarget(s.sptg)
