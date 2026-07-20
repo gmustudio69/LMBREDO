@@ -1,18 +1,22 @@
---Blastcore Detonator
+-- Blastcore Detonator
 local s,id=GetID()
-function s.initial_effect(c)
-	--Any card destroyed by effect & sent to GY (except from hand) goes to hand instead
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_TO_HAND_REDIRECT)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetTargetRange(LOCATION_ONFIELD|LOCATION_DECK|LOCATION_REMOVED|LOCATION_EXTRA, LOCATION_ONFIELD|LOCATION_DECK|LOCATION_REMOVED|LOCATION_EXTRA)
-	e1:SetCondition(s.redcon)
-	e1:SetTarget(s.redtg)
-	e1:SetValue(LOCATION_HAND)
-	c:RegisterEffect(e1)
 
-	--On Normal or Special Summon: Destroy 1 FIRE monster with 0 DEF from hand, deck, or face-up field
+function s.initial_effect(c)
+
+
+	---------------------------------------------------
+	-- Replacement: destroyed cards to GY → hand
+	---------------------------------------------------
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_FIELD)
+	e0:SetCode(EFFECT_TO_GRAVE_REDIRECT)
+	e0:SetRange(LOCATION_MZONE)
+	e0:SetTarget(s.rmtarget)
+	e0:SetTargetRange(LOCATION_ALL,LOCATION_ALL)
+	e0:SetValue(LOCATION_HAND)
+	c:RegisterEffect(e0)
+
+	-On Normal or Special Summon: Destroy 1 FIRE monster with 0 DEF from hand, deck, or face-up field
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_DESTROY)
@@ -39,6 +43,7 @@ function s.initial_effect(c)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
+
 end
 
 -- 1. Replacement Effect Functions
