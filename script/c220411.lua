@@ -48,13 +48,21 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
+	e1:SetCode(EVENT_PHASE|PHASE_BATTLE_START)
+	local reset,reset_ct=RESET_PHASE|PHASE_BATTLE_START,1
+	local turn_ct=0
+	if Duel.IsPhase(PHASE_BATTLE_START) then
+		reset_ct=2
+		turn_ct=Duel.GetTurnCount()
+	end
 	e1:SetCountLimit(1)
 	e1:SetLabel(loc)
 	e1:SetLabelObject(c)
 	e1:SetOperation(s.revsp)
-	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
+	e1:SetLabel(turn_ct)
+	e1:SetReset(reset,reset_ct)
 	Duel.RegisterEffect(e1,tp)
+	aux.RegisterClientHint(c,0,tp,0,1,aux.Stringid(id,2),reset,reset_ct)
 end
 
 function s.revsp(e,tp,eg,ep,ev,re,r,rp)
