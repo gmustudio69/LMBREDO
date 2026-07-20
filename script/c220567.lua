@@ -78,7 +78,7 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			------------------------------------------------
 			-- Opponent takes no damage
 			------------------------------------------------
-			- Opponent takes no battle damage
+			-- Opponent takes no battle damage
 			local e1=Effect.GlobalEffect()
 			e1:SetType(EFFECT_TYPE_FIELD)
 			e1:SetCode(EFFECT_CHANGE_DAMAGE)
