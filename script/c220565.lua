@@ -1,6 +1,5 @@
 -- Custom Card ID (Change this to match your text file name)
-local s, id = GetID()
-
+local s,id = GetID()
 function s.initial_effect(c)
 	-- Xyz Summon Procedure
 	Xyz.AddProcedure(c, nil, 4, 2, s.ovfilter, aux.Stringid(id, 0))
@@ -22,7 +21,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1, id)
-	e2:SetCost(Xyz.DetachSelfCost(1))
+	e2:SetCost(Cost.DetachFromSelf(1))
 	e2:SetTarget(s.destg)
 	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
@@ -62,7 +61,7 @@ function s.checkop(e, tp, eg, ep, ev, re, r, rp)
 end
 
 function s.ovfilter(c, tp, xyzc)
-	return Duel.GetFlagEffect(tp, id) > 0 and c:IsFaceUp() and c:IsSetCard(0xc25) and not c:IsType(TYPE_XYZ) -- Replace 0xXXXX with your "Detonator" Archetype Hex Code
+	return Duel.GetFlagEffect(tp,id)>0 and c:IsFaceUp() and c:IsSetCard(0xc25) and not c:IsType(TYPE_XYZ) -- Replace 0xXXXX with your "Detonator" Archetype Hex Code
 end
 
 function s.rmtarget(e,c)
