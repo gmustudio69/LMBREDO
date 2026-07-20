@@ -1,143 +1,112 @@
--- Blastcore Detonator
+--Blastcore Detonator
 local s,id=GetID()
-
 function s.initial_effect(c)
-
-
-	---------------------------------------------------
-	-- Replacement: destroyed cards to GY → hand
-	---------------------------------------------------
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetCode(EFFECT_TO_GRAVE_REDIRECT)
-	e0:SetRange(LOCATION_MZONE)
-	e0:SetTarget(s.rmtarget)
-	e0:SetTargetRange(LOCATION_ALL,LOCATION_ALL)
-	e0:SetValue(LOCATION_HAND)
-	c:RegisterEffect(e0)
-
-	---------------------------------------------------
-	-- Summon effect
-	---------------------------------------------------
+	--Any card destroyed by effect & sent to GY (except from hand) goes to hand instead
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_DESTROY)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_SUMMON_SUCCESS)
-	e1:SetProperty(EFFECT_FLAG_DELAY)
-	e1:SetCountLimit(1,id)
-	e1:SetTarget(s.destg)
-	e1:SetOperation(s.desop)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_TO_HAND_REDIRECT)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetTargetRange(LOCATION_ONFIELD|LOCATION_DECK|LOCATION_REMOVED|LOCATION_EXTRA, LOCATION_ONFIELD|LOCATION_DECK|LOCATION_REMOVED|LOCATION_EXTRA)
+	e1:SetCondition(s.redcon)
+	e1:SetTarget(s.redtg)
+	e1:SetValue(LOCATION_HAND)
 	c:RegisterEffect(e1)
 
-	local e2=e1:Clone()
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	--On Normal or Special Summon: Destroy 1 FIRE monster with 0 DEF from hand, deck, or face-up field
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_DESTROY)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_SUMMON_SUCCESS)
+	e2:SetCountLimit(1,id)
+	e2:SetTarget(s.destg)
+	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
+	local e2_sp=e2:Clone()
+	e2_sp:SetCode(EVENT_SPSUMMON_SUCCESS)
+	c:RegisterEffect(e2_sp)
 
-	---------------------------------------------------
-	-- Revive + Deck summon on destruction
-	---------------------------------------------------
+	--Quick Effect: Destroy 1 other face-up card you control, then Special Summon 1 FIRE monster with 0 DEF from hand
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_DESTROYED)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCountLimit(1,{id,1})
-	e3:SetCondition(s.revcon)
-	e3:SetOperation(s.revop)
+	e3:SetCategory(CATEGORY_DESTROY+CATEGORY_SPECIAL_SUMMON)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_CHAINING)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetCountLimit(1,id+100)
+	e3:SetCondition(s.spcon)
+	e3:SetTarget(s.sptg)
+	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
-
 end
 
----------------------------------------------------
--- REPLACEMENT: destroy → add to hand
----------------------------------------------------
-function s.rmtarget(e,c)
-	return c:IsReason(REASON_DESTROY)
+-- 1. Replacement Effect Functions
+function s.redcon(e)
+	-- Ensure the card is heading to the GY due to a card effect destruction
+	local r=Duel.GetChainInfo(0,CHAININFO_REASON)
+	return (r&REASON_EFFECT)~=0 and (r&REASON_DESTROY)~=0
 end
 
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return eg:IsExists(s.repfilter,1,nil)
-	end
-	return true
+function s.redtg(e,c)
+	-- Exclude cards that were destroyed while in the hand
+	return not c:IsLocation(LOCATION_HAND)
 end
 
-function s.repval(e,c)
-	return s.repfilter(c)
-end
-
----------------------------------------------------
--- DESTROY EFFECT FILTERS
----------------------------------------------------
+-- 2. Summon Trigger Functions
 function s.desfilter(c)
-	return (c:IsSetCard(0xc25) and c:IsMonster())
-		or (c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsLevel(7))
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsDestructable()
+		and (c:IsLocation(LOCATION_HAND|LOCATION_DECK) or c:IsFaceup())
 end
 
----------------------------------------------------
--- DESTROY TARGET
----------------------------------------------------
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil)
+	if chk==0 then 
+		return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,nil) 
 	end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE)
 end
 
----------------------------------------------------
--- DESTROY OPERATION
----------------------------------------------------
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-
-	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,1,nil)
-	local tc=g:GetFirst()
-
-	if tc and Duel.Destroy(tc,REASON_EFFECT)>0 then
-		if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-			local g=Duel.SelectMatchingCard(tp,Card.IsMonster(),tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
-			if #g>0 then
-				Duel.Destroy(g,REASON_EFFECT)
-			end
-		end
+	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
+	if #g>0 then
+		Duel.Destroy(g,REASON_EFFECT)
 	end
 end
 
----------------------------------------------------
--- REVIVE AFTER DESTRUCTION
----------------------------------------------------
-function s.revcon(e,tp,eg,ep,ev,re,r,rp)
-	return r&REASON_EFFECT~=0
+-- 3. Quick Effect Functions
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	-- Triggers when another card or effect is activated anywhere
+	return re:GetHandler() ~= e:GetHandler()
 end
 
---Register Battle Phase revive
-function s.revop(e,tp,eg,ep,ev,re,r,rp)
+function s.spfilter(c,e,tp)
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-
-	local loc=c:GetLocation()
-
-	-- store original location zone
-	e:SetLabel(loc)
-	e:SetLabelObject(c)
-
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
-	e1:SetCountLimit(1)
-	e1:SetLabel(loc)
-	e1:SetLabelObject(c)
-	e1:SetOperation(s.revsp)
-	e1:SetReset(RESET_PHASE+PHASE_BATTLE)
-	Duel.RegisterEffect(e1,tp)
+	if chk==0 then
+		-- Must control another face-up card to destroy, and have a valid summon target in hand
+		return Duel.IsExistingMatchingCard(Card.IsFaceup,tp,LOCATION_ONFIELD,0,1,c)
+			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND,0,1,nil,e,tp)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_ONFIELD)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND)
 end
 
-function s.revsp(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetLabelObject()
-	local loc=e:GetLabel()
-	if c and c:IsLocation(loc)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	-- Select another face-up card you control
+	local dg=Duel.SelectMatchingCard(tp,Card.IsFaceup,tp,LOCATION_ONFIELD,0,1,1,c)
+	if #dg>0 and Duel.Destroy(dg,REASON_EFFECT)>0 then
+		-- Proceed to Special Summon from hand if destruction is successful
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local sg=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND,0,1,1,nil,e,tp)
+		if #sg>0 then
+			Duel.BreakEffect()
+			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+		end
 	end
 end
