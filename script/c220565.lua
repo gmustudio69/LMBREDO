@@ -2,7 +2,7 @@
 local s,id = GetID()
 function s.initial_effect(c)
 	-- Xyz Summon Procedure
-	Xyz.AddProcedure(c, nil, 4, 2, s.ovfilter, aux.Stringid(id, 0))
+	Xyz.AddProcedure(c,nil,4,2,s.xyzfilter,aux.Stringid(id,0),nil,s.xyzop)
 	c:EnableReviveLimit()
 	
 	 local e0=Effect.CreateEffect(c)
@@ -39,29 +39,37 @@ function s.initial_effect(c)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
 	
-	-- Global listener to track if a monster in possession was destroyed by effect this turn
-	if not s.global_check then
-		s.global_check = true
-		local ge1 = Effect.CreateEffect(c)
-		ge1:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
-		ge1:SetCode(EVENT_DESTROYED)
+	--Register destruction of monsters
+	aux.GlobalCheck(s,function()
+		local ge1=Effect.CreateEffect(c)
+		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		ge1:SetCode(EVENT_DESTROY)
 		ge1:SetOperation(s.checkop)
-		Duel.RegisterEffect(ge1, 0)
-	end
+		Duel.RegisterEffect(ge1,0)
+	end)
 end
 
--- 1. Alternative Xyz Summon Logic
-function s.checkop(e, tp, eg, ep, ev, re, r, rp)
-	if not re then return end
-	for tc in aux.Next(eg) do
-		if tc:IsMonster() and tc:IsPreviousLocation(LOCATION_MZONE + LOCATION_HAND + LOCATION_DECK + LOCATION_GRAVE + LOCATION_REMOVED) and (r & REASON_EFFECT) ~= 0 then
-			Duel.RegisterFlagEffect(tc:GetPreviousControler(), id, RESET_PHASE + PHASE_END, 0, 1)
+function s.checkfilter(c)
+	return (c:IsPreviousLocation(LOCATION_MZONE) or (c:IsMonster() and not c:IsPreviousLocation(LOCATION_ONFIELD))) and c:IsReason(REASON_EFFECT)
+end
+function s.checkop(e,tp,eg,ep,ev,re,r,rp)
+	local g=eg:Filter(s.checkfilter,nil)
+	if #g==0 then return end
+	for p=0,1 do
+		if g:IsExists(Card.IsPreviousControler,1,nil,p) and not Duel.HasFlagEffect(p,id) then
+			Duel.RegisterFlagEffect(p,id,RESET_PHASE|PHASE_END,0,1)
 		end
 	end
 end
 
-function s.ovfilter(c, tp, xyzc)
-	return Duel.GetFlagEffect(tp,id)>0 and c:IsFaceUp() and c:IsSetCard(0xc25) and not c:IsType(TYPE_XYZ) -- Replace 0xXXXX with your "Detonator" Archetype Hex Code
+function s.xyzfilter(c,tp,xyzc)
+	return c:IsFaceup() and c:IsSetCard(0xc25) and not c:IsType(TYPE_XYZ)
+end
+function s.xyzop(e,tp,chk)
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and
+		Duel.GetCustomActivityCount(id,tp,ACTIVITY_CHAIN)>0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
+	return true
 end
 
 function s.rmtarget(e,c)

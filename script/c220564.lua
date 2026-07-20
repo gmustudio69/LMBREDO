@@ -90,7 +90,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 end
-function s.spfilter(c,e,tp)
+function s.spfilter(c)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 -- 3. Special Summon Trigger & Execution Functions
