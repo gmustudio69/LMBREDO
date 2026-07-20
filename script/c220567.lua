@@ -60,19 +60,29 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.BreakEffect()
 		if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
-			------------------------------------------------
-			-- Time Jump
-			------------------------------------------------
-
-			local p=tp
-			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,2)
-			Duel.SkipPhase(p,PHASE_STANDBY,RESET_PHASE|PHASE_END,2)
-			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,2)
-
+			local p=Duel.GetTurnPlayer()
+			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(1-p,PHASE_STANDBY,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+			local e1=Effect.GlobalEffect()
+			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			e1:SetType(EFFECT_TYPE_FIELD)
+			e1:SetCode(EFFECT_CANNOT_BP)
+			e1:SetTargetRange(1,1)
+			e1:SetReset(RESET_PHASE+PHASE_END,2)
+			Duel.RegisterEffect(e1,tp)
+			local be=Effect.GlobalEffect()
+			be:SetType(EFFECT_TYPE_FIELD)
+			be:SetCode(EFFECT_CANNOT_EP)
+			be:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			be:SetTargetRange(1,1)
+			be:SetReset(RESET_PHASE+PHASE_MAIN1,2)
+			Duel.RegisterEffect(be,tp)
 						Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
 						Duel.SkipPhase(1-p,PHASE_END,RESET_PHASE|PHASE_END,1)
 
