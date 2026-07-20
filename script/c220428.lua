@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) -- Fixed: Correct type combo
 	e3:SetCode(EVENT_BATTLED)
 	e3:SetRange(LOCATION_MZONE) -- Required so the engine looks for it on the field
-	e3:SetCondition(function(e) return local c=e:GetHandler() return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) end)
+	e3:SetCondition(s.inhcon)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
@@ -99,4 +99,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			sc:CompleteProcedure()
 		end
 	end
+end
+function s.inhcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler() -- This correctly checks the Xyz monster holding Flamewings as a material
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ)
 end
