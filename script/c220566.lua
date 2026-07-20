@@ -2,16 +2,14 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	--3+ Level 13 monsters
-	Xyz.AddProcedure(c,nil,13,3,nil,nil,99)
+	Xyz.AddProcedure(c,nil,7,2)
 	c:EnableReviveLimit()
-
 	--Cannot be destroyed by battle
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_INDESTRUCTIBLE_BATTLE)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
-
 	--Opponent cannot target other cards if you control "<World Decoder> Ellie"
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
