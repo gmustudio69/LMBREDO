@@ -45,7 +45,20 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 
 end
+function s.rmtarget(e,c)
+	return c:IsReason(REASON_DESTROY)
+end
 
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return eg:IsExists(s.repfilter,1,nil)
+	end
+	return true
+end
+
+function s.repval(e,c)
+	return s.repfilter(c)
+end
 -- 1. Replacement Effect Functions
 function s.redcon(e)
 	-- Ensure the card is heading to the GY due to a card effect destruction
