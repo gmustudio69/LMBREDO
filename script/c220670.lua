@@ -8,34 +8,21 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	e1:SetCondition(s.actcon)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
+
+	--Neither player can chain monster effects
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_CANNOT_ACTIVATE)
+	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetValue(s.aclimit)
+	c:RegisterEffect(e2)
 end
 
--- Monster effects cannot be chained
-function s.actcon(e,tp,eg,ep,ev,re,r,rp)
-	local ge=Effect.GlobalEffect()
-	ge:SetType(EFFECT_TYPE_FIELD)
-	ge:SetCode(EFFECT_CANNOT_INACTIVATE)
-	ge:SetValue(s.effectfilter)
-	ge:SetReset(RESET_CHAIN)
-	Duel.RegisterEffect(ge,tp)
-
-	local ge2=Effect.GlobalEffect()
-	ge2:SetType(EFFECT_TYPE_FIELD)
-	ge2:SetCode(EFFECT_CANNOT_DISEFFECT)
-	ge2:SetValue(s.effectfilter)
-	ge2:SetReset(RESET_CHAIN)
-	Duel.RegisterEffect(ge2,tp)
-
-	return true
-end
-
-function s.effectfilter(e,ct)
-	local te=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT)
-	return te and te:GetHandler():IsMonster()
+function s.aclimit(e,re,tp)
+	return re:IsActiveType(TYPE_MONSTER)
 end
 
 function s.xyzfilter(c,e,tp)
@@ -44,65 +31,102 @@ function s.xyzfilter(c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
 end
 
-function s.rescon(sg,e,tp,mg)
-	return sg:GetClassCount(Card.GetCode)==2
-end
-
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,2,nil,e,tp)
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+			and Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
+			and Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,2,nil,e,tp)
 	end
 
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,0,PLAYER_ALL,LOCATION_MZONE)
+	local g=Duel.GetMatchingGroup(Card.IsDestructable,tp,
+		LOCATION_MZONE,LOCATION_MZONE,nil)
+
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_EXTRA)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-	local dg=Duel.GetMatchingGroup(Card.IsDestructable,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
-	Duel.Destroy(dg,REASON_EFFECT)
 
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	if Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then return end
+	--Destroy all monsters
+	local dg=Duel.GetMatchingGroup(Card.IsDestructable,tp,
+		LOCATION_MZONE,LOCATION_MZONE,nil)
 
-	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
+	if #dg>0 then
+		Duel.Destroy(dg,REASON_EFFECT)
+	end
+
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0
+		or Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then
+		return
+	end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 
-	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_SPSUMMON)
-	if not sg then return end
+	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,
+		LOCATION_EXTRA,0,2,2,nil,e,tp)
 
-	local c1,c2=sg:GetFirst(),sg:GetNext()
+	if #g~=2 then return end
+
+	local tc1=g:GetFirst()
+	local tc2=g:GetNext()
+
+	if tc1:GetCode()==tc2:GetCode() then
+		return
+	end
 
 	local you,opp
 
-	if c1:GetAttack()<=c2:GetAttack() then
-		you=c1
-		opp=c2
+	if tc1:GetBaseAttack()<=tc2:GetBaseAttack() then
+		you=tc1
+		opp=tc2
 	else
-		you=c2
-		opp=c1
+		you=tc2
+		opp=tc1
 	end
 
-	Duel.SpecialSummonStep(you,0,tp,tp,true,false,POS_FACEUP)
-	Duel.SpecialSummonStep(opp,0,tp,1-tp,true,false,POS_FACEUP)
+	if Duel.SpecialSummonStep(you,0,tp,tp,true,false,POS_FACEUP) then
+
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetValue(LOCATION_EXTRA)
+		e1:SetReset(RESET_EVENT|RESETS_REDIRECT)
+		you:RegisterEffect(e1,true)
+	end
+
+	if Duel.SpecialSummonStep(opp,0,tp,1-tp,true,false,POS_FACEUP) then
+
+		local e2=Effect.CreateEffect(e:GetHandler())
+		e2:SetType(EFFECT_TYPE_SINGLE)
+		e2:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e2:SetValue(LOCATION_EXTRA)
+		e2:SetReset(RESET_EVENT|RESETS_REDIRECT)
+		opp:RegisterEffect(e2,true)
+	end
+
 	Duel.SpecialSummonComplete()
 
 	local rg=Group.FromCards(you,opp)
 
-	for tc in aux.Next(rg) do
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-		e1:SetCode(EVENT_PHASE+PHASE_END)
-		e1:SetCountLimit(1)
-		e1:SetOperation(s.retop)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END)
-		tc:RegisterEffect(e1)
-	end
+	local e3=Effect.CreateEffect(e:GetHandler())
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EVENT_PHASE+PHASE_END)
+	e3:SetCountLimit(1)
+	e3:SetLabelObject(rg)
+	e3:SetOperation(s.retop)
+	e3:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e3,tp)
 end
 
 function s.retop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:IsLocation(LOCATION_MZONE) then
-		Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+	local g=e:GetLabelObject()
+	if not g then return end
+
+	local rg=g:Filter(Card.IsAbleToExtra,nil)
+
+	if #rg>0 then
+		Duel.SendtoDeck(rg,nil,SEQ_DECKTOP,REASON_EFFECT)
 	end
 end
