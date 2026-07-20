@@ -112,8 +112,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_PHASE|PHASE_END)
 		e1:SetLabelObject(tc)
 		e1:SetOperation(s.retop)
-		Duel.RegisterEffect(e1,tp)
-		
+		Duel.RegisterEffect(e1,tp)	 
 	end
 end
 
