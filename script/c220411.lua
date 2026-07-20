@@ -48,10 +48,10 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE|PHASE_BATTLE_START)
-	local reset,reset_ct=RESET_PHASE|PHASE_BATTLE_START,1
+	e1:SetCode(EVENT_PHASE|PHASE_BATTLE)
+	local reset,reset_ct=RESET_PHASE|PHASE_BATTLE,1
 	local turn_ct=0
-	if Duel.IsPhase(PHASE_BATTLE_START) then
+	if Duel.IsPhase(PHASE_BATTLE) then
 		reset_ct=2
 		turn_ct=Duel.GetTurnCount()
 	end
