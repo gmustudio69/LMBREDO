@@ -45,19 +45,19 @@ function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	
 	local turn_ct = Duel.GetTurnCount()
 	-- If it's already the Battle Phase or later, schedule for the next turn's Battle Phase
-	if Duel.GetCurrentPhase() >= PHASE_BATTLE_START then
+	if Duel.GetCurrentPhase() >= PHASE_BATTLE then
 		turn_ct = turn_ct + 1
 	end
 
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
+	e1:SetCode(EVENT_PHASE+PHASE_BATTLE)
 	e1:SetCountLimit(1)
 	e1:SetLabel(loc, turn_ct) -- Pass both the exact location and target turn count
 	e1:SetLabelObject(c)
 	e1:SetCondition(s.revspcon)
 	e1:SetOperation(s.revspop)
-	e1:SetReset(RESET_PHASE+PHASE_BATTLE_START, turn_ct == Duel.GetTurnCount() and 1 or 2)
+	e1:SetReset(RESET_PHASE+PHASE_BATTLE, turn_ct == Duel.GetTurnCount() and 1 or 2)
 	Duel.RegisterEffect(e1,tp)
 end
 

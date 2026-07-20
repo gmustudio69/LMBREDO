@@ -82,8 +82,8 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			be:SetTargetRange(1,1)
 			be:SetReset(RESET_PHASE+PHASE_MAIN1,2)
 			Duel.RegisterEffect(be,tp)
-						Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-						Duel.SkipPhase(1-p,PHASE_END,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_END,RESET_PHASE|PHASE_END,1)
 
 						------------------------------------------------
 						-- Opponent takes no damage
