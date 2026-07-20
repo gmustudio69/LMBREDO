@@ -24,19 +24,20 @@ function s.initial_effect(c)
 	e2_sp:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e2_sp)
 
-	--Trigger/Quick Summon effect: Start of BP or Opponent SpSummon non-FIRE from Deck/Extra
+	--Trigger Summon: Opponent special summons a non-FIRE monster from Deck/Extra Deck
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e3:SetRange(LOCATION_HAND) -- Assumed hand/GY baseline for deployment
+	e3:SetRange(LOCATION_HAND)
 	e3:SetCountLimit(1,id+100)
 	e3:SetCondition(s.spcon1)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
 	
+	--Trigger Summon: Or at the start of the Battle Phase
 	local e4=e3:Clone()
 	e4:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e4:SetCondition(s.spcon2)
@@ -83,7 +84,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 3. Dynamic Hand/GY Special Summon Trigger Checks
+-- 3. Special Summon Trigger & Execution Functions
 function s.nonfirefilter(c,tp)
 	return c:IsSummonPlayer(1-tp) 
 		and not c:IsAttribute(ATTRIBUTE_FIRE) 
@@ -91,20 +92,17 @@ function s.nonfirefilter(c,tp)
 end
 
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
-	-- Triggers if opponent summons a non-FIRE monster from Deck or Extra Deck
 	return eg:IsExists(s.nonfirefilter,1,nil,tp)
 end
 
 function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
-	-- Triggers cleanly at the beginning of any Battle Phase
 	return true
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
-		-- Check zone availability on either side of the field
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
+		return (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0)
 			and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
@@ -114,13 +112,12 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
 	
-	-- Determine valid fields to deploy to
 	local b1=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 	local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
 	local sptp=tp
 	
 	if b1 and b2 then
-		-- Prompts the player to select which side of the field to summon to
+		-- Prompt choice: 0 for your side, 1 for your opponent's side
 		if Duel.SelectOption(tp,aux.Stringid(id,2),aux.Stringid(id,3))==1 then
 			sptp=1-tp
 		end
