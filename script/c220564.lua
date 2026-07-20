@@ -89,7 +89,6 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 				Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
 			end
 		end
-	end
 end
 function s.spfilter(c,e,tp)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
