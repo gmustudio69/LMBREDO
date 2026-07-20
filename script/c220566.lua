@@ -100,16 +100,30 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 		local p=tc:GetControler()
 		
 		if Duel.Destroy(tc,REASON_EFFECT)>0 then
-			-- Check if the destroyed card was in a valid Main Monster Zone or Spell & Trap Zone
-			if loc==LOCATION_MZONE and seq<5 then
+			-- Verify it was in a usable, valid Main Monster Zone or Spell & Trap Zone
+			if (loc==LOCATION_MZONE or loc==LOCATION_SZONE) and seq<5 then
 				if c:IsFaceup() and c:IsRelateToEffect(e) then
 					Duel.BreakEffect()
-					Duel.LockField(p,loc,seq,RESET_DISABLE,id)
-				end
-			elseif loc==LOCATION_SZONE and seq<5 then
-				if c:IsFaceup() and c:IsRelateToEffect(e) then
-					Duel.BreakEffect()
-					Duel.LockField(p,loc,seq,RESET_DISABLE,id)
+					
+					-- Step 1: Calculate the exact zone bitmask
+					local zone = 1 << seq
+					if loc == LOCATION_SZONE then
+						zone = zone << 8 -- Shift to SZONE bits
+					end
+					if p == 1-tp then
+						zone = zone << 16 -- Shift to opponent's field bits if opponent controlled it
+					end
+					
+					-- Step 2: Register the continuous lock linked to this card
+					local e1=Effect.CreateEffect(c)
+					e1:SetType(EFFECT_TYPE_FIELD)
+					e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+					e1:SetCode(EFFECT_DISABLE_FIELD)
+					e1:SetRange(LOCATION_MZONE)
+					e1:SetOperation(function(e) return zone end)
+					-- RESETS_STANDARD ensures the lock breaks if Titan leaves the field/gets flipped
+					e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+					c:RegisterEffect(e1)
 				end
 			end
 		end
