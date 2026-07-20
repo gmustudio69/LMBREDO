@@ -61,10 +61,10 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 		if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
 			local p=Duel.GetTurnPlayer()
-			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,2)
 			Duel.SkipPhase(p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
-			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,2)
 			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
@@ -91,9 +91,6 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			local e2=e1:Clone()
 			e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
 			Duel.RegisterEffect(e2,tp)
-			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
 			end
-	
-	end
-	
+	end   
 end
