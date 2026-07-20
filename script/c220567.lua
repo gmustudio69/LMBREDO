@@ -63,11 +63,12 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			local p=Duel.GetTurnPlayer()
 			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
-			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+			Duel.SkipPhase(p,PHASE_MAIN2,RESET_PHASE|PHASE_END,2)
 			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
-			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
 			------------------------------------------------
 			-- Opponent takes no damage
 			------------------------------------------------
@@ -83,6 +84,7 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
 			Duel.RegisterEffect(e2,tp)
 			end
+	
 	end
 	
 end
