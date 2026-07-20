@@ -91,7 +91,14 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 
 	Duel.SpecialSummon(opp,0,tp,1-tp,false,false,POS_FACEUP)
-
+	for tc in aux.Next(Group.FromCards(tc1,tc2)) do
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_SET_DEFENSE_FINAL)
+		e1:SetValue(0)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		tc:RegisterEffect(e1)
+	end
 	------------------------------------------------
 	-- Return during End Phase
 	------------------------------------------------
@@ -106,6 +113,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetLabelObject(tc)
 		e1:SetOperation(s.retop)
 		Duel.RegisterEffect(e1,tp)
+		
 	end
 end
 
