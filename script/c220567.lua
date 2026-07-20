@@ -62,9 +62,7 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 
 	if not tc then return end
 
-	if Duel.Destroy(tc,REASON_EFFECT)==0 then
-		if Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-			if Duel.GetFlagEffect(tp,id+100)==0 then
+	if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 				Duel.RegisterFlagEffect(tp,id+100,0,0,1)
 				------------------------------------------------
 				-- Time Jump
