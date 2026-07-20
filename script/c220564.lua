@@ -81,16 +81,17 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	-- Target filters checking the owner's possession fields specifically
 	local g=Duel.SelectMatchingCard(owner,s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
 	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0  then
+		if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
 		-- Proceed to Special Summon from hand if destruction is successful
 		Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SPSUMMON)
-		local sg=Duel.SelectMatchingCard(owner,s.spfilter,owner,LOCATION_HAND,0,1,1,nil)
-			if #sg>0 and Duel.SelectYesNo(owner,aux.Stringid(id,1)) then
-				Duel.BreakEffect()
-				Duel.SpecialSummon(sg,0,owner,owner,false,false,POS_FACEUP)
-			end
+		local sg=Duel.SelectMatchingCard(owner,s.spfilter,owner,LOCATION_HAND,0,1,1,nil,e,owner)
+		if #sg>0 and Duel.SelectYesNo(owner,aux.Stringid(id,1))then
+			Duel.BreakEffect()
+			Duel.SpecialSummon(sg,0,owner,owner,false,false,POS_FACEUP)
 		end
+	end
 end
-function s.spfilter(c)
+function s.spfilter(c,e,tp)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 -- 3. Special Summon Trigger & Execution Functions

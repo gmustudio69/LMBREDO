@@ -78,7 +78,7 @@ end
 
 -- 3. Detach, Destroy 1 FIRE from Deck/Field, then pop 1
 function s.desfilter(c)
-	return c:IsAttribute(ATTRIBUTE_FIRE) and (c:IsLocation(LOCATION_DECK) or c:IsFaceUp())
+	return c:IsAttribute(ATTRIBUTE_FIRE) and (c:IsLocation(LOCATION_DECK) or c:IsFaceup()
 end
 function s.destg(e, tp, eg, ep, ev, re, r, rp, chk)
 	if chk == 0 then return Duel.IsExistingMatchingCard(s.desfilter, tp, LOCATION_DECK + LOCATION_MZONE, 0, 1, nil) end
@@ -86,7 +86,7 @@ function s.destg(e, tp, eg, ep, ev, re, r, rp, chk)
 end
 function s.desop(e, tp, eg, ep, ev, re, r, rp)
 	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_DESTROY)
-	local g = Duel.SelectMatchingCard(tp, s.desfilter, tp, LOCATION_DECK + LOCATION_MZONE, 0, 1, 1, nil)
+	local g = Duel.SelectMatchingCard(tp,s.desfilter, tp,LOCATION_DECK +LOCATION_MZONE, 0, 1, 1, nil)
 	if #g > 0 and Duel.Destroy(g, REASON_EFFECT) > 0 then
 		if Duel.IsExistingMatchingCard(nil, tp, LOCATION_ONFIELD, LOCATION_ONFIELD, 1, nil) 
 		   and Duel.SelectYesNo(tp, aux.Stringid(id, 3)) then
@@ -95,7 +95,7 @@ function s.desop(e, tp, eg, ep, ev, re, r, rp)
 			local sg = Duel.SelectMatchingCard(tp, nil, tp, LOCATION_ONFIELD, LOCATION_ONFIELD, 1, 1, nil)
 			if #sg > 0 then
 				Duel.HintSelection(sg)
-				Duel.Destroy(sg, REASON_EFFECT)
+				Duel.Destroy(sg,REASON_EFFECT)
 			end
 		end
 	end
@@ -105,7 +105,7 @@ end
 function s.spcon(e, tp, eg, ep, ev, re, r, rp)
 	return (r & REASON_EFFECT) ~= 0
 end
-function s.spfilter(c, e, tp)
+function s.spfilter(c,e,tp)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsLevelBelow(7) and c:IsCanBeSpecialSummoned(e, 0, tp, false, false)
 end
 function s.sptg(e, tp, eg, ep, ev, re, r, rp, chk)
