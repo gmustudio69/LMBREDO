@@ -65,11 +65,12 @@ end
 
 -- Operation Logic for Main Activation
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local op=e:GetLabel()
 	if op==0 then
 		-- Effect 1: Destroy 1 "Pyrea" card from Deck or face-up field
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-		local g=Duel.SelectMatchingCard(tp,s.desfilter1,tp,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,s.desfilter1,tp,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,c)
 		if #g>0 then
 			Duel.Destroy(g,REASON_EFFECT)
 		end
