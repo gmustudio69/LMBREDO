@@ -48,7 +48,6 @@ function s.timetg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 end
 function s.timeop(e,tp,eg,ep,ev,re,r,rp)
-
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 
 	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK|LOCATION_MZONE|LOCATION_SZONE,0,1,1,nil)
@@ -69,7 +68,6 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
 			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
 			Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-			Duel.RegisterEffect(e1,tp)
 			local be=Effect.GlobalEffect()
 			be:SetType(EFFECT_TYPE_FIELD)
 			be:SetCode(EFFECT_CANNOT_EP)
