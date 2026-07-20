@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	--3+ Level 13 monsters
-	Xyz.AddProcedure(c,nil,7,2)
+	Xyz.AddProcedure(c,nil,13,3)
 	c:EnableReviveLimit()
 	--Cannot be destroyed by battle
 	local e0=Effect.CreateEffect(c)
