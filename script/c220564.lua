@@ -86,13 +86,13 @@ end
 
 -- 3. Special Summon Trigger & Execution Functions
 function s.nonfirefilter(c,tp)
-	return c:IsSummonPlayer(1-tp) 
+	return c:IsSummonPlayer(tp) 
 		and not c:IsAttribute(ATTRIBUTE_FIRE) 
 		and (c:IsPreviousLocation(LOCATION_DECK) or c:IsPreviousLocation(LOCATION_EXTRA))
 end
 
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.nonfirefilter,1,nil,tp)
+	return eg:IsExists(s.nonfirefilter,1,nil,1-tp)
 end
 
 function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
