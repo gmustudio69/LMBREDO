@@ -74,14 +74,12 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,owner,LOCATION_DECK|LOCATION_ONFIELD)
 end
-
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local owner=e:GetHandler():GetOwner()
 	Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_DESTROY)
 	-- Target filters checking the owner's possession fields specifically
 	local g=Duel.SelectMatchingCard(owner,s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
-	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0  then
-		if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
+	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
 		-- Proceed to Special Summon from hand if destruction is successful
 		Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SPSUMMON)
 		local sg=Duel.SelectMatchingCard(owner,s.spfilter,owner,LOCATION_HAND,0,1,1,nil,e,owner)
