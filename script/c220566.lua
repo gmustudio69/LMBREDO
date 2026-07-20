@@ -80,6 +80,7 @@ function s.statop(e,tp,eg,ep,ev,re,r,rp)
 		-- Set Permanent Base ATK
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 		e1:SetCode(EFFECT_SET_BASE_ATTACK)
 		e1:SetValue(mats*1000)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
@@ -170,16 +171,4 @@ function s.bpop(e,tp,eg,ep,ev,re,r,rp)
 			c:RegisterEffect(e1)
 		end
 	end
-end
-function s.effop(e,tp,eg,ep,ev,re,r,rp)
-	--Cannot Special Summon monsters, except "Gimmick Puppet" monsters
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetDescription(aux.Stringid(id,2))
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(function(e,c) return not c:IsSetCard(SET_GIMMICK_PUPPET) end)
-	e1:SetReset(RESET_PHASE|PHASE_END)
-	Duel.RegisterEffect(e1,tp)
 end
