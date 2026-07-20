@@ -22,6 +22,7 @@ function s.initial_effect(c)
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_BATTLED)
+	e2:SetCondition(s.spcon)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
@@ -68,7 +69,13 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SSet(tp,g:GetFirst())
 	end
 end
-
+function s.renarafilter(c)
+	return c:IsCode(220411) -- Replace 111222 with the actual card ID of "<Limit Breaker> Renara"
+end
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	-- Checks if Renara is attached as an Xyz material
+	return e:GetHandler():GetOverlayGroup():IsExists(s.renarafilter,1,nil)
+end
 -- 2. Rank-Up Transformation Logic
 function s.spfilter(c,e,tp,mc)
 	return (c:IsSetCard(0xf86) or c:IsSetCard(0xb18)) -- Archetype IDs for "Limit Breaker" and "World Breaker"
@@ -92,6 +99,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local sc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c):GetFirst()
 	if sc then
+		-- Restrict player from summoning another monster with this same original name this turn
+		Duel.RegisterFlagEffect(tp,sc:GetOriginalCode(),RESET_PHASE+PHASE_END,0,1)
 		local mg=Group.FromCards(c)
 		sc:SetMaterial(mg)
 		Duel.Overlay(sc,mg)
@@ -102,5 +111,5 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.inhcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler() -- This correctly checks the Xyz monster holding Flamewings as a material
-	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ)
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ) and c:GetOverlayGroup():IsExists(s.renarafilter,1,nil)
 end
