@@ -80,11 +80,11 @@ function s.statop(e,tp,eg,ep,ev,re,r,rp)
 		-- Set Permanent Base ATK
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 		e1:SetCode(EFFECT_SET_BASE_ATTACK)
 		e1:SetValue(mats*1000)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
 		c:RegisterEffect(e1)
-		
 		-- Set Permanent Base DEF
 		local e2=e1:Clone()
 		e2:SetCode(EFFECT_SET_BASE_DEFENSE)
