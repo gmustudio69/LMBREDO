@@ -78,7 +78,7 @@ end
 
 -- 3. Detach, Destroy 1 FIRE from Deck/Field, then pop 1
 function s.desfilter(c)
-	return c:IsAttribute(ATTRIBUTE_FIRE) and (c:IsLocation(LOCATION_DECK) or c:IsFaceup()
+	return c:IsAttribute(ATTRIBUTE_FIRE) and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
 end
 function s.destg(e, tp, eg, ep, ev, re, r, rp, chk)
 	if chk == 0 then return Duel.IsExistingMatchingCard(s.desfilter, tp, LOCATION_DECK + LOCATION_MZONE, 0, 1, nil) end
