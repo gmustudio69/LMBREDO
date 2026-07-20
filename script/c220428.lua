@@ -72,7 +72,7 @@ end
 -- 2. Rank-Up Transformation Logic
 function s.spfilter(c,e,tp,mc)
 	return (c:IsSetCard(0xf86) or c:IsSetCard(0xb18)) -- Archetype IDs for "Limit Breaker" and "World Breaker"
-		and c:IsAttribute(ATTRIBUTE_FIRE)
+		and c:IsAttribute(ATTRIBUTE_FIRE) and c:IsType(TYPE_XYZ)
 		and mc:IsCanBeXyzMaterial(c)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
 		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
