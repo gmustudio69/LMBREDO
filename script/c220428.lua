@@ -15,6 +15,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.settg)
 	e1:SetOperation(s.setop)
 	c:RegisterEffect(e1)
+
 	--End of Damage Step Rank-Up Battle Trigger
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,2))
@@ -24,14 +25,19 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
+
 	--Material Inheritance Effect: Grants the Rank-Up trigger to a FIRE Warrior Xyz
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetDescription(aux.Stringid(id,2)) -- Linked description text so option displays properly
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON) -- Fixed: Changed from e2 to e3
+	e3:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) -- Fixed: Correct type combo
 	e3:SetCode(EVENT_BATTLED)
-	e3:SetCondition(s.inhcon)
+	e3:SetRange(LOCATION_MZONE) -- Required so the engine looks for it on the field
+	e3:SetCondition(function(e) return local c=e:GetHandler() return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) end)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
+
 	Duel.AddCustomActivityCounter(id,ACTIVITY_CHAIN,function(re) return not re:GetHandler():IsCode(220406) end)
 end
 
@@ -45,6 +51,7 @@ function s.xyzop(e,tp,chk)
 	Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,EFFECT_FLAG_OATH,1)
 	return true
 end
+
 -- 1. Deck Search/Set Logic
 function s.setfilter(c)
 	return c:IsSetCard(0x989) and c:IsType(TYPE_SPELL|TYPE_TRAP) and c:IsSSetable()
@@ -79,24 +86,17 @@ end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if c:IsControler(1-tp) or not c:IsRelateToEffect(e) or c:IsFacedown() then return end
+	if c:IsFacedown() or not c:IsRelateToEffect(e) or c:IsControler(1-tp) or c:IsImmuneToEffect(e) then return end
+	local pg=aux.GetMustBeMaterialGroup(tp,Group.FromCards(c),tp,nil,nil,REASON_XYZ)
+	if #pg>1 or (#pg==1 and not pg:IsContains(c)) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c)
-	local sc=g:GetFirst()
+	local sc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c):GetFirst()
 	if sc then
-		local mg=c:GetOverlayGroup()
-		if #mg>0 then
-			Duel.Overlay(sc,mg)
+		local mg=Group.FromCards(c)
+		sc:SetMaterial(mg)
+		Duel.Overlay(sc,mg)
+		if Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)>0 then
+			sc:CompleteProcedure()
 		end
-		sc:SetMaterial(Group.FromCards(c))
-		Duel.Overlay(sc,Group.FromCards(c))
-		Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
-		sc:CompleteProcedure()
 	end
-end
-
--- Inheritance safety filter verification 
-function s.inhcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsType(TYPE_XYZ)
 end
