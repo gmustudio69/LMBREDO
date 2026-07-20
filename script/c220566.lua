@@ -64,7 +64,7 @@ end
 
 -- 1. Protection Condition Filters
 function s.elliefilter(c)
-	return c:IsFaceup() and c:IsCode(98765432) -- Replace 98765432 with the actual card ID of "<World Decoder> Ellie"
+	return c:IsFaceup() and c:IsCode(220405) -- Replace 98765432 with the actual card ID of "<World Decoder> Ellie"
 end
 
 function s.tgcon(e)

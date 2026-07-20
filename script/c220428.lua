@@ -30,7 +30,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_XMATERIAL)
 	e3:SetCode(EVENT_BATTLED)
 	e3:SetCountLimit(1)
-	e3:SetCondition(s.inhcon
+	e3:SetCondition(s.inhcon)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
