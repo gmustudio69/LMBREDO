@@ -74,7 +74,12 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 			be:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 			be:SetTargetRange(1,1)
 			be:SetReset(RESET_PHASE+PHASE_MAIN1,1)
-			Duel.RegisterEffect(be,tp)
+			local be=Effect.GlobalEffect()
+			be:SetType(EFFECT_TYPE_FIELD)
+			be:SetCode(EFFECT_CANNOT_ACTIVATE)
+			be:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+			be:SetTargetRange(1,1)
+			be:SetReset(RESET_PHASE+PHASE_MAIN1,1)
 			------------------------------------------------
 			-- Opponent takes no damage
 			------------------------------------------------
