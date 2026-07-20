@@ -9,11 +9,12 @@ function s.initial_effect(c)
 	-- Destruction protection
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_COUNT)
+	e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetTargetRange(LOCATION_MZONE,0)
 	e1:SetTarget(s.indtg)
-	e1:SetValue(s.indct)
+	e1:SetValue(1)
 	c:RegisterEffect(e1)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
@@ -26,13 +27,6 @@ function s.initial_effect(c)
 end
 function s.indtg(e,c)
 	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR)
-end
-
-function s.indct(e,re,r,rp)
-	if (r&REASON_EFFECT)~=0 then
-		return 1
-	end
-	return 0
 end
 function s.desfilter(c)
 	return (c:IsAttribute(ATTRIBUTE_FIRE) and c:IsDefense(0) or c:IsSetCard(0x989))
