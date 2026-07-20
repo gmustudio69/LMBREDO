@@ -40,7 +40,6 @@ end
 function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local loc=c:GetLocation()
-	if not (loc==LOCATION_GRAVE or loc==LOCATION_REMOVED) then return end
 	
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
