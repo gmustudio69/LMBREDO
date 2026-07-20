@@ -56,40 +56,43 @@ function s.timeop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:GetFirst()
 
 	if not tc then return end
+	if Duel.Destroy(tc,REASON_EFFECT)>0 then
+		Duel.BreakEffect()
+		if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
+			------------------------------------------------
+			-- Time Jump
+			------------------------------------------------
 
-	if Duel.GetFlagEffect(tp,id+100)==0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-	   Duel.RegisterFlagEffect(tp,id+100,0,0,1)
-------------------------------------------------
--- Time Jump
-------------------------------------------------
+			local p=tp
+			Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(p,PHASE_STANDBY,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,2)
 
-	local p=tp
-	Duel.SkipPhase(p,PHASE_DRAW,RESET_PHASE|PHASE_END,2)
-	Duel.SkipPhase(p,PHASE_STANDBY,RESET_PHASE|PHASE_END,2)
-	Duel.SkipPhase(p,PHASE_MAIN1,RESET_PHASE|PHASE_END,2)
+			Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_STANDBY,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
+			Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
+						Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
+						Duel.SkipPhase(1-p,PHASE_END,RESET_PHASE|PHASE_END,1)
 
-	Duel.SkipPhase(1-p,PHASE_DRAW,RESET_PHASE|PHASE_END,1)
-	Duel.SkipPhase(1-p,PHASE_STANDBY,RESET_PHASE|PHASE_END,1)
-	Duel.SkipPhase(1-p,PHASE_MAIN1,RESET_PHASE|PHASE_END,1)
-	Duel.SkipPhase(1-p,PHASE_BATTLE,RESET_PHASE|PHASE_END,1,1)
-				Duel.SkipPhase(1-p,PHASE_MAIN2,RESET_PHASE|PHASE_END,1)
-				Duel.SkipPhase(1-p,PHASE_END,RESET_PHASE|PHASE_END,1)
+						------------------------------------------------
+						-- Opponent takes no damage
+						------------------------------------------------
 
-				------------------------------------------------
-				-- Opponent takes no damage
-				------------------------------------------------
-
-				local e1=Effect.GlobalEffect()
-				e1:SetType(EFFECT_TYPE_FIELD)
-				e1:SetCode(EFFECT_CHANGE_DAMAGE)
-				e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-				e1:SetTargetRange(0,1)
-				e1:SetValue(0)
-				e1:SetReset(RESET_PHASE|PHASE_BATTLE)
-				Duel.RegisterEffect(e1,tp)
-				local e2=e1:Clone()
-				e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
-				Duel.RegisterEffect(e2,tp)
-				
+						local e1=Effect.GlobalEffect()
+						e1:SetType(EFFECT_TYPE_FIELD)
+						e1:SetCode(EFFECT_CHANGE_DAMAGE)
+						e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+						e1:SetTargetRange(0,1)
+						e1:SetValue(0)
+						e1:SetReset(RESET_PHASE|PHASE_BATTLE)
+						Duel.RegisterEffect(e1,tp)
+						local e2=e1:Clone()
+						e2:SetCode(EFFECT_NO_EFFECT_DAMAGE)
+						Duel.RegisterEffect(e2,tp)
+						
+			end
 	end
+	
 end
