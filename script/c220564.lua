@@ -88,7 +88,7 @@ end
 function s.nonfirefilter(c,tp)
 	return c:IsSummonPlayer(1-tp) 
 		and not c:IsAttribute(ATTRIBUTE_FIRE) 
-		and (c:IsSummonLocation(LOCATION_DECK) or c:IsSummonLocation(LOCATION_EXTRA))
+		and (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_EXTRA))
 end
 
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
