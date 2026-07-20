@@ -39,40 +39,37 @@ end
 --Register Battle Phase revive
 function s.revop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	-- Dynamically check where it landed immediately after destruction
 	local loc=c:GetLocation()
 	if not (loc==LOCATION_GRAVE or loc==LOCATION_REMOVED) then return end
 	
-	local turn_ct = Duel.GetTurnCount()
-	-- If it's already the Battle Phase or later, schedule for the next turn's Battle Phase
-	if Duel.GetCurrentPhase() >= PHASE_BATTLE_START then
-		turn_ct = turn_ct + 1
-	end
-
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e1:SetCountLimit(1)
-	e1:SetLabel(loc, turn_ct) -- Pass both the exact location and target turn count
+	e1:SetLabel(loc) 
 	e1:SetLabelObject(c)
 	e1:SetCondition(s.revspcon)
 	e1:SetOperation(s.revspop)
-	e1:SetReset(RESET_PHASE+PHASE_BATTLE_START, turn_ct == Duel.GetTurnCount() and 1 or 2)
+	-- By leaving out standard Turn/Phase Resets, this remains active until an actual Battle Phase starts
 	Duel.RegisterEffect(e1,tp)
 end
 
+-- If a Battle Phase actually starts, we check if we shouldn't trigger instantly 
+-- (in case it was destroyed DURING the start of the current Battle Phase)
 function s.revspcon(e,tp,eg,ep,ev,re,r,rp)
-	local loc, turn_ct = e:GetLabel()
-	return Duel.GetTurnCount() == turn_ct
+	-- If it was just destroyed this exact instant at the start of a BP, wait for the next one
+	return Duel.GetTurnCount() ~= e:GetHandler():GetTurnID() or Duel.GetCurrentPhase() == PHASE_BATTLE_START
 end
 
 function s.revspop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetLabelObject()
-	local loc, turn_ct = e:GetLabel()
-	-- Verifies it is still in the exact location it was sent to when destroyed
+	local loc=e:GetLabel()
+	
+	-- Try to summon if it's still in the exact location it landed in
 	if c and c:IsLocation(loc) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
+	-- Crucial: Explicitly reset/kill the field effect only after a Battle Phase has actually happened
 	e:Reset()
 end
 
