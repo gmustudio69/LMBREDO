@@ -79,7 +79,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(owner,s.desfilter,owner,LOCATION_DECK|LOCATION_ONFIELD,0,1,1,nil)
 	if #g>0 and Duel.Destroy(g,REASON_EFFECT)>0 then
 		if Duel.GetLocationCount(owner,LOCATION_MZONE)<=0 then return Duel.IsExistingMatchingCard(s.spfilter,owner,LOCATION_HAND,0,1,nil,owner) end
-		local sg=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND,0,nil,e,owner)
+		local sg=Duel.GetMatchingGroup(s.spfilter,owner,LOCATION_HAND,0,nil,e,owner)
 		if #sg>0 and Duel.SelectYesNo(owner,aux.Stringid(id,2)) then
 			Duel.BreakEffect()
 			Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SPSUMMON)
