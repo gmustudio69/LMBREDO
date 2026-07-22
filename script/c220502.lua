@@ -38,7 +38,7 @@ end
 
 -- Target Filter: "Nocturne Gear" monster with a different Level than the banished cost card
 function s.spfilter(c,e,tp,lv)
-	return c:IsSetCard(0x999) -- Replace 0x999 with your actual "Nocturne Gear" archetype ID
+	return c:IsSetCard(0xd8f) -- Replace 0x999 with your actual "Nocturne Gear" archetype ID
 		and c:IsType(TYPE_MONSTER)
 		and c:HasLevel()
 		and not c:IsLevel(lv)
