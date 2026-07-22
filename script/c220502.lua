@@ -1,11 +1,11 @@
 --Nocturne Gear - Secret hideout
 local s,id=GetID()
 function s.initial_effect(c)
-	--Activate Field Spell
+	--Activate
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-
 	--Extra Normal Summon (1 extra Psychic Normal Summon per turn)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
