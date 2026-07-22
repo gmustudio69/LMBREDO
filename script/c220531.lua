@@ -1,66 +1,72 @@
+--Nocturne Gear - Secret hideout
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 1: Special Summon from hand if you took effect damage
+	--Activate Field Spell
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	c:RegisterEffect(e0)
+
+	--Extra Normal Summon (1 extra Psychic Normal Summon per turn)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DAMAGE)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e1:SetCode(EVENT_DAMAGE)
-	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetRange(LOCATION_FZONE)
+	e1:SetCode(EFFECT_EXTRA_SUMMON_OPTIONAL)
+	e1:SetTargetRange(LOCATION_HAND,0)
+	e1:SetTarget(aux.TargetBoolFunction(Card.IsRace,RACE_PSYCHIC))
 	c:RegisterEffect(e1)
-	
-	-- 2: On Summon: Search "Shadow Beast" or "Kazari"
+
+	--Banish 1 Psychic to Special Summon 1 "Nocturne Gear" with a different Level
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_SUMMON_SUCCESS)
-	e2:SetCountLimit(1,id+100)
-	e2:SetTarget(s.thtg)
-	e2:SetOperation(s.thop)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_REMOVE)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_FZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetCost(s.spcost)
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	c:RegisterEffect(e3)
-end
-s.listed_names={220450,id}
--- E1: Summon Condition
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return ep==tp and (r&REASON_EFFECT)~=0
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,ev*2)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-		Duel.Damage(1-tp,ev*2,REASON_EFFECT)
-	end
 end
 
--- E2: Search Logic
-function s.thfilter(c)
-	return (c:IsSetCard(0xd8f) or c:IsCode(220450)) 
-		and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToHand()
+-- Cost Filter: Must be a Psychic monster on field or GY that is able to be banished
+function s.costfilter(c,e,tp)
+	local lv=c:GetLevel()
+	return c:IsRace(RACE_PSYCHIC) and c:IsAbleToRemoveAsCost() and lv>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,c,e,tp,lv)
 end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+
+-- Target Filter: "Nocturne Gear" monster with a different Level than the banished cost card
+function s.spfilter(c,e,tp,lv)
+	return c:IsSetCard(0x999) -- Replace 0x999 with your actual "Nocturne Gear" archetype ID
+		and c:IsType(TYPE_MONSTER)
+		and c:HasLevel()
+		and not c:IsLevel(lv)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and (not c:IsLocation(LOCATION_REMOVED) or c:IsFaceup())
 end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+
+-- 1. Cost & Target Logic
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,1,nil,e,tp)
+	e:SetLabel(g:GetFirst():GetLevel())
+	Duel.Remove(g,POS_FACEUP,REASON_COST)
+end
+
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end -- Cost already verifies target availability
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED)
+end
+
+-- 2. Special Summon Operation
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local lv=e:GetLabel()
+	if not lv then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil,e,tp,lv)
 	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
