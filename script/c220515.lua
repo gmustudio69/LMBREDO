@@ -47,7 +47,7 @@ s.listed_names={220450,id}
 -- Effect 1: Special Summon & Search
 -- =========================================================
 function s.thfilter(c)
-	return (c:IsCode(KAZARI_ID) or c:IsCode(EMI_ID))and c:IsAbleToHand()
+	return ((c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_WIND) and c:IsAttack(2500) and c:IsDefense(2000)) or c:IsCode(EMI_ID))and c:IsAbleToHand()
 end
 function s.sstg(e, tp, eg, ep, ev, re, r, rp, chk)
 	local c = e:GetHandler()
