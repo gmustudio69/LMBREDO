@@ -1,119 +1,72 @@
--- <Limit Breaker> Ancient Spirit Tree
-local s, id = GetID()
-local KAZARI_ID = 220450 -- Replace with the actual ID of "<Limit Breaker> Kazari"
-local AWAKENING_ID = 100000007 -- Replace with the actual ID of "Limit Break - Awakening"
-
+--Nocturne Gear - Secret hideout
+local s,id=GetID()
 function s.initial_effect(c)
-	-- Must be properly summoned
-	c:EnableReviveLimit()
-	-- Necessary for EDOPro to recognize mentions of the Ritual Spell and Kazari
+	--Activate Field Spell
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	c:RegisterEffect(e0)
 
-	-- This card becomes "<Limit Breaker> Kazari" while on the field
-	local e1 = Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_CHANGE_CODE)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(KAZARI_ID)
+	--Extra Normal Summon (1 extra Psychic Normal Summon per turn)
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetRange(LOCATION_FZONE)
+	e1:SetCode(EFFECT_EXTRA_SUMMON_OPTIONAL)
+	e1:SetTargetRange(LOCATION_HAND,0)
+	e1:SetTarget(aux.TargetBoolFunction(Card.IsRace,RACE_PSYCHIC))
 	c:RegisterEffect(e1)
 
-	-- Gains 300 ATK for each "<Limit Breaker> Kazari" on your side of the field
-	local e2 = Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCode(EFFECT_UPDATE_ATTACK)
-	e2:SetValue(s.atkval)
+	--Banish 1 Psychic to Special Summon 1 "Nocturne Gear" with a different Level
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_REMOVE)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_FZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetCost(s.spcost)
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-
-	-- If Special Summoned: Apply effects in sequence
-	local e3 = Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id, 0))
-	e3:SetCategory(CATEGORY_DISABLE + CATEGORY_TOHAND)
-	e3:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCountLimit(1, id)
-	e3:SetTarget(s.efftg)
-	e3:SetOperation(s.effop)
-	c:RegisterEffect(e3)
-end
-s.listed_names={220450,id}
--- =========================================================
--- ATK Gain Calculation
--- =========================================================
-function s.atkfilter(c)
-	return c:IsFaceup() and c:IsCode(KAZARI_ID)
-end
-function s.atkval(e, c)
-	-- Because this card becomes Kazari on the field, it will always count itself!
-	return Duel.GetMatchingGroupCount(s.atkfilter, c:GetControler(), LOCATION_ONFIELD, 0, nil) * 300
 end
 
--- =========================================================
--- Sequence Effects
--- =========================================================
-function s.thfilter(c)
-	return (c:IsCode(KAZARI_ID) or (c:IsMonster() and c:ListsCode(KAZARI_ID))) and c:IsAbleToHand()
+-- Cost Filter: Must be a Psychic monster on field or GY that is able to be banished
+function s.costfilter(c,e,tp)
+	local lv=c:GetLevel()
+	return c:IsRace(RACE_PSYCHIC) and c:IsAbleToRemoveAsCost() and lv>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,c,e,tp,lv)
 end
 
-function s.efftg(e, tp, eg, ep, ev, re, r, rp, chk)
-	local ct = Duel.GetMatchingGroupCount(s.atkfilter, tp, LOCATION_ONFIELD, 0, nil)
-	-- Check if at least one of the sequence effects can be applied
-	local can_negate = ct > 0 and Duel.IsExistingMatchingCard(Card.IsNegatable, tp, LOCATION_ONFIELD, LOCATION_ONFIELD, 1, nil)
-	local can_add = Duel.IsExistingMatchingCard(s.thfilter, tp, LOCATION_GRAVE, 0, 1, nil)
-	
-	if chk == 0 then return can_negate or can_add end
-	
-	if can_negate then
-		Duel.SetPossibleOperationInfo(0, CATEGORY_DISABLE, nil, 1, 0, LOCATION_ONFIELD)
-	end
-	if can_add then
-		Duel.SetPossibleOperationInfo(0, CATEGORY_TOHAND, nil, 1, tp, LOCATION_GRAVE)
-	end
+-- Target Filter: "Nocturne Gear" monster with a different Level than the banished cost card
+function s.spfilter(c,e,tp,lv)
+	return c:IsSetCard(0x999) -- Replace 0x999 with your actual "Nocturne Gear" archetype ID
+		and c:IsType(TYPE_MONSTER)
+		and c:HasLevel()
+		and not c:IsLevel(lv)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and (not c:IsLocation(LOCATION_REMOVED) or c:IsFaceup())
 end
 
-function s.effop(e, tp, eg, ep, ev, re, r, rp)
-	local c = e:GetHandler()
-	
-	-- SEQUENCE 1: Negate face-up cards up to the number of Kazari
-	local ct = Duel.GetMatchingGroupCount(s.atkfilter, tp, LOCATION_ONFIELD, 0, nil)
-	local ng = Duel.GetMatchingGroup(Card.IsNegatable, tp, LOCATION_ONFIELD, LOCATION_ONFIELD, nil)
-	
-	if ct > 0 and #ng > 0 then
-		if Duel.SelectYesNo(tp, aux.Stringid(id, 1)) then -- Prompt: Do you want to negate cards?
-			Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_NEGATE)
-			-- "Up to" allows selecting anywhere from 1 to 'ct'
-			local sg = ng:Select(tp, 1, ct, nil)
-			for tc in aux.Next(sg) do
-				Duel.NegateRelatedChain(tc, RESET_TURN_SET)
-				local e1 = Effect.CreateEffect(c)
-				e1:SetType(EFFECT_TYPE_SINGLE)
-				e1:SetCode(EFFECT_DISABLE)
-				e1:SetReset(RESET_EVENT + RESETS_STANDARD)
-				tc:RegisterEffect(e1)
-				local e2 = Effect.CreateEffect(c)
-				e2:SetType(EFFECT_TYPE_SINGLE)
-				e2:SetCode(EFFECT_DISABLE_EFFECT)
-				e2:SetValue(RESET_TURN_SET)
-				e2:SetReset(RESET_EVENT + RESETS_STANDARD)
-				tc:RegisterEffect(e2)
-			end
-		end
-	end
+-- 1. Cost & Target Logic
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,1,nil,e,tp)
+	e:SetLabel(g:GetFirst():GetLevel())
+	Duel.Remove(g,POS_FACEUP,REASON_COST)
+end
 
-	-- SEQUENCE 2: Add 1 Kazari or mentioned monster from GY
-	local thg = Duel.GetMatchingGroup(aux.NecroValleyFilter(s.thfilter), tp, LOCATION_GRAVE, 0, nil)
-	if #thg > 0 then
-		-- Optional BreakEffect to separate the timing windows slightly, matching "apply in sequence"
-		Duel.BreakEffect()
-		if Duel.SelectYesNo(tp, aux.Stringid(id, 2)) then -- Prompt: Do you want to add 1 card to your hand?
-			Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_ATOHAND)
-			local sg = thg:Select(tp, 1, 1, nil)
-			if #sg > 0 then
-				Duel.SendtoHand(sg, nil, REASON_EFFECT)
-				Duel.ConfirmCards(1 - tp, sg)
-			end
-		end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end -- Cost already verifies target availability
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED)
+end
+
+-- 2. Special Summon Operation
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local lv=e:GetLabel()
+	if not lv then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil,e,tp,lv)
+	if #g>0 then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
