@@ -12,15 +12,18 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	-- Substitute Cost: Banish this card from GY instead of discarding/sending for World Decoder effects
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e2:SetCode(EFFECT_DISCARD_COST_CHANGE)
-	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id+100)
-	e2:SetTarget(s.subtg)
-	c:RegisterEffect(e2)
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetCode(EFFECT_COST_REPLACE)
+	e1:SetRange(LOCATION_GRAVE)
+	e1:SetTargetRange(1,0)
+	e1:SetCountLimit(1,id)
+	e1:SetCondition(function(e) return e:GetHandler():IsAbleToRemoveAsCost() end)
+	e1:SetValue(s.repval)
+	e1:SetOperation(function(base) Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE) end)
+	c:RegisterEffect(e1)
 	local e3=e2:Clone()
 	e3:SetCode(EFFECT_SEND_REPLACE)
 	c:RegisterEffect(e3)
@@ -81,8 +84,8 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 2. Cost Substitution Logic
-function s.subtg(e,re,rp)
-	-- Verifies the effect being activated belongs to a "World Decoder" card
-	return re and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
+function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	return c:IsSetCard(SET_WORLD_DECODER) and c:IsControler(tp)
+		and extracon(base,e,tp,eg,ep,ev,re,r,rp)
 end
