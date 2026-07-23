@@ -130,5 +130,5 @@ end
 
 -- Filter: Allows only Mandatory and Optional Trigger Effects
 function s.actlimit(e,re,tp)
-	return not (re:IsHasType(EFFECT_TYPE_TRIGGER_O) or re:IsHasType(EFFECT_TYPE_TRIGGER_F))
+	return true
 end
