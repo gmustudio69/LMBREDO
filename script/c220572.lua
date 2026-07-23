@@ -24,9 +24,6 @@ function s.initial_effect(c)
 	e2:SetValue(s.repval)
 	e2:SetOperation(function(base) Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE) end)
 	c:RegisterEffect(e1)
-	local e3=e2:Clone()
-	e3:SetCode(EFFECT_SEND_REPLACE)
-	c:RegisterEffect(e3)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
@@ -86,6 +83,5 @@ end
 
 function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	return c:IsSetCard(SET_WORLD_DECODER) and c:IsControler(tp)
-		and extracon(base,e,tp,eg,ep,ev,re,r,rp)
+	return c:IsSetCard(SET_WORLD_DECODER) and extracon(base,e,tp,eg,ep,ev,re,r,rp)
 end
