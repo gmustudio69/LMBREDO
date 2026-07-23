@@ -80,11 +80,12 @@ function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --XYZ filter
-function s.xyzfilter(c,mc1,mc2,tp)
+function s.xyzfilter(c,e,tp,mc)
 	return c:IsType(TYPE_XYZ)
 		and c:IsRank(7)
 		and c:IsAttribute(ATTRIBUTE_FIRE)
 		and c:IsRace(RACE_WARRIOR)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
 --Target

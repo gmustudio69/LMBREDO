@@ -80,8 +80,7 @@ end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_MZONE+LOCATION_GRAVE,0,nil)
 	if chk==0 then 
-		return Duel.GetLocationCountFromEx(tp)>0
-		and aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) 
+		return aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) 
 	end
 	
 	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_REMOVE)

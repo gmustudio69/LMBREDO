@@ -44,8 +44,8 @@ function s.spop1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- E2: Banish Choice Logic
-function s.sumfilter(c,e,tp)
-	return c:IsRace(RACE_PSYCHIC) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+function s.thfilter(c,e,tp)
+	return c:IsSetCard(0xd8f) and c:IsSpellTrap() and c:IsAbleToHand()
 end
 function s.choicetg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
@@ -53,8 +53,7 @@ function s.choicetg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		return false
 	end
 	
-	local b1 = Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
-		and Duel.IsExistingMatchingCard(s.sumfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp)
+	local b1 = Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
 	local b2 = Duel.IsExistingTarget(Card.IsType,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,TYPE_SPELL+TYPE_TRAP)
 	
 	if chk==0 then return b1 or b2 end
@@ -72,8 +71,8 @@ function s.choicetg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	
 	if op==0 then
 		-- Summon
-		e:SetCategory(CATEGORY_SPECIAL_SUMMON)
-		Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_REMOVED)
+		e:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND)
+		Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	else
 		-- Destroy
 		e:SetCategory(CATEGORY_DESTROY)
@@ -86,12 +85,11 @@ end
 function s.choiceop(e,tp,eg,ep,ev,re,r,rp)
 	local op=e:GetLabel()
 	if op==0 then
-		-- Summon Logic
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.sumfilter),tp,LOCATION_HAND+LOCATION_REMOVED,0,1,1,nil,e,tp)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+		local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 		if #g>0 then
-			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
 		end
 	else
 		-- Destroy Logic
