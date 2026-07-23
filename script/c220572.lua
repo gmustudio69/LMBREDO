@@ -63,7 +63,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.ConfirmCards(1-tp,revcard)
 	local att=revcard:GetAttribute()
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.thspfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp,att)
 	local tc=g:GetFirst()
 	if not tc then return end
