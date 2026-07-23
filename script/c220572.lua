@@ -13,11 +13,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	--GY Cost Replace: Banish this card from GY instead of discarding/sending for a "World Decoder" cost
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EFFECT_COST_REPLACE)
+	local e2=Worlddecoder.CreateCostReplaceEffect(c)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetTarget(s.reptg)
+	e2:SetCondition(s.repcon)
 	e2:SetOperation(s.repop)
 	c:RegisterEffect(e2)
 end
@@ -79,17 +77,11 @@ end
 -- E2: Cost Replacement (Banishing from GY)
 --------------------------------------------------------------------------------
 
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.repcon(e)
 	local c=e:GetHandler()
-	-- Check if the cost is for a "World Decoder" card and this card is able to be banished
-	if chk==0 then
-		return c:IsAbleToRemoveAsCost() 
-			and re and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
-			and (r&REASON_COST)~=0
-	end
-	return Duel.SelectEffectYesNo(tp,c,96)
+	local tp=e:GetHandlerPlayer()
+	return Duel.IsTurnPlayer(tp) and c:IsAbleToRemoveAsCost() and Duel.SelectEffectYesNo(tp,c,96)
 end
-
-function s.repop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
+function s.repop(base,extracon,e,tp,eg,ep,ev,re,r,rp)
+	Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE)
 end
