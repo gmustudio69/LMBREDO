@@ -31,6 +31,7 @@ function s.initial_effect(c)
 	e2:SetOperation(s.xyzop)
 	c:RegisterEffect(e2)
 end
+
 --Revive condition
 function s.revcon(e,tp,eg,ep,ev,re,r,rp)
 	return r&REASON_EFFECT~=0
@@ -68,7 +69,7 @@ function s.revspop(e,tp,eg,ep,ev,re,r,rp)
 	if c and c:IsLocation(loc) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
-	-- Crucial: Explicitly reset/kill the field effect only after a Battle Phase has actually happened
+	-- Explicitly reset/kill the field effect only after a Battle Phase has actually happened
 	e:Reset()
 end
 
@@ -79,13 +80,13 @@ function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	return bc and bc:IsRelateToBattle() and c:IsRelateToBattle()
 end
 
---XYZ filter
-function s.xyzfilter(c,e,tp,mc)
+--XYZ filter with legality and Extra Deck zone verification
+function s.xyzfilter(c,e,tp,mg)
 	return c:IsType(TYPE_XYZ)
 		and c:IsRank(7)
 		and c:IsAttribute(ATTRIBUTE_FIRE)
 		and c:IsRace(RACE_WARRIOR)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
 end
 
 --Target
@@ -94,7 +95,8 @@ function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local bc=c:GetBattleTarget()
 	if chk==0 then
 		if not bc then return false end
-		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil,c,bc,tp)
+		local mg=Group.FromCards(c,bc)
+		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
@@ -105,12 +107,12 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	local bc=c:GetBattleTarget()
 	if not (c:IsRelateToBattle() and bc and bc:IsRelateToBattle()) then return end
 
+	local mg=Group.FromCards(c,bc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,c,bc,tp)
+	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,mg)
 	local sc=g:GetFirst()
 	if not sc then return end
 
-	local mg=Group.FromCards(c,bc)
 	sc:SetMaterial(mg)
 	Duel.Overlay(sc,mg)
 	Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
