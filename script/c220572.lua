@@ -27,7 +27,7 @@ function s.initial_effect(c)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
-local SET_WORLD_DECODER = 0x999
+local SET_WORLD_DECODER = 0xb67
 
 -- Extra Deck Reveal Filter: Must be a "World Decoder" Synchro monster
 function s.revfilter(c,e,tp)
