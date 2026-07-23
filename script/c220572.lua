@@ -12,18 +12,14 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
+	--GY Cost Replace: Banish this card from GY instead of discarding/sending for a "World Decoder" cost
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e2:SetCode(EFFECT_COST_REPLACE)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetTargetRange(1,0)
-	e2:SetCountLimit(1,id)
-	e2:SetCondition(function(e) return e:GetHandler():IsAbleToRemoveAsCost() end)
-	e2:SetValue(s.repval)
-	e2:SetOperation(function(base) Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE) end)
-	c:RegisterEffect(e1)
+	e2:SetTarget(s.reptg)
+	e2:SetOperation(s.repop)
+	c:RegisterEffect(e2)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
@@ -80,8 +76,20 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,tc)
 	end
 end
+-- E2: Cost Replacement (Banishing from GY)
+--------------------------------------------------------------------------------
 
-function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	return c:IsSetCard(SET_WORLD_DECODER) and extracon(base,e,tp,eg,ep,ev,re,r,rp)
+	-- Check if the cost is for a "World Decoder" card and this card is able to be banished
+	if chk==0 then
+		return c:IsAbleToRemoveAsCost() 
+			and re and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
+			and (r&REASON_COST)~=0
+	end
+	return Duel.SelectEffectYesNo(tp,c,96)
+end
+
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
 end
