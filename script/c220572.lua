@@ -84,6 +84,6 @@ end
 --------------------------------------------------------------------------------
 function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	return c:IsSetCard(SET_WORLD_DECODER) and Duel.SelectEffectYesNo(tp,c,96) and extracon(base,e,tp,eg,ep,ev,re,r,rp)
+	return c:IsSetCard(SET_WORLD_DECODER) and Duel.SelectEffectYesNo(tp,c,96) 
 end
 
