@@ -22,9 +22,6 @@ function s.initial_effect(c)
 	e2:SetCountLimit(1,id+100)
 	e2:SetTarget(s.subtg)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EFFECT_TRASH_COST_SUB)
-	c:RegisterEffect(e3)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
