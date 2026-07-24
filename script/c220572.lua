@@ -13,16 +13,10 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	--If a "Prank-Kids" monster you control would Tribute itself to activate its effect during your opponent's turn, you can banish this card you control or from your GY instead
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e2:SetCode(EFFECT_COST_REPLACE)
+	-- Effect 2: If you would discard or send card(s) for a "World Decoder" monster, banish this card from GY instead
+	local e2=aux.CreateCostReplaceEffect(c,EFFECT_DISCARD_COST_CHANGE,s.repval,s.repcon,s.repop)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetTargetRange(1,0)
-	e2:SetCondition(function(e) return e:GetHandler():IsAbleToRemoveAsCost() end)
-	e2:SetValue(s.repval)
-	e2:SetOperation(function(base) Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE) end)
+	e2:SetCountLimit(1,id+100)
 	c:RegisterEffect(e2)
 end
 
@@ -81,9 +75,18 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 -- E2: Cost Replacement (Banishing from GY)
---------------------------------------------------------------------------------
-function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	return c:IsSetCard(SET_WORLD_DECODER) and Duel.SelectEffectYesNo(tp,c,96) 
+------------------------------------------------------------------------------ Checks if the effect requiring discard/send belongs to a "World Decoder" monster
+function s.repval(e,re,r,rp)
+	return re and re:IsMonster() and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
 end
 
+-- Checks if this card in the GY can be banished as cost instead
+function s.repcon(e)
+	local c=e:GetHandler()
+	return c:IsAbleToRemoveAsCost()
+end
+
+-- Executes the replacement cost (Banishes this card from the GY)
+function s.repop(base,extracon,e,tp,eg,ep,ev,re,r,rp)
+	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
+end
