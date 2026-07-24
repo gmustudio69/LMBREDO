@@ -7,21 +7,11 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetCost(s.cost)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
-
-	-- Substitute Cost: Banish this card from GY instead of discarding/sending for World Decoder effects
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e2:SetCode(EFFECT_DISCARD_COST_CHANGE)
-	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id+100)
-	e2:SetTarget(s.subtg)
-	c:RegisterEffect(e2)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
@@ -83,9 +73,4 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
 	end
-end
-
--- 2. Cost Substitution Logic
-function s.subtg(e,re,rp)
-	return re and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
 end
