@@ -1,29 +1,36 @@
 --World Decoder Spell
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Activate: Reveal 1 World Decoder Synchro -> Search or SS 1 monster with same Attribute
+	-- Activate: Reveal 1 World Decoder Synchro as COST -> Search or SS 1 monster with same Attribute
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetCountLimit(1,id)
+	e1:SetCost(s.cost)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	--If a "Prank-Kids" monster you control would Tribute itself to activate its effect during your opponent's turn, you can banish this card you control or from your GY instead
-	-- Effect 2: If you would discard or send card(s) for a "World Decoder" monster, banish this card from GY instead
-	local e2=aux.CreateCostReplaceEffect(c,EFFECT_DISCARD_COST_CHANGE,s.repval,s.repcon,s.repop)
+	-- Substitute Cost: Banish this card from GY instead of discarding/sending for World Decoder effects
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e2:SetCode(EFFECT_DISCARD_COST_SUB)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,id+100)
+	e2:SetTarget(s.subtg)
 	c:RegisterEffect(e2)
+	local e3=e2:Clone()
+	e3:SetCode(EFFECT_TRASH_COST_SUB)
+	c:RegisterEffect(e3)
 end
 
 -- Archetype definition (Replace 0x999 with your actual "World Decoder" setcode)
 local SET_WORLD_DECODER = 0xb67
 
--- Extra Deck Reveal Filter: Must be a "World Decoder" Synchro monster
+-- Extra Deck Reveal Filter
 function s.revfilter(c,e,tp)
 	if not (c:IsSetCard(SET_WORLD_DECODER) and c:IsType(TYPE_SYNCHRO) and not c:IsPublic()) then return false end
 	local att=c:GetAttribute()
@@ -41,23 +48,29 @@ function s.diffattfilter(c,att)
 	return c:IsFaceup() and c:IsSetCard(SET_WORLD_DECODER) and not c:IsAttribute(att)
 end
 
--- 1. Activation Target & Operation
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
+-- 1. Cost, Activation Target & Operation
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.revfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	local g=Duel.SelectMatchingCard(tp,s.revfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
+	local tc=g:GetFirst()
+	
+	-- Reveal card as COST
+	Duel.ConfirmCards(1-tp,tc)
+	e:SetLabel(tc:GetAttribute())
+end
+
+function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end -- Verified during cost check
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-	local revg=Duel.SelectMatchingCard(tp,s.revfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
-	if #revg==0 then return end
-	
-	local revcard=revg:GetFirst()
-	Duel.ConfirmCards(1-tp,revcard)
-	local att=revcard:GetAttribute()
+	local att=e:GetLabel()
+	if not att then return end
 
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
 	local g=Duel.SelectMatchingCard(tp,s.thspfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp,att)
 	local tc=g:GetFirst()
 	if not tc then return end
@@ -74,19 +87,8 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,tc)
 	end
 end
--- E2: Cost Replacement (Banishing from GY)
------------------------------------------------------------------------------- Checks if the effect requiring discard/send belongs to a "World Decoder" monster
-function s.repval(e,re,r,rp)
-	return re and re:IsMonster() and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
-end
 
--- Checks if this card in the GY can be banished as cost instead
-function s.repcon(e)
-	local c=e:GetHandler()
-	return c:IsAbleToRemoveAsCost()
-end
-
--- Executes the replacement cost (Banishes this card from the GY)
-function s.repop(base,extracon,e,tp,eg,ep,ev,re,r,rp)
-	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
+-- 2. Cost Substitution Logic
+function s.subtg(e,re,rp)
+	return re and re:GetHandler():IsSetCard(SET_WORLD_DECODER)
 end
