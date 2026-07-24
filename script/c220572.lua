@@ -12,11 +12,17 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	--GY Cost Replace: Banish this card from GY instead of discarding/sending for a "World Decoder" cost
-	local e2=Worlddecoder.CreateCostReplaceEffect(c)
+	--If a "Prank-Kids" monster you control would Tribute itself to activate its effect during your opponent's turn, you can banish this card you control or from your GY instead
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetCode(EFFECT_COST_REPLACE)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCondition(s.repcon)
-	e2:SetOperation(s.repop)
+	e2:SetTargetRange(1,0)
+	e2:SetCondition(function(e) return e:GetHandler():IsAbleToRemoveAsCost() end)
+	e2:SetValue(s.repval)
+	e2:SetOperation(function(base) Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE) end)
 	c:RegisterEffect(e2)
 end
 
@@ -76,12 +82,9 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 -- E2: Cost Replacement (Banishing from GY)
 --------------------------------------------------------------------------------
-
-function s.repcon(e)
+function s.repval(base,extracon,e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local tp=e:GetHandlerPlayer()
-	return Duel.IsTurnPlayer(tp) and c:IsAbleToRemoveAsCost() and Duel.SelectEffectYesNo(tp,c,96)
+	return c:IsSetCard(SET_WORLD_DECODER) and Duel.SelectEffectYesNo(tp,c,96) and c:IsControler(tp)
+		and extracon(base,e,tp,eg,ep,ev,re,r,rp)
 end
-function s.repop(base,extracon,e,tp,eg,ep,ev,re,r,rp)
-	Duel.Remove(base:GetHandler(),POS_FACEUP,REASON_COST|REASON_REPLACE)
-end
+
