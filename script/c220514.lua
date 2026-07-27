@@ -1,8 +1,8 @@
 -- Limit Overdrive - Resonance
 local s, id = GetID()
-function s.initial_effect(e0)
+function s.initial_effect(c)
 	-- Activate
-	local e1 = Effect.CreateEffect(c)
+	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DISABLE)
 	e1:SetType(EFFECT_TYPE_ACTIVAT)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -10,7 +10,7 @@ function s.initial_effect(e0)
 	e1:SetCountLimit(1, id, EFFECT_COUNT_CODE_OATH)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
-	c:RegisterEffect(e1)
+	c:RegisterEffect(e2\1)
 end
 
 -- Filter for valid tributes: "<Limit Breaker> Kazari" on the field (Monster Zone or Face-up Spell & Trap Zone)
