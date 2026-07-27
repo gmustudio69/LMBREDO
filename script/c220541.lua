@@ -27,22 +27,36 @@ function s.initial_effect(c)
 	e2:SetOperation(s.eqop)
 	c:RegisterEffect(e2)
 
-	-- 3. Grant Effect to the equipped monster
+	-- Create the granted Quick Effect
 	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
-	e3:SetTarget(s.eftg)
-	e3:SetValue(s.efilter)
-	c:RegisterEffect(e3)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_TOGRAVE)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
+	e3:SetCountLimit(1)
+	e3:SetCost(s.sendcost)
+	e3:SetTarget(s.sendtg)
+	e3:SetOperation(s.sendop)
+
+	-- 3. Grant Effect to the equipped monster
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
+	e4:SetRange(LOCATION_SZONE)
+	e4:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
+	e4:SetTarget(s.eftg)
+	e4:SetLabelObject(e3) -- Correctly attach the granted effect
+	c:RegisterEffect(e4)
 
 	-- Equip limit for when treated as an Equip Card
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetCode(EFFECT_EQUIP_LIMIT)
-	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e4:SetValue(s.eqlimit)
-	c:RegisterEffect(e4)
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_SINGLE)
+	e5:SetCode(EFFECT_EQUIP_LIMIT)
+	e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e5:SetValue(s.eqlimit)
+	c:RegisterEffect(e5)
 end
 
 function s.eqlimit(e,c)
@@ -102,38 +116,22 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ==========================================
--- E3: Granted Quick Effect
+-- E3/E4: Granted Quick Effect Logic
 -- ==========================================
 function s.eftg(e,c)
 	return e:GetHandler():GetEquipTarget()==c
 end
 
-function s.efilter(e,c)
-	-- The actual granted effect
-	local e1=Effect.CreateEffect(e:GetOwner())
-	e1:SetDescription(aux.Stringid(id,2))
-	e1:SetCategory(CATEGORY_TOGRAVE)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e1:SetCountLimit(1)
-	e1:SetCost(s.sendcost)
-	e1:SetTarget(s.sendtg)
-	e1:SetOperation(s.sendop)
-	return e1
-end
-
--- Filter for Equip Spells equipped to this card
 function s.eqspellfilter(c)
 	return c:IsType(TYPE_EQUIP) and c:IsAbleToGraveAsCost()
 end
 
 function s.sendcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return c:GetEquipGroup():IsExists(s.eqspellfilter,1,nil) end
+	local eqg=c:GetEquipGroup():Filter(s.eqspellfilter,nil)
+	if chk==0 then return #eqg>0 end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=c:GetEquipGroup():FilterSelect(tp,s.eqspellfilter,1,1,nil)
+	local g=eqg:Select(tp,1,1,nil)
 	Duel.SendtoGrave(g,REASON_COST)
 end
 
