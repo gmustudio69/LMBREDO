@@ -15,7 +15,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 end
-
+s.listed_names={220450,id}
 --Kazari filter
 function s.cfilter(c)
 	return c:IsCode(KAZARI_ID)
