@@ -2,7 +2,7 @@
 local s, id = GetID()
 function s.initial_effect(e0)
 	-- Activate
-	local e1 = Effect.CreateEffect(e0:GetHandler())
+	local e1 = Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DISABLE)
 	e1:SetType(EFFECT_TYPE_ACTIVAT)
 	e1:SetCode(EVENT_FREE_CHAIN)
