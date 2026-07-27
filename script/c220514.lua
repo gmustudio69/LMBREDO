@@ -34,7 +34,7 @@ function s.cost(e, tp, eg, ep, ev, re, r, rp, chk)
 	-- Store the tribute count using SetLabel so target/activation know how many cards to select
 	e:SetLabel(ct)
 end
-
+s.listed_names={220450,id}
 function s.target(e, tp, eg, ep, ev, re, r, rp, chk)
 	local ct = e:GetLabel()
 	if chk == 0 then return ct > 0 and Duel.IsExistingTarget(Card.IsNegatable, tp, LOCATION_ONBOARD, LOCATION_ONBOARD, ct, nil) end
