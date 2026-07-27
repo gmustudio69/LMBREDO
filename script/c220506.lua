@@ -74,7 +74,7 @@ end
 -- Filter for "Limit" Spell/Traps that mention Kazari
 function s.setfilter(c)
 	return c:IsSetCard(SET_LIMIT) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP))
-		and c:IsCodeMentioned(CARD_KAZARI) and c:IsSSetable()
+		and c:ListsCode(220450) and c:IsSSetable()
 end
 
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
