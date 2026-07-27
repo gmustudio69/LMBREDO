@@ -1,8 +1,8 @@
 -- Limit Overdrive - Resonance
 local s, id = GetID()
-function s.initial_effect(e0)
-	-- Activate: Tribute any number of "<Limit Breaker> Kazari" (Monster or S&T Zone), then negate target cards equal to that number
-	local e1 = Effect.CreateEffect(e0:GetHandler())
+function s.initial_effect(c)
+	-- Activate
+	local e1 = Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DISABLE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -10,55 +10,49 @@ function s.initial_effect(e0)
 	e1:SetCountLimit(1, id, EFFECT_COUNT_CODE_OATH)
 	e1:SetCost(s.cost)
 	e1:SetTarget(s.target)
-	e1:SetOperation(s.operation)
-	e0:GetHandler():RegisterEffect(e1)
+	e1:SetOperation(s.activate)
+	c:RegisterEffect(e1)
 end
 
--- Filter for valid tribute targets: "<Limit Breaker> Kazari" on the field (Monster or S&T Zone)
-function s.costfilter(c, tp)
-	return c:IsFaceup() and c:IsCode(220450) -- Replace 100000000 with "<Limit Breaker> Kazari"'s actual passcode
-		and (c:IsLocation(LOCATION_MZONE) or c:IsLocation(LOCATION_SZONE))
+-- Filter for valid tributes: "<Limit Breaker> Kazari" on the field (Monster Zone or face-up Monster treated as Spell)
+function s.tribute_filter(c, tp)
+	return c:IsFaceup() and c:IsCode(220450)
+		and (c:IsLocation(LOCATION_MZONE) or (c:IsLocation(LOCATION_SZONE) and c:IsType(TYPE_MONSTER)))
 		and c:IsReleasable()
-		and Duel.IsExistingTarget(s.negfilter, tp, LOCATION_ONBOARD, LOCATION_ONBOARD, 1, c)
 end
 
-function s.negfilter(c)
-	return c:IsFaceup() and not c:IsDisabled()
-end
-
--- Cost function: Tribute any number of them and store the count to dynamically target cards
 function s.cost(e, tp, eg, ep, ev, re, r, rp, chk)
-	e:SetLabel(100)
-	if chk == 0 then return true end
+	if chk == 0 then return Duel.CheckReleaseGroup(tp, s.tribute_filter, 1, nil, tp) end
+	
+	-- Let the player choose any number of Kazari cards to tribute
+	local rg = Duel.SelectReleaseGroup(tp, s.tribute_filter, 1, 99, nil, tp)
+	local ct = #rg
+	
+	-- Perform the tribute cost
+	Duel.Release(rg, REASON_COST)
+	
+	-- Store the tribute count using SetLabel so target/activation know how many cards to select
+	e:SetLabel(ct)
 end
 
 function s.target(e, tp, eg, ep, ev, re, r, rp, chk)
-	if chk == 0 then
-		if e:GetLabel() ~= 100 then return false end
-		e:SetLabel(0)
-		return Duel.CheckReleaseGroupCost(tp, s.costfilter, 1, false, nil, nil, tp)
-	end
-	e:SetLabel(0)
+	local ct = e:GetLabel()
+	if chk == 0 then return ct > 0 and Duel.IsExistingTarget(Card.IsNegatable, tp, LOCATION_ONBOARD, LOCATION_ONBOARD, ct, nil) end
 	
-	-- Prompt player to select how many "<Limit Breaker> Kazari" to tribute
-	local rg = Duel.SelectReleaseGroupCost(tp, s.costfilter, 1, 99, false, nil, nil, tp)
-	local ct = #rg
-	Duel.Release(rg,REASON_COST)
-	
-	-- Save the number tributed so we can target exactly that many cards
-	e:SetLabel(ct)
-	
-	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_NEGATE)
-	local tg = Duel.SelectTarget(tp, s.negfilter, tp, LOCATION_ONBOARD, LOCATION_ONBOARD, ct, ct, nil)
-	Duel.SetOperationInfo(0, CATEGORY_DISABLE, tg, #tg, 0, 0)
+	-- Target cards on the field equal to the number tributed
+	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_DISABLE)
+	local g = Duel.SelectTarget(tp, Card.IsNegatable, tp, LOCATION_ONBOARD, LOCATION_ONBOARD, ct, ct, nil)
+	Duel.SetOperationInfo(0, CATEGORY_DISABLE, g, ct, 0, 0)
 end
 
-function s.operation(e, tp, eg, ep, ev, re, r, rp)
+function s.activate(e, tp, eg, ep, ev, re, r, rp)
 	local g = Duel.GetChainInfo(0, CHAININFO_TARGET_CARDS)
-	local tg = g:Filter(Card.IsRelateToEffect, nil)
-	for tc in aux.Next(tg) do
-		if tc:IsFaceup() and not tc:IsDisabled() then
-			-- Negate effects
+	if not g then return end
+	
+	for tc in aux.Next(g) do
+		if tc:IsRelateToEffect(e) and tc:IsFaceup() and not tc:IsDisabled() then
+			-- Negate effects (permanent or standard depending on design choice; keeping standard persistent negation)
+			Duel.NegateRelatedChain(tc, RESET_TURN_SET)
 			local e1 = Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_DISABLE)
