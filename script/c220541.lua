@@ -1,7 +1,7 @@
 --Resonant <S> Victoria
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 1. Normal Summon: Draw 2 cards, then shuffle 1 card from hand to Deck
+	-- 1. Normal Summon: Draw 2, Shuffle 1 to Deck + Lock Deck/Extra Deck SS
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DRAW+CATEGORY_TODECK)
@@ -13,58 +13,20 @@ function s.initial_effect(c)
 	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
 
-	-- 2. GY Trigger: If a Warrior monster is Special Summoned, equip this card to a Warrior monster
+	-- 2. GY Destruction Replacement Effect
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_EQUIP)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EFFECT_DESTROY_REPLACE)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,id+100)
-	e2:SetCondition(s.eqcon)
-	e2:SetTarget(s.eqtg)
-	e2:SetOperation(s.eqop)
+	e2:SetTarget(s.reptg)
+	e2:SetValue(s.repval)
+	e2:SetOperation(s.repop)
 	c:RegisterEffect(e2)
-
-	-- Create the granted Quick Effect
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetCategory(CATEGORY_TOGRAVE)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetCode(EVENT_FREE_CHAIN)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e3:SetCountLimit(1)
-	e3:SetCost(s.sendcost)
-	e3:SetTarget(s.sendtg)
-	e3:SetOperation(s.sendop)
-
-	-- 3. Grant Effect to the equipped monster
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
-	e4:SetRange(LOCATION_SZONE)
-	e4:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
-	e4:SetTarget(s.eftg)
-	e4:SetLabelObject(e3) -- Correctly attach the granted effect
-	c:RegisterEffect(e4)
-
-	-- Equip limit for when treated as an Equip Card
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_SINGLE)
-	e5:SetCode(EFFECT_EQUIP_LIMIT)
-	e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e5:SetValue(s.eqlimit)
-	c:RegisterEffect(e5)
-end
-
-function s.eqlimit(e,c)
-	return c:IsRace(RACE_WARRIOR)
 end
 
 -- ==========================================
--- E1: Draw 2, Shuffle 1
+-- E1: Draw 2, Shuffle 1 + Summon Lock
 -- ==========================================
 function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsPlayerCanDraw(tp,2) end
@@ -85,67 +47,49 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 		end
 	end
+
+	-- Special Summon Lock: Only Psychic and Warrior from Deck or Extra Deck
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,target_p,se)
+	-- Blocks SS from Deck or Extra Deck UNLESS it is Psychic or Warrior
+	return (c:IsLocation(LOCATION_DECK) or c:IsLocation(LOCATION_EXTRA))
+		and not (c:IsRace(RACE_PSYCHIC) or c:IsRace(RACE_WARRIOR))
 end
 
 -- ==========================================
--- E2: GY Trigger Equip
+-- E2: GY Destruction Replacement Logic
 -- ==========================================
-function s.warriorfilter(c)
-	return c:IsFaceup() and c:IsRace(RACE_WARRIOR)
+function s.lvl7warriorfilter(c)
+	return c:IsFaceup() and c:IsRace(RACE_WARRIOR) 
+		and ((c:IsLevelAbove(7) and c:IsType(TYPE_MONSTER)) or (c:IsRankAbove(7) and c:IsType(TYPE_XYZ)))
 end
 
-function s.eqcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.warriorfilter,1,nil)
+function s.repfilter(c,tp)
+	return c:IsControler(tp) and c:IsOnField() and c:IsReason(REASON_EFFECT) and not c:IsReason(REASON_REPLACE)
 end
 
-function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.warriorfilter(chkc) end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-		and Duel.IsExistingTarget(s.warriorfilter,tp,LOCATION_MZONE,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-	Duel.SelectTarget(tp,s.warriorfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,0,0)
-end
-
-function s.eqop(e,tp,eg,ep,ev,re,r,rp)
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
-		Duel.Equip(tp,c,tc)
-	end
+	if chk==0 then return c:IsAbleToRemove()
+		and Duel.IsExistingMatchingCard(s.lvl7warriorfilter,tp,LOCATION_MZONE,0,1,nil)
+		and eg:IsExists(s.repfilter,1,nil,tp) end
+	return Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,2))
 end
 
--- ==========================================
--- E3/E4: Granted Quick Effect Logic
--- ==========================================
-function s.eftg(e,c)
-	return e:GetHandler():GetEquipTarget()==c
+function s.repval(e,c)
+	return s.repfilter(c,e:GetHandlerPlayer())
 end
 
-function s.eqspellfilter(c)
-	return c:IsType(TYPE_EQUIP) and c:IsAbleToGraveAsCost()
-end
-
-function s.sendcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	local eqg=c:GetEquipGroup():Filter(s.eqspellfilter,nil)
-	if chk==0 then return #eqg>0 end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=eqg:Select(tp,1,1,nil)
-	Duel.SendtoGrave(g,REASON_COST)
-end
-
-function s.sendtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsAbleToGrave() end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToGrave,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectTarget(tp,Card.IsAbleToGrave,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,1,0,0)
-end
-
-function s.sendop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.SendtoGrave(tc,REASON_EFFECT)
-	end
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_EFFECT+REASON_REPLACE)
 end
