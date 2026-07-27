@@ -18,7 +18,7 @@ local SET_RESONANT = 0x726
 
 -- Filter for "Resonant" cards in Deck
 function s.thfilter(c)
-	return c:IsSetCard(SET_RESONANT) and c:IsAbleToHand()
+	return c:IsSetCard(SET_RESONANT) and c:IsAbleToHand() and not c:IsCode(id)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
