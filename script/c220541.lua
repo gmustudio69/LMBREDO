@@ -1,149 +1,153 @@
+--Resonant <S> Victoria
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Link Summon procedure
-	c:EnableReviveLimit()
-	--Pendulum.AddProcedure(c)
-	Link.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_EFFECT),2,2)
-
+	-- 1. Normal Summon: Draw 2 cards, then shuffle 1 card from hand to Deck
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EFFECT_REPLACE_DISCARD)
-	e1:SetRange(LOCATION_PZONE)
-	e1:SetTarget(s.reptg)
-	e1:SetValue(s.repval)
-	e1:SetOperation(s.repop)
-	c:RegisterEffect(e1)
-
-	-- Monster Effect 1: Trigger on Summon
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_DESTROY+CATEGORY_REMOVE)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_DRAW+CATEGORY_TODECK)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
-	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetCountLimit(1,id+100)
-	e1:SetTarget(s.destg)
-	e1:SetOperation(s.desop)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_SUMMON_SUCCESS)
+	e1:SetCountLimit(1,id)
+	e1:SetTarget(s.drtg)
+	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
-	
-	-- Monster Effect 2: Same trigger when summoned to a linked zone
-	local e2=e1:Clone()
+
+	-- 2. GY Trigger: If a Warrior monster is Special Summoned, equip this card to a Warrior monster
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_EQUIP)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_SUMMON_SUCCESS)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCondition(s.linkcon)
+	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetRange(LOCATION_GRAVE)
+	e2:SetCountLimit(1,id+100)
+	e2:SetCondition(s.eqcon)
+	e2:SetTarget(s.eqtg)
+	e2:SetOperation(s.eqop)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+
+	-- 3. Grant Effect to the equipped monster
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
+	e3:SetTarget(s.eftg)
+	e3:SetValue(s.efilter)
 	c:RegisterEffect(e3)
 
-	-- Monster Effect 3: If sent to Extra Deck face-up, place in Pendulum Zone
+	-- Equip limit for when treated as an Equip Card
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e4:SetCode(EVENT_TO_DECK)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetCountLimit(1,id+200)
-	e4:SetTarget(s.pzontg)
-	e4:SetOperation(s.pzonop)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetCode(EFFECT_EQUIP_LIMIT)
+	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e4:SetValue(s.eqlimit)
 	c:RegisterEffect(e4)
 end
 
--- Pendulum Effect Logic
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return c:IsDestructable() end
-	return true
+function s.eqlimit(e,c)
+	return c:IsRace(RACE_WARRIOR)
 end
 
-function s.repval(e,c)
-	return true
+-- ==========================================
+-- E1: Draw 2, Shuffle 1
+-- ==========================================
+function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsPlayerCanDraw(tp,2) end
+	Duel.SetTargetPlayer(tp)
+	Duel.SetTargetParam(2)
+	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,2)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_HAND)
 end
 
-function s.repop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Destroy(e:GetHandler(),REASON_EFFECT+REASON_REPLACE)
-end
-
--- Monster Effect Logic
-function s.linkcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(function(c,lc) return lc:GetLinkedGroup():IsContains(c) end,1,nil,e:GetHandler())
-end
--- Fix 1: Targeting Logic in Monster Effect
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return false end
-	-- We need 1 monster I control AND 1 other card on the field
-	if chk==0 then 
-		return Duel.IsExistingTarget(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil)
-			and Duel.IsExistingTarget(function(c,ec) return c~=ec end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e:GetHandler()) 
-	end
-	
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g1=Duel.SelectTarget(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,nil)
-	
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	-- Ensure the second target is not the first target
-	local g2=Duel.SelectTarget(tp,function(c,tc) return c~=tc end,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,g1:GetFirst(),g1:GetFirst())
-	
-	g1:Merge(g2)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g1,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g1,1,0,0)
-end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	-- 1. Get the target group
-	local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
-	-- 2. Filter for cards that are still on the field and related to the effect
-	local g=tg:Filter(Card.IsRelateToEffect,nil,e)
-	
-	if #g < 2 then return end
-
-	-- 3. Ask player to pick 1 to Destroy
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	tc1 = g:GetFirst()
-	tc2 = g:GetNext()
-	
-	-- 5. Perform actions
-	if tc1 and Duel.Destroy(tc1,REASON_EFFECT)>0 and tc2 then
-		-- This uses the standard way to banish until End Phase
-		Duel.Remove(tc2,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		e1:SetCode(EVENT_PHASE+PHASE_END)
-		e1:SetCountLimit(1)
-		e1:SetLabel(Duel.GetTurnCount())
-		e1:SetLabelObject(tc)
-		if Duel.IsPhase(PHASE_END) and Duel.IsTurnPlayer(1-tp) then
-			e1:SetLabel(Duel.GetTurnCount())
-			e1:SetReset(RESETS_STANDARD_PHASE_END|RESET_OPPO_TURN,2)
-		else
-			e1:SetLabel(0)
-			e1:SetReset(RESETS_STANDARD_PHASE_END|RESET_OPPO_TURN)
+function s.drop(e,tp,eg,ep,ev,re,r,rp)
+	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
+	if Duel.Draw(p,d,REASON_EFFECT)==2 then
+		Duel.ShuffleHand(tp)
+		Duel.BreakEffect()
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+		local g=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_HAND,0,1,1,nil)
+		if #g>0 then
+			Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 		end
-		e1:SetCondition(s.retcon)
-		e1:SetOperation(s.retop)
-		Duel.RegisterEffect(e1,tp)
 	end
 end
-function s.retcon(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	return Duel.GetTurnCount()~=e:GetLabel() and Duel.IsTurnPlayer(1-tp)
-		and tc and tc:GetReasonEffect() and tc:GetReasonEffect():GetHandler()==e:GetHandler()
+
+-- ==========================================
+-- E2: GY Trigger Equip
+-- ==========================================
+function s.warriorfilter(c)
+	return c:IsFaceup() and c:IsRace(RACE_WARRIOR)
 end
-function s.retop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.ReturnToField(e:GetLabelObject())
+
+function s.eqcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.warriorfilter,1,nil)
 end
--- Extra Deck to Pendulum Zone Logic
-function s.pzontg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1) end
+
+function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.warriorfilter(chkc) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+		and Duel.IsExistingTarget(s.warriorfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
+	Duel.SelectTarget(tp,s.warriorfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,0,0)
 end
-function s.pzonop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not (Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1)) then return end
-	Duel.MoveToField(c,tp,tp,LOCATION_PZONE,POS_FACEUP,true)
-	local e1=Effect.CreateEffect(c)
-	e1:SetCode(EFFECT_CHANGE_TYPE)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	e1:SetValue(TYPE_SPELL+TYPE_LINK)
-	c:RegisterEffect(e1)
+	local tc=Duel.GetFirstTarget()
+	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
+		Duel.Equip(tp,c,tc)
+	end
+end
+
+-- ==========================================
+-- E3: Granted Quick Effect
+-- ==========================================
+function s.eftg(e,c)
+	return e:GetHandler():GetEquipTarget()==c
+end
+
+function s.efilter(e,c)
+	-- The actual granted effect
+	local e1=Effect.CreateEffect(e:GetOwner())
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetCategory(CATEGORY_TOGRAVE)
+	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
+	e1:SetCountLimit(1)
+	e1:SetCost(s.sendcost)
+	e1:SetTarget(s.sendtg)
+	e1:SetOperation(s.sendop)
+	return e1
+end
+
+-- Filter for Equip Spells equipped to this card
+function s.eqspellfilter(c)
+	return c:IsType(TYPE_EQUIP) and c:IsAbleToGraveAsCost()
+end
+
+function s.sendcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return c:GetEquipGroup():IsExists(s.eqspellfilter,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=c:GetEquipGroup():FilterSelect(tp,s.eqspellfilter,1,1,nil)
+	Duel.SendtoGrave(g,REASON_COST)
+end
+
+function s.sendtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsAbleToGrave() end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToGrave,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectTarget(tp,Card.IsAbleToGrave,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,1,0,0)
+end
+
+function s.sendop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if tc and tc:IsRelateToEffect(e) then
+		Duel.SendtoGrave(tc,REASON_EFFECT)
+	end
 end
