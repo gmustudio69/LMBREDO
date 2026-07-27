@@ -14,7 +14,7 @@ function s.initial_effect(c)
 end
 
 -- Archetype definition (Replace 0x99a with your actual "Resonant" setcode)
-local SET_RESONANT = 726
+local SET_RESONANT = 0x726
 
 -- Filter for "Resonant" cards in Deck
 function s.thfilter(c)
