@@ -21,7 +21,8 @@ function s.initial_effect(c)
 	-- Effect 2: Set 1 "Limit" Spell/Trap that mentions "<Limit Breaker> Kazari"
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_PHASE+PHASE_END)
 	e2:SetRange(LOCATION_FZONE)
 	e2:SetCountLimit(1,id+100)
 	e2:SetCondition(s.setcon)
@@ -63,7 +64,7 @@ end
 -- ==========================================
 -- Check for Monster Cards treated as Continuous Spells on the field
 function s.conspellfilter(c)
-	return c:IsLocation(LOCATION_SZONE) and c:IsType(TYPE_MONSTER)
+	return c:IsFaceup() and c:IsMonsterCard() and c:IsContinuousSpell()
 end
 
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
