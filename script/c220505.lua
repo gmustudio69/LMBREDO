@@ -23,17 +23,16 @@ function s.initial_effect(c)
 	e2:SetValue(KAZARI_ID)
 	c:RegisterEffect(e2)
 
-	-- Standby Phase: If this card is a Continuous Spell: You can Special Summon this card
-	local e3 = Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id, 0))
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_PHASE + PHASE_STANDBY)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetCondition(s.spcon)
-	e3:SetTarget(s.sptg)
-	e3:SetOperation(s.spop)
-	c:RegisterEffect(e3)
+	--Revive from S/T zone
+	local e1=Effect.CreateEffect(c)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetCode(EVENT_PHASE+PHASE_STANDBY)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetCondition(s.spcon)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
+	c:RegisterEffect(e1)
 	-- Quick Effect: Target up to 2 monsters you control/GY; place them as Cont. Spells, then bounce cards
 	local e4 = Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -59,7 +58,7 @@ function s.spcost(e,se,sp,st)
 	return Duel.IsExistingMatchingCard(s.cfilter, e:GetHandlerPlayer(), LOCATION_MZONE,0, 1, nil)
 end
 
--- Standby Phase Special Summon Condition (Must be a Continuous Spell)
+--===== Revive condition =====
 function s.spcon(e, tp, eg, ep, ev, re, r, rp)
 	local c = e:GetHandler()
 	return c:IsType(TYPE_SPELL) and c:IsType(TYPE_CONTINUOUS)
