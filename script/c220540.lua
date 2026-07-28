@@ -10,7 +10,7 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetCode(EFFECT_CHANGE_CODE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(CARD_ELLIE)
+	e1:SetValue(220405)
 	c:RegisterEffect(e1)
 
 	-- Special Summon from Hand or SZone by sending 1 other S/T to GY
