@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
 
-	-- If Special Summoned: Negate all opponent's activated effects
+	-- If Special Summoned: Negate all opponent's currently activated effects (Does NOT start a chain)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -71,15 +71,17 @@ end
 -- ==========================================
 -- E2: Negate Opponent Activated Effects
 -- ==========================================
+-- ==========================================
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_DISABLE)
-	e1:SetTargetRange(0,LOCATION_MZONE)
-	e1:SetTarget(s.distg)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
+	local chain_length = Duel.GetCurrentChain()
+	if chain_length == 0 then return end
+	
+	for i = 1, chain_length do
+		local p = Duel.GetChainInfo(i, CHAININFO_TRIGGERING_PLAYER)
+		if p == 1-tp then
+			Duel.NegateEffect(i)
+		end
+	end
 end
 
 function s.distg(e,c)
