@@ -65,7 +65,6 @@ local CARD_INSTALL = 220407		 -- Replace with exact ID of "Limit Break - Install
 function s.splimit(e,se,sp,st)
 	return se and se:IsHasType(EFFECT_TYPE_ACTIONS) 
 		and se:GetHandler():IsSetCard(SET_LIMIT) 
-		and (se:GetHandler():IsType(TYPE_SPELL) or se:GetHandler():IsType(TYPE_TRAP))
 end
 
 -- ==========================================
@@ -124,7 +123,11 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		sc:SetMaterial(Group.FromCards(c))
 		Duel.Overlay(sc,Group.FromCards(c))
-		Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,true,true,POS_FACEUP)
+		if Duel.SpecialSummonStep(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP) then
+			local turn_ct=Duel.GetTurnCount()
+			--Return it to the Extra Deck during the End Phase of the next turn
+			aux.DelayedOperation(sc,PHASE_END,id,e,tp,function(ag) Duel.SendtoDeck(ag,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) end,function(ag) return Duel.GetTurnCount()==turn_ct+1 end,nil,2,aux.Stringid(id,2))
+		end
 		sc:CompleteProcedure()
 	end
 end
