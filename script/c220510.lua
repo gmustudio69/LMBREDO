@@ -27,10 +27,10 @@ end
 function s.target(e, tp, eg, ep, ev, re, r, rp, chk)
 	-- Check if the player hasn't used Effect 1 this turn and has valid targets
 	local b1 = not Duel.HasFlagEffect(tp, id) 
-		and Duel.IsExistingMatchingCard(s.thfilter, tp, LOCATION_DECK, 0, 1, nil)
+		and Duel.IsExistingMatchingCard(s.thfilter, tp, LOCATION_DECK+LOCATION_GRAVE, 0, 1, nil)
 	-- Check if the player hasn't used Effect 2 this turn and has valid targets
 	local b2 = not Duel.HasFlagEffect(tp, id + 1) and Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 
-		and Duel.IsExistingMatchingCard(s.spfilter, tp, LOCATION_HAND + LOCATION_GRAVE, 0, 1, nil, e, tp)
+		and Duel.IsExistingMatchingCard(s.spfilter, tp, LOCATION_HAND+LOCATION_GRAVE, 0, 1, nil, e, tp)
 	if chk == 0 then return b1 or b2 end
 	
 	local op = 0
@@ -48,7 +48,7 @@ function s.target(e, tp, eg, ep, ev, re, r, rp, chk)
 	if op == 0 then
 		Duel.RegisterFlagEffect(tp, id, RESET_PHASE + PHASE_END, 0, 1)
 		e:SetCategory(CATEGORY_TOHAND + CATEGORY_SEARCH)
-		Duel.SetOperationInfo(0, CATEGORY_TOHAND, nil, 1, tp, LOCATION_DECK)
+		Duel.SetOperationInfo(0, CATEGORY_TOHAND, nil, 1, tp,LOCATION_DECK+LOCATION_GRAVE)
 	else
 		Duel.RegisterFlagEffect(tp, id + 1, RESET_PHASE + PHASE_END, 0, 1)
 		e:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -60,7 +60,7 @@ function s.activate(e, tp, eg, ep, ev, re, r, rp)
 	if op == 0 then
 		-- Execute Effect 1: Search
 		Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_ATOHAND)
-		local g = Duel.SelectMatchingCard(tp, s.thfilter, tp, LOCATION_DECK, 0, 1, 1, nil)
+		local g = Duel.SelectMatchingCard(tp, s.thfilter, tp,LOCATION_DECK+LOCATION_GRAVE, 0, 1, 1, nil)
 		if #g > 0 then
 			Duel.SendtoHand(g, nil, REASON_EFFECT)
 			Duel.ConfirmCards(1 - tp, g)
