@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetCode(EFFECT_TUNER)
+	e1:SetCode(EFFECT_NONTUNER)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetValue(function(e,sc) return sc:IsAttribute(ATTRIBUTE_DARK) end)
 
@@ -57,7 +57,7 @@ end
 -- E2: Search Logic
 -- ==========================================
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsMainPhase()
+	return Duel.IsMainPhase() and Duel.GetTurnPlayer()==tp
 end
 
 function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -67,7 +67,7 @@ function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.thfilter(c)
-	return c:IsCode(DIAGRAM_SYSTEM) or ( c:IsType(TYPE_MONSTER) and c:IsSetCard(SET_ENDLESS)) and c:IsAbleToHand()
+	return c:IsCode(DIAGRAM_SYSTEM) or ( c:IsType(TYPE_MONSTER) and c:IsSetCard(SET_ENDLESS)) and c:IsAbleToHand() and not c:IsCode(id)
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
