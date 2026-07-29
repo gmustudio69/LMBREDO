@@ -2,12 +2,13 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Treat as a Tuner if used as Synchro Material for a DARK Synchro Monster
+	--If this card you control would be used as Synchro Material for a Psychic monster, you can treat it as a non-Tuner
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetCode(EFFECT_TUNER)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.tunerval)
-	c:RegisterEffect(e1)
+	e1:SetValue(function(e,sc) return sc:IsAttribute(ATTRIBUTE_DARK) end)
 
 	-- Quick Effect: Tribute from hand/field to search "Diagram System" or "Endless" monster
 	local e2=Effect.CreateEffect(c)
