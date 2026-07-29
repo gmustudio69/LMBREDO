@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetCode(EFFECT_NONTUNER_IS_TUNER)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.tuner val)
+	e1:SetValue(s.tunerval)
 	c:RegisterEffect(e1)
 
 	-- Quick Effect: Tribute from hand/field to search "Diagram System" or "Endless" monster
