@@ -1,40 +1,32 @@
-
---<Limit Breaker> Tempesta Noir
+--<Limit Breaker> Solaris Frost
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Enable Pendulum and Fusion Attributes
+	aux.EnablePendulumAttribute(c)
 	c:EnableReviveLimit()
-	Pendulum.AddProcedure(c)
 	Fusion.AddProcMix(c,true,true,CARD_ANN,s.matfilter)
-	-- Track destroyed monsters this turn for Pendulum condition
-	if not s.global_check then
-		s.global_check=true
-		local ge1=Effect.GlobalEffect()
-		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		ge1:SetCode(EVENT_DESTROYED)
-		ge1:SetOperation(s.checkop)
-		Duel.RegisterEffect(ge1,0)
-	end
 
 	-- ==========================================
 	-- PENDULUM EFFECT
 	-- ==========================================
-	-- Main Phase: Add 1 "Lawrence" card from Deck or Banishment to hand
+	-- If card added to opp hand from Deck: Fusion Summon 1 Warrior Fusion Monster
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_TO_HAND)
 	e1:SetRange(LOCATION_PZONE)
 	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.pencon)
-	e1:SetTarget(s.pentg)
-	e1:SetOperation(s.penop)
+	e1:SetCondition(s.fuscon)
+	e1:SetTarget(s.fustg)
+	e1:SetOperation(s.fusop)
 	c:RegisterEffect(e1)
 
 	-- ==========================================
 	-- MONSTER EFFECTS
 	-- ==========================================
-	-- Special Summon from Extra Deck by banishing materials from Field/GY
+	-- Contact Fusion Procedure: Banish materials from Field/GY
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_SPSUMMON_PROC)
@@ -42,7 +34,6 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_EXTRA)
 	e2:SetCondition(s.spcon)
 	e2:SetTarget(s.sptg)
-	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 
@@ -52,22 +43,22 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_DESTROYED)
+	e3:SetCountLimit(1,id+100)
 	e3:SetCondition(s.pencon2)
-	e3:SetCountLimit(1,id)
 	e3:SetTarget(s.pentg2)
 	e3:SetOperation(s.penop2)
 	c:RegisterEffect(e3)
 
-	-- Quick Effect: Destroy 1 card on the field, then SS up to 2 Warriors from Banishment/Extra Deck
+	-- Quick Effect: Destroy 1 card, look at 1 random opponent hand card, place on top of Deck
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetCategory(CATEGORY_DESTROY+CATEGORY_SPECIAL_SUMMON)
+	e4:SetCategory(CATEGORY_DESTROY+CATEGORY_TODECK)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e4:SetCode(EVENT_FREE_CHAIN)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
-	e4:SetCountLimit(1,{id,1})
+	e4:SetCountLimit(1,id+200)
 	e4:SetCondition(s.descon)
 	e4:SetTarget(s.destg)
 	e4:SetOperation(s.desop)
@@ -77,57 +68,72 @@ end
 -- ==========================================
 -- Definitions & Setcodes
 -- ==========================================
-local SET_LAWRENCE =0x8ec	 -- Replace with your actual "Lawrence" setcode
-local CARD_ANN = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
+local CARD_ANN = 220414   -- Replace with exact ID of "<Limit Breaker> Ann"
 
-function s.matfilter(c,scard,sumtype,tp)
-	return c:IsAttribute(ATTRIBUTE_LIGHT,scard,sumtype,tp) and c:IsRace(RACE_WARRIOR,scard,sumtype,tp)
+function s.matfilter(c,fc,sumtype,tp)
+	return c:IsAttribute(ATTRIBUTE_FIRE,fc,sumtype,tp) and c:IsRace(RACE_WARRIOR,fc,sumtype,tp)
 end
 
--- Track monster destruction per turn
-function s.checkop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=eg:GetFirst()
-	for tc in aux.Next(eg) do
-		if tc:IsReason(REASON_EFFECT) and tc:IsType(TYPE_MONSTER) then
-			Duel.RegisterFlagEffect(tc:GetControler(),id,RESET_PHASE+PHASE_END,0,1)
+-- ==========================================
+-- Pendulum Fusion Logic
+-- ==========================================
+function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetCurrentPhase()~=PHASE_DRAW 
+		and eg:IsExists(s.tohandfilter,1,nil,1-tp)
+end
+
+function s.tohandfilter(c,tp)
+	return c:IsControler(tp) and c:IsPreviousLocation(LOCATION_DECK)
+end
+
+function s.mfilter(c,e)
+	return c:IsCanBeFusionMaterial() and not c:IsImmuneToEffect(e)
+end
+
+function s.ffilter(c,e,tp,m,f,chkf)
+	return c:IsType(TYPE_FUSION) and c:IsRace(RACE_WARRIOR) and (not f or f(c))
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false) 
+		and m:IsExists(s.ffiltercheck,1,nil,c,e,tp,m,f,chkf)
+end
+
+function s.ffiltercheck(c,fc,e,tp,m,f,chkf)
+	return fc:CheckFusionMaterial(m,c,chkf)
+end
+
+function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		local mg=Duel.GetMatchingGroup(s.mfilter,tp,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_PZONE,0,nil,e)
+		return Duel.IsExistingMatchingCard(s.ffilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg,nil,0)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+end
+
+function s.fusop(e,tp,eg,ep,ev,re,r,rp)
+	local mg=Duel.GetMatchingGroup(s.mfilter,tp,LOCATION_HAND+LOCATION_ONFIELD+LOCATION_PZONE,0,nil,e)
+	local sg=Duel.GetMatchingGroup(s.ffilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,nil,0)
+	if #sg>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local tc=sg:Select(tp,1,1,nil):GetFirst()
+		if tc then
+			local mat=Duel.SelectFusionMaterial(tp,tc,mg,nil,0)
+			tc:SetMaterial(mat)
+			Duel.SendtoGrave(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
+			Duel.BreakEffect()
+			Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
+			tc:CompleteProcedure()
 		end
 	end
 end
 
 -- ==========================================
--- Pendulum Effect Logic
--- ==========================================
-function s.pencon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsMainPhase() and Duel.GetFlagEffect(tp,id)>0
-end
-
-function s.lawrencefilter(c)
-	return c:IsSetCard(SET_LAWRENCE) and c:IsAbleToHand() and (c:IsFaceup() or c:IsLocation(LOCATION_DECK))
-end
-
-function s.pentg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.lawrencefilter,tp,LOCATION_DECK+LOCATION_REMOVED,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_REMOVED)
-end
-
-function s.penop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.lawrencefilter,tp,LOCATION_DECK+LOCATION_REMOVED,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
-	end
-end
-
--- ==========================================
--- Alternative Contact Fusion Logic
+-- Contact Fusion / Banish Logic
 -- ==========================================
 function s.contactfilter1(c)
 	return c:IsCode(CARD_ANN) and c:IsAbleToRemoveAsCost()
 end
 
 function s.contactfilter2(c)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsRace(RACE_WARRIOR) and c:IsAbleToRemoveAsCost()
+	return c:IsAttribute(ATTRIBUTE_FIRE) and c:IsRace(RACE_WARRIOR) and c:IsAbleToRemoveAsCost()
 end
 
 function s.spcon(e,c)
@@ -139,8 +145,8 @@ function s.spcon(e,c)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g1=Duel.GetMatchingGroup(s.contactfilter1,tp,LOCATION_ONFIELD+LOCATION_GRAVE,0,nil)
-	local g2=Duel.GetMatchingGroup(s.contactfilter2,tp,LOCATION_ONFIELD+LOCATION_GRAVE,0,nil)
+	local g1=Duel.GetMatchingGroup(s.contactfilter1,tp,LOCATION_MZONE+LOCATION_GRAVE,0,nil)
+	local g2=Duel.GetMatchingGroup(s.contactfilter2,tp,LOCATION_MZONE+LOCATION_GRAVE,0,nil)
 	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 	local sg1=g1:Select(tp,1,1,nil)
@@ -149,7 +155,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 	local sg2=g2:Select(tp,1,1,nil)
 	sg1:Merge(sg2)
-
+	
 	if #sg1==2 then
 		sg1:KeepAlive()
 		e:SetLabelObject(sg1)
@@ -186,15 +192,10 @@ function s.penop2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ==========================================
--- Quick Effect Destroy & Special Summon Logic
+-- Quick Effect Destroy & Hand Control Logic
 -- ==========================================
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
-end
-
-function s.spwarriorfilter(c,e,tp)
-	return c:IsRace(RACE_WARRIOR) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and (c:IsFaceup() or c:IsLocation(LOCATION_REMOVED))
 end
 
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -203,23 +204,18 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_REMOVED+LOCATION_EXTRA)
 end
 
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) and Duel.Destroy(tc,REASON_EFFECT)>0 then
-		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
-		if ft<=0 then return end
-		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
-		ft=math.min(ft,2)
-		
-		local g=Duel.GetMatchingGroup(s.spwarriorfilter,tp,LOCATION_REMOVED+LOCATION_EXTRA,0,nil,e,tp)
-		if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+		local hand=Duel.GetFieldGroup(tp,0,LOCATION_HAND)
+		if #hand>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
 			Duel.BreakEffect()
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local sg=g:Select(tp,1,ft,nil)
-			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+			local rg=hand:RandomSelect(tp,1)
+			Duel.ConfirmCards(tp,rg)
+			Duel.SendtoDeck(rg,nil,SEQ_DECKTOP,REASON_EFFECT)
+			Duel.ShuffleHand(1-tp)
 		end
 	end
 end

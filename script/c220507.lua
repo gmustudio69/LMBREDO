@@ -1,7 +1,6 @@
 --<Limit Breaker> Eden Grace
 local s,id=GetID()
 function s.initial_effect(c)
-
 	--Fusion material
 	c:EnableReviveLimit()
 	Fusion.AddProcMix(c,true,true,s.matfilter,s.matfilter)
