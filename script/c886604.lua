@@ -4,7 +4,7 @@ function s.initial_effect(c)
 	-- Enable Pendulum and Fusion Attributes
 	Pendulum.AddProcedure(c)
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,s.matfilter,2)
+	Fusion.AddProcMix(c,true,true,s.matfilter,s.matfilter)
 
 	-- ==========================================
 	-- PENDULUM EFFECT
