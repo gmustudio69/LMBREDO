@@ -1,8 +1,4 @@
---<Limit Breaker> Tempesta Noir
-local s,id,o=GetID()
-function s.initial_effect(c)
-	
-end
+
 --<Limit Breaker> Tempesta Noir
 local s,id=GetID()
 function s.initial_effect(c)
@@ -79,8 +75,8 @@ end
 -- ==========================================
 -- Definitions & Setcodes
 -- ==========================================
-local SET_LAWRENCE = 0x8ec	   -- Replace with your actual "Lawrence" setcode
-local CARD_ANN	 = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
+local SET_LAWRENCE = 0x8ec	 -- Replace with your actual "Lawrence" setcode
+local CARD_ANN   = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
 
 function s.matfilter(c,scard,sumtype,tp)
 	return c:IsAttribute(ATTRIBUTE_LIGHT,scard,sumtype,tp) and c:IsRace(RACE_WARRIOR,scard,sumtype,tp)
