@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_PZONE)
 	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.pencon)
+	e1:SetCondition(function(e) return e:GetHandler():HasFlagEffect(id) end)
 	e1:SetTarget(s.pentg)
 	e1:SetOperation(s.penop)
 	c:RegisterEffect(e1)
@@ -64,9 +64,6 @@ local CARD_ANN		   = 220414 -- Replace with exact ID of "<Limit Breaker> Ann"
 -- ==========================================
 -- Pendulum Effect Logic
 -- ==========================================
-function s.pencon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsMainPhase() and e:GetHandler():GetStatus(STATUS_ACT_FROM_HAND) or e:GetHandler():IsStatus(STATUS_CHAINING) or e:GetHandler():GetTurnCounter()==Duel.GetTurnCount()
-end
 
 function s.penfilter(c)
 	return c:IsCode(CARD_ANN) and not c:IsForbidden()
