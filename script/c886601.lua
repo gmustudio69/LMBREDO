@@ -99,7 +99,7 @@ end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	local rg=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil,c)
-	local g=aux.SelectUnselectGroup(rg,e,tp,1,1,aux.ChkfMMZ(1),1,tp,HINTMSG_TOGRAVE,nil,c,true)
+	local g=aux.SelectUnselectGroup(rg,e,tp,1,1,aux.ChkfMMZ(1),1,tp,HINTMSG_TOGRAVE,c,nil,true)
 	if #g>0 then
 		g:KeepAlive()
 		e:SetLabelObject(g)
