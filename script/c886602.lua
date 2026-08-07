@@ -6,7 +6,6 @@ function s.initial_effect(c)
 	Pendulum.AddProcedure(c)
 	c:EnableReviveLimit()
 	Fusion.AddProcMix(c,true,true,CARD_ANN,s.matfilter)
-
 	-- Track destroyed monsters this turn for Pendulum condition
 	if not s.global_check then
 		s.global_check=true
@@ -160,7 +159,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local sg=e:GetLabelObject()
 	if sg then
 		Duel.Remove(sg,POS_FACEUP,REASON_COST)
-		sg:Delete()
 	end
 end
 
