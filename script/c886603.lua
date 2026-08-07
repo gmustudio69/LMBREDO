@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Enable Pendulum and Fusion Attributes
-	aux.EnablePendulumAttribute(c)
+	Pendulum.AddProcedure(c)
 	c:EnableReviveLimit()
 	Fusion.AddProcMix(c,true,true,CARD_ANN,s.matfilter)
 
