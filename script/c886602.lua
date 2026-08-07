@@ -3,8 +3,8 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Enable Pendulum and Fusion Attributes
-	Pendulum.AddProcedure(c)
 	c:EnableReviveLimit()
+	Pendulum.AddProcedure(c)
 	Fusion.AddProcMix(c,true,true,CARD_ANN,s.matfilter)
 	-- Track destroyed monsters this turn for Pendulum condition
 	if not s.global_check then
