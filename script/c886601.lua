@@ -34,7 +34,7 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_SPSUMMON_PROC)
 	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e2:SetRange(LOCATION_EXTRA)
-	e2:SetCountLimit(1,id+100,EFFECT_COUNT_CODE_OATH)
+	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e2:SetCondition(s.spcon)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
@@ -86,36 +86,32 @@ end
 -- ==========================================
 -- Alternative Special Summon Logic
 -- ==========================================
-function s.costfilter(c)
-	return c:IsSetCard(SET_LIMIT_BREAKER) and c:IsType(TYPE_MONSTER) 
-		and c:IsFaceup() and c:IsAbleToGraveAsCost()
+function s.selfspconfilter(c)
+	return c:IsSetCard(SET_LIMIT_BREAKER) and c:IsType(TYPE_MONSTER) and c:IsAbleToGraveAsCost()
 end
 
 function s.spcon(e,c)
 	if c==nil then return true end
-	local tp=c:GetControler()
-	return c:IsFaceup() and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_EXTRA,0,1,c)
+	local tp=e:GetHandlerPlayer()
+	local g=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil)
+	return #g>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_EXTRA,0,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=g:SelectUnselect(Group.CreateGroup(),tp,false,true,1,1)
-	if sg then
-		sg:KeepAlive()
-		e:SetLabelObject(sg)
+	local rg=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil)
+	local g=aux.SelectUnselectGroup(rg,e,tp,1,1,aux.ChkfMMZ(1),1,tp,HINTMSG_TOGRAVE,nil,nil,true)
+	if #g>0 then
+		g:KeepAlive()
+		e:SetLabelObject(g)
 		return true
 	end
 	return false
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-	local sg=e:GetLabelObject()
-	if sg then
-		Duel.SendtoGrave(sg,REASON_COST)
-		sg:Delete()
-	end
+	local g=e:GetLabelObject()
+	if not g then return end
+	Duel.SendtoGrave(g,REASON_COST)
 
 	-- SS Restrict: Cannot SS from Extra Deck for rest of turn except Fusion and Link
 	local e1=Effect.CreateEffect(c)
