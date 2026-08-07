@@ -98,12 +98,11 @@ function s.spcon(e,c)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=g:SelectUnselect(Group.CreateGroup(),tp,false,true,1,1)
-	if sg then
-		sg:KeepAlive()
-		e:SetLabelObject(sg)
+	local rg=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil,c)
+	local g=aux.SelectUnselectGroup(rg,e,tp,1,1,aux.ChkfMMZ(1),1,tp,HINTMSG_TOGRAVE,nil,c,true)
+	if #g>0 then
+		g:KeepAlive()
+		e:SetLabelObject(g)
 		return true
 	end
 	return false
