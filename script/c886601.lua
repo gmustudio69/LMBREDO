@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- Enable Pendulum Feature
-	aux.EnablePendulumAttribute(c)
+	Pendulum.AddProcedure(c)
 
 	-- ==========================================
 	-- PENDULUM EFFECT
