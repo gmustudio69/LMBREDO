@@ -79,8 +79,8 @@ end
 -- ==========================================
 -- Definitions & Setcodes
 -- ==========================================
-local SET_LAWRENCE = 0x9a1	  -- Replace with your actual "Lawrence" setcode
-local CARD_ANN	 = 0x8ec   -- Replace with exact ID of "<Limit Breaker> Ann"
+local SET_LAWRENCE = 0x8ec	   -- Replace with your actual "Lawrence" setcode
+local CARD_ANN	 = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
 
 function s.matfilter(c,fc,sumtype,tp)
 	return c:IsAttribute(ATTRIBUTE_LIGHT,fc,sumtype,tp) and c:IsRace(RACE_WARRIOR,fc,sumtype,tp)
