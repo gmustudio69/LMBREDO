@@ -82,8 +82,8 @@ end
 local SET_LAWRENCE = 0x8ec	   -- Replace with your actual "Lawrence" setcode
 local CARD_ANN	 = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
 
-function s.matfilter(c,fc,sumtype,tp)
-	return c:IsAttribute(ATTRIBUTE_LIGHT,fc,sumtype,tp) and c:IsRace(RACE_WARRIOR,fc,sumtype,tp)
+function s.matfilter(c,scard,sumtype,tp)
+	return c:IsAttribute(ATTRIBUTE_LIGHT,scard,sumtype,tp) and c:IsRace(RACE_WARRIOR,scard,sumtype,tp)
 end
 
 -- Track monster destruction per turn
