@@ -59,7 +59,7 @@ end
 -- Definitions & Setcodes
 -- ==========================================
 local SET_LIMIT_BREAKER = 0xf86	  -- Replace with your actual "Limit Breaker" setcode
-local CARD_ANN		   = 220414 -- Replace with exact ID of "<Limit Breaker> Ann"
+local CARD_ANN = 220414 -- Replace with exact ID of "<Limit Breaker> Ann"
 
 -- ==========================================
 -- Pendulum Effect Logic
