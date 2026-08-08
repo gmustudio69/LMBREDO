@@ -84,26 +84,33 @@ function s.penop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ==========================================
--- Alternative Special Summon Logic
+-- Alternative Special Summon Logic (Fixed)
 -- ==========================================
-function s.selfspconfilter(c)
-	return c:IsSetCard(SET_LIMIT_BREAKER) and c:IsType(TYPE_MONSTER) and c:IsAbleToGraveAsCost()
+function s.selfspconfilter(c,sc)
+	return c:IsSetCard(SET_LIMIT_BREAKER) and c:IsType(TYPE_MONSTER) 
+		and c:IsAbleToGraveAsCost() and c~=sc
 end
 
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=e:GetHandlerPlayer()
-	local g=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil,c)
-	return #g>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+	
+	-- Check if there is an available EMZ or Linked MMZ for this card
+	if Duel.GetLocationCountFromEx(tp,tp,nil,c)<=0 then return false end
+	
+	-- Ensure there is a valid cost target in the Extra Deck (excluding itself)
+	return Duel.IsExistingMatchingCard(s.selfspconfilter,tp,LOCATION_EXTRA,0,1,nil,c)
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
 	local c=e:GetHandler()
 	local rg=Duel.GetMatchingGroup(s.selfspconfilter,tp,LOCATION_EXTRA,0,nil,c)
-	local g=aux.SelectUnselectGroup(rg,e,tp,1,1,aux.ChkfMMZ(1),1,tp,HINTMSG_TOGRAVE,nil,nil,true)
-	if #g>0 then
-		g:KeepAlive()
-		e:SetLabelObject(g)
+	
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local sg=rg:Select(tp,1,1,nil)
+	if sg and #sg>0 then
+		sg:KeepAlive()
+		e:SetLabelObject(sg)
 		return true
 	end
 	return false
@@ -113,6 +120,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local g=e:GetLabelObject()
 	if not g then return end
 	Duel.SendtoGrave(g,REASON_COST)
+	g:Delete()
 
 	-- SS Restrict: Cannot SS from Extra Deck for rest of turn except Fusion and Link
 	local e1=Effect.CreateEffect(c)
@@ -127,7 +135,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 end
 
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and not (c:IsType(TYPE_PENDULUM) or c:IsType(TYPE_LINK))
+	return c:IsLocation(LOCATION_EXTRA) and not (c:IsType(TYPE_FUSION) or c:IsType(TYPE_LINK))
 end
 
 -- ==========================================
