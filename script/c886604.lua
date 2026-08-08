@@ -110,32 +110,40 @@ function s.hdop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ==========================================
--- Quick Effect Pendulum Place & SS Logic
+-- Quick Effect Pendulum Place & SS Logic (Fixed)
 -- ==========================================
 function s.pzcon(e,tp,eg,ep,ev,re,r,rp)
 	return rp==1-tp
 end
 
-function s.spwaterfilter(c,e,tp)
-	return c:IsAttribute(ATTRIBUTE_WATER) and c:IsRace(RACE_WARRIOR)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and (c:IsLocation(LOCATION_HAND) or (c:IsLocation(LOCATION_EXTRA) and c:IsFaceup()))
+function s.spwaterfilter(c,e,tp,sc)
+	if not (c:IsAttribute(ATTRIBUTE_WATER) and c:IsRace(RACE_WARRIOR) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)) then 
+		return false 
+	end
+	if c:IsLocation(LOCATION_HAND) then
+		-- Checking space in MMZ accounting for sc leaving the MZONE
+		return Duel.GetMZoneCount(tp,sc)>0
+	elseif c:IsLocation(LOCATION_EXTRA) and c:IsFaceup() then
+		-- Checking EMZ/Linked MMZ space accounting for sc leaving the MZONE
+		return Duel.GetLocationCountFromEx(tp,tp,sc,c)>0
+	end
+	return false
 end
 
 function s.pztg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
 	if chk==0 then return Duel.CheckPendulumZones(tp)
-		and Duel.IsExistingMatchingCard(s.spwaterfilter,tp,LOCATION_HAND+LOCATION_EXTRA,0,1,nil,e,tp) end
+		and Duel.IsExistingMatchingCard(s.spwaterfilter,tp,LOCATION_HAND+LOCATION_EXTRA,0,1,nil,e,tp,c) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_EXTRA)
 end
 
 function s.pzop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) or not Duel.CheckPendulumZones(tp) then return end
-	
 	if Duel.MoveToField(c,tp,tp,LOCATION_PZONE,POS_FACEUP,true) then
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.spwaterfilter,tp,LOCATION_HAND+LOCATION_EXTRA,0,1,1,nil,e,tp)
+		-- After moving to PZONE, sc is no longer on MZONE, pass nil for zone calculations
+		local g=Duel.SelectMatchingCard(tp,s.spwaterfilter,tp,LOCATION_HAND+LOCATION_EXTRA,0,1,1,nil,e,tp,nil)
 		if #g>0 then
 			Duel.BreakEffect()
 			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
