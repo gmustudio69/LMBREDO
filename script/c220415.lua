@@ -74,7 +74,7 @@ end
 function s.pdestg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local c=e:GetHandler()
 	if chkc then return chkc:IsOnField() and s.pdesfilter(chkc,c) end
-	if chk==0 then return c:IsDestructible() 
+	if chk==0 then return c:IsDestructable()
 		and Duel.IsExistingTarget(s.pdesfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,c) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
 	local g=Duel.SelectTarget(tp,s.pdesfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,c)
