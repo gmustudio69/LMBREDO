@@ -5,18 +5,19 @@ function s.initial_effect(c)
 	Pendulum.AddProcedure(c)
 	c:EnableUnsummonable()
 
-	-- =========================
-	-- Pendulum: shuffle up to 3 Spells from GY/banished into Deck
-	-- =========================
+	-- ==========================================
+	-- PENDULUM EFFECT
+	-- ==========================================
+	-- Target 1 other S/T; destroy this card and that target
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TODECK)
+	e1:SetCategory(CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetRange(LOCATION_PZONE)
 	e1:SetCountLimit(1,id)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetTarget(s.pztg)
-	e1:SetOperation(s.pzop)
+	e1:SetTarget(s.pdestg)
+	e1:SetOperation(s.pdesop)
 	c:RegisterEffect(e1)
 
 	-- =========================
@@ -63,30 +64,31 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
--- ===== Pendulum shuffle =====
-
-function s.tdfilter(c)
-	return c:IsType(TYPE_SPELL) and c:IsAbleToDeck()
+-- ==========================================
+-- Pendulum Effect Logic
+-- ==========================================
+function s.pdesfilter(c,pcard)
+	return c:IsType(TYPE_SPELL+TYPE_TRAP) and c~=pcard
 end
 
-function s.pztg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then
-		return chkc:IsControler(tp)
-			and chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED)
-			and s.tdfilter(chkc)
-	end
-	if chk==0 then
-		return Duel.IsExistingTarget(s.tdfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil)
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectTarget(tp,s.tdfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,3,nil)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,#g,0,0)
+function s.pdestg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
+	if chkc then return chkc:IsOnField() and s.pdesfilter(chkc,c) end
+	if chk==0 then return c:IsDestructible() 
+		and Duel.IsExistingTarget(s.pdesfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,c) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local g=Duel.SelectTarget(tp,s.pdesfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,c)
+	g:AddCard(c)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,2,0,0)
 end
 
-function s.pzop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetTargetCards(e):Filter(Card.IsRelateToEffect,nil,e)
-	if #g>0 then
-		Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+function s.pdesop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
+	if c:IsRelateToEffect(e) and Duel.Destroy(c,REASON_EFFECT)>0 then
+		if tc and tc:IsRelateToEffect(e) then
+			Duel.Destroy(tc,REASON_EFFECT)
+		end
 	end
 end
 
