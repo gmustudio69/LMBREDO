@@ -58,7 +58,7 @@ end
 -- ==========================================
 -- Definitions & Setcodes
 -- ==========================================
-local SET_LIMIT_BREAKER = 0xf86	  -- Replace with your actual "Limit Breaker" setcode
+local SET_LIMIT_BREAKER = 0xf86   -- Replace with your actual "Limit Breaker" setcode
 local CARD_ANN = 220414 -- Replace with exact ID of "<Limit Breaker> Ann"
 
 -- ==========================================
@@ -127,7 +127,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 end
 
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and not (c:IsType(TYPE_FUSION) or c:IsType(TYPE_LINK))
+	return c:IsLocation(LOCATION_EXTRA) and not (c:IsType(TYPE_PENDULUM) or c:IsType(TYPE_LINK))
 end
 
 -- ==========================================
