@@ -44,12 +44,11 @@ function s.initial_effect(c)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetCategory(CATEGORY_DESTROY+CATEGORY_TODECK)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_END_PHASE)
-	e3:SetCountLimit(1)
+	e3:SetCountLimit(1,id)
 	e3:SetTarget(s.destg)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
@@ -120,7 +119,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	local g=e:GetLabelObject()
 	if not g then return end
 	Duel.SendtoGrave(g,REASON_COST)
-	g:Delete()
 
 	-- SS Restrict: Cannot SS from Extra Deck for rest of turn except Fusion and Link
 	local e1=Effect.CreateEffect(c)
@@ -153,13 +151,11 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) and Duel.Destroy(tc,REASON_EFFECT)>0 then
 		local hand=Duel.GetFieldGroup(tp,0,LOCATION_HAND)
-		if #hand>0 then
+		if #hand>=2 then
 			Duel.BreakEffect()
-			-- Select up to 2 random cards from opponent's hand
-			local count=math.min(#hand,2)
-			local rg=hand:RandomSelect(tp,count)
+			-- Randomly select 2 cards from opponent's hand
+			local rg=hand:RandomSelect(tp,2)
 			Duel.ConfirmCards(tp,rg)
-			
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 			local sg=rg:Select(tp,1,1,nil)
 			if #sg>0 then
