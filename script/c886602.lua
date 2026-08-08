@@ -53,7 +53,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_DESTROYED)
 	e3:SetCondition(s.pencon2)
-	e3:SetCountLimit(1,id)
+	e3:SetCountLimit(1,{id,1})
 	e3:SetTarget(s.pentg2)
 	e3:SetOperation(s.penop2)
 	c:RegisterEffect(e3)
@@ -67,7 +67,7 @@ function s.initial_effect(c)
 	e4:SetCode(EVENT_FREE_CHAIN)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
-	e4:SetCountLimit(1,{id,1})
+	e4:SetCountLimit(1,{id,2})
 	e4:SetCondition(s.descon)
 	e4:SetTarget(s.destg)
 	e4:SetOperation(s.desop)
@@ -77,7 +77,7 @@ end
 -- ==========================================
 -- Definitions & Setcodes
 -- ==========================================
-local SET_LAWRENCE =0x8ec	 -- Replace with your actual "Lawrence" setcode
+local SET_LAWRENCE =0x8ec	-- Replace with your actual "Lawrence" setcode
 local CARD_ANN = 220414  -- Replace with exact ID of "<Limit Breaker> Ann"
 
 function s.matfilter(c,scard,sumtype,tp)
